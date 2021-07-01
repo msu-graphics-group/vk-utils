@@ -17,25 +17,25 @@ namespace vk_utils
     uint32_t transfer;
   };
 
-  VkInstance CreateInstance(bool &a_enableValidationLayers, std::vector<const char *> &a_requestedLayers,
+  VkInstance createInstance(bool &a_enableValidationLayers, std::vector<const char *> &a_requestedLayers,
                             std::vector<const char *> &a_instanceExtensions, VkApplicationInfo* appInfo = nullptr);
 
-  VkPhysicalDevice FindPhysicalDevice(VkInstance a_instance, bool a_printInfo, unsigned a_preferredDeviceId, std::vector<const char *> a_deviceExt = {});
+  VkPhysicalDevice findPhysicalDevice(VkInstance a_instance, bool a_printInfo, unsigned a_preferredDeviceId, std::vector<const char *> a_deviceExt = {});
 
-  VkDevice CreateLogicalDevice(VkPhysicalDevice physicalDevice, const std::vector<const char *>& a_enabledLayers,
+  VkDevice createLogicalDevice(VkPhysicalDevice physicalDevice, const std::vector<const char *>& a_enabledLayers,
                                std::vector<const char *> a_extensions, VkPhysicalDeviceFeatures a_deviceFeatures,
                                QueueFID_T &a_queueIDXs, VkQueueFlags requestedQueueTypes = VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_TRANSFER_BIT,
                                void* pNextFeatures = nullptr);
-  uint32_t FindMemoryType(uint32_t memoryTypeBits, VkMemoryPropertyFlags properties, VkPhysicalDevice physicalDevice);
+  uint32_t findMemoryType(uint32_t memoryTypeBits, VkMemoryPropertyFlags properties, VkPhysicalDevice physicalDevice);
 
-  std::vector<std::string> SubgroupOperationToString(VkSubgroupFeatureFlags flags);
+  std::vector<std::string> subgroupOperationToString(VkSubgroupFeatureFlags flags);
 
-  size_t Padding(size_t a_size, size_t a_alignment);
-  uint32_t alignedSize(uint32_t value, uint32_t alignment);
+  size_t getPaddedSize(size_t a_size, size_t a_alignment);
+  uint32_t getSBTAlignedSize(uint32_t value, uint32_t alignment);
 
-  std::vector<uint32_t> ReadFile(const char* filename);
-  VkShaderModule CreateShaderModule(VkDevice a_device, const std::vector<uint32_t>& code);
-  VkPipelineShaderStageCreateInfo LoadShader(VkDevice a_device, const std::string& fileName, VkShaderStageFlagBits stage,
+  std::vector<uint32_t> readSPVFile(const char* filename);
+  VkShaderModule createShaderModule(VkDevice a_device, const std::vector<uint32_t>& code);
+  VkPipelineShaderStageCreateInfo loadShader(VkDevice a_device, const std::string& fileName, VkShaderStageFlagBits stage,
                                              std::vector<VkShaderModule> &modules);
 
   VkDescriptorSetLayout createDescriptorSetLayout(VkDevice a_device, const std::vector<VkDescriptorType> &a_descrTypes);
@@ -49,8 +49,8 @@ namespace vk_utils
   void createStagingBuffer(VkDevice a_device, VkPhysicalDevice a_physDevice, const size_t a_bufferSize,
                            VkBuffer* a_pBuffer, VkDeviceMemory* a_pBufferMemory);
 
-  VkMemoryRequirements CreateBuffer(VkDevice a_dev, VkDeviceSize a_size, VkBufferUsageFlags a_usageFlags, VkBuffer &a_buf);
-  VkDeviceMemory AllocateAndBindWithPadding(VkDevice a_dev, VkPhysicalDevice a_physDev, const std::vector<VkBuffer> &a_buffers,
+  VkMemoryRequirements createBuffer(VkDevice a_dev, VkDeviceSize a_size, VkBufferUsageFlags a_usageFlags, VkBuffer &a_buf);
+  VkDeviceMemory allocateAndBindWithPadding(VkDevice a_dev, VkPhysicalDevice a_physDev, const std::vector<VkBuffer> &a_buffers,
                                             VkMemoryAllocateFlags flags = {});
 
   std::string errorString(VkResult errorCode);
@@ -64,7 +64,7 @@ namespace vk_utils
                                                             const char*                pMessage,
                                                             void*                      pUserData);
 
-  void InitDebugReportCallback(VkInstance a_instance, DebugReportCallbackFuncType a_callback, VkDebugReportCallbackEXT* a_debugReportCallback);
+  void initDebugReportCallback(VkInstance a_instance, DebugReportCallbackFuncType a_callback, VkDebugReportCallbackEXT* a_debugReportCallback);
 }
 
 #define VK_CHECK_RESULT(f) 													           \

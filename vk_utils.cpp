@@ -93,7 +93,7 @@ namespace vk_utils {
     return all_layers_supported;
   }
 
-  VkInstance CreateInstance(bool &a_enableValidationLayers, std::vector<const char *> &a_requestedLayers, std::vector<const char *> &a_instanceExtensions, VkApplicationInfo *appInfo)
+  VkInstance createInstance(bool &a_enableValidationLayers, std::vector<const char *> &a_requestedLayers, std::vector<const char *> &a_instanceExtensions, VkApplicationInfo *appInfo)
   {
     std::vector<const char *> enabledExtensions = a_instanceExtensions;
     std::vector<std::string> supportedLayers;
@@ -184,7 +184,7 @@ namespace vk_utils {
   }
 
 
-  void InitDebugReportCallback(VkInstance a_instance, DebugReportCallbackFuncType a_callback, VkDebugReportCallbackEXT *a_debugReportCallback)
+  void initDebugReportCallback(VkInstance a_instance, DebugReportCallbackFuncType a_callback, VkDebugReportCallbackEXT *a_debugReportCallback)
   {
     VkDebugReportCallbackCreateInfoEXT createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
@@ -199,12 +199,12 @@ namespace vk_utils {
     VK_CHECK_RESULT(vkCreateDebugReportCallbackEXT(a_instance, &createInfo, nullptr, a_debugReportCallback));
   }
 
-  VkPhysicalDevice FindPhysicalDevice(VkInstance a_instance, bool a_printInfo, unsigned a_preferredDeviceId, std::vector<const char *> a_deviceExt)
+  VkPhysicalDevice findPhysicalDevice(VkInstance a_instance, bool a_printInfo, unsigned a_preferredDeviceId, std::vector<const char *> a_deviceExt)
   {
     uint32_t deviceCount;
     vkEnumeratePhysicalDevices(a_instance, &deviceCount, nullptr);
     if (deviceCount == 0) {
-      RunTimeError("vk_utils::FindPhysicalDevice, no Vulkan devices found");
+      RunTimeError("vk_utils::findPhysicalDevice, no Vulkan devices found");
     }
 
     std::vector<VkPhysicalDevice> devices(deviceCount);
@@ -213,7 +213,7 @@ namespace vk_utils {
     VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
 
     if (a_printInfo)
-      std::cout << "FindPhysicalDevice: { " << std::endl;
+      std::cout << "findPhysicalDevice: { " << std::endl;
 
     VkPhysicalDeviceProperties props;
     VkPhysicalDeviceFeatures features;
@@ -260,7 +260,7 @@ namespace vk_utils {
     }
 
     if (physicalDevice == VK_NULL_HANDLE)
-      RunTimeError("vk_utils::FindPhysicalDevice, no Vulkan devices supporting requested extensions were found");
+      RunTimeError("vk_utils::findPhysicalDevice, no Vulkan devices supporting requested extensions were found");
 
     return physicalDevice;
   }
@@ -290,7 +290,7 @@ namespace vk_utils {
   }
 
 
-  VkDevice CreateLogicalDevice(VkPhysicalDevice physicalDevice, const std::vector<const char *> &a_enabledLayers,
+  VkDevice createLogicalDevice(VkPhysicalDevice physicalDevice, const std::vector<const char *> &a_enabledLayers,
                                std::vector<const char *> a_extensions, VkPhysicalDeviceFeatures a_deviceFeatures,
                                QueueFID_T &a_queueIDXs, VkQueueFlags requestedQueueTypes, void* pNextFeatures)
   {
@@ -379,7 +379,7 @@ namespace vk_utils {
   }
 
 
-  uint32_t FindMemoryType(uint32_t memoryTypeBits, VkMemoryPropertyFlags properties, VkPhysicalDevice physicalDevice)
+  uint32_t findMemoryType(uint32_t memoryTypeBits, VkMemoryPropertyFlags properties, VkPhysicalDevice physicalDevice)
   {
     VkPhysicalDeviceMemoryProperties memoryProperties;
 
@@ -394,7 +394,7 @@ namespace vk_utils {
     return -1;
   }
 
-  std::vector<std::string> SubgroupOperationToString(VkSubgroupFeatureFlags flags)
+  std::vector<std::string> subgroupOperationToString(VkSubgroupFeatureFlags flags)
   {
     std::vector<std::string> res;
     std::vector<std::pair<VkSubgroupFeatureFlagBits, std::string>> flagBits = {
@@ -417,7 +417,7 @@ namespace vk_utils {
   }
 
 
-  VkMemoryRequirements CreateBuffer(VkDevice a_dev, VkDeviceSize a_size, VkBufferUsageFlags a_usageFlags, VkBuffer &a_buf)
+  VkMemoryRequirements createBuffer(VkDevice a_dev, VkDeviceSize a_size, VkBufferUsageFlags a_usageFlags, VkBuffer &a_buf)
   {
     assert(a_dev != VK_NULL_HANDLE);
 
@@ -440,7 +440,7 @@ namespace vk_utils {
     return result;
   }
 
-  size_t Padding(size_t a_size, size_t a_alignment)
+  size_t getPaddedSize(size_t a_size, size_t a_alignment)
   {
     if (a_size % a_alignment == 0)
       return a_size;
@@ -460,14 +460,14 @@ namespace vk_utils {
     for (size_t i = 0; i < a_memInfos.size() - 1; i++)
     {
       mem_offsets.push_back(currOffset);
-      currOffset += vk_utils::Padding(a_memInfos[i].size, a_memInfos[i + 1].alignment);
+      currOffset += vk_utils::getPaddedSize(a_memInfos[i].size, a_memInfos[i + 1].alignment);
     }
 
     // put mem offset for last element of 'a_memInfos'
     //
     size_t last = a_memInfos.size() - 1;
     mem_offsets.push_back(currOffset);
-    currOffset += vk_utils::Padding(a_memInfos[last].size, a_memInfos[last].alignment);
+    currOffset += vk_utils::getPaddedSize(a_memInfos[last].size, a_memInfos[last].alignment);
 
     // put total mem amount in last vector element
     //
@@ -475,11 +475,11 @@ namespace vk_utils {
     return mem_offsets;
   }
 
-  VkDeviceMemory AllocateAndBindWithPadding(VkDevice a_dev, VkPhysicalDevice a_physDev, const std::vector<VkBuffer> &a_buffers, VkMemoryAllocateFlags flags)
+  VkDeviceMemory allocateAndBindWithPadding(VkDevice a_dev, VkPhysicalDevice a_physDev, const std::vector<VkBuffer> &a_buffers, VkMemoryAllocateFlags flags)
   {
     if(a_buffers.empty())
     {
-      std::cout << "[AllocateAndBindWithPadding]: error, zero input array" << std::endl;
+      std::cout << "[allocateAndBindWithPadding]: error, zero input array" << std::endl;
       return VK_NULL_HANDLE;
     }
 
@@ -498,7 +498,7 @@ namespace vk_utils {
     {
       if(memInfos[i].memoryTypeBits != memInfos[0].memoryTypeBits)
       {
-        std::cout << "[AllocateAndBindWithPadding]: error, input buffers has different 'memReq.memoryTypeBits'" << std::endl;
+        std::cout << "[allocateAndBindWithPadding]: error, input buffers has different 'memReq.memoryTypeBits'" << std::endl;
         return VK_NULL_HANDLE;
       }
     }
@@ -511,7 +511,7 @@ namespace vk_utils {
     allocateInfo.sType           = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
     allocateInfo.pNext           = nullptr;
     allocateInfo.allocationSize  = memTotal;
-    allocateInfo.memoryTypeIndex = vk_utils::FindMemoryType(memInfos[0].memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, a_physDev);
+    allocateInfo.memoryTypeIndex = vk_utils::findMemoryType(memInfos[0].memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, a_physDev);
 
     VkMemoryAllocateFlagsInfo memoryAllocateFlagsInfo{};
     if(flags)
@@ -533,12 +533,12 @@ namespace vk_utils {
     return res;
   }
 
-  std::vector<uint32_t> ReadFile(const char *filename)
+  std::vector<uint32_t> readSPVFile(const char *filename)
   {
     FILE *fp = fopen(filename, "rb");
     if (fp == nullptr)
     {
-      std::string errorMsg = std::string("[vk_utils::ReadFile]: can't open file ") + std::string(filename);
+      std::string errorMsg = std::string("[vk_utils::readSPVFile]: can't open file ") + std::string(filename);
       RunTimeError(errorMsg.c_str());
     }
 
@@ -560,7 +560,7 @@ namespace vk_utils {
     return resData;
   }
 
-  VkShaderModule CreateShaderModule(VkDevice a_device, const std::vector<uint32_t> &code)
+  VkShaderModule createShaderModule(VkDevice a_device, const std::vector<uint32_t> &code)
   {
     VkShaderModuleCreateInfo createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
@@ -569,7 +569,7 @@ namespace vk_utils {
 
     VkShaderModule shaderModule;
     if (vkCreateShaderModule(a_device, &createInfo, nullptr, &shaderModule) != VK_SUCCESS)
-      RunTimeError("[CreateShaderModule]: failed to create shader module!");
+      RunTimeError("[createShaderModule]: failed to create shader module!");
 
     return shaderModule;
   }
@@ -690,9 +690,9 @@ namespace vk_utils {
     VkMemoryAllocateInfo allocateInfo = {};
     allocateInfo.sType           = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
     allocateInfo.allocationSize  = memoryRequirements.size;
-    allocateInfo.memoryTypeIndex = vk_utils::FindMemoryType(memoryRequirements.memoryTypeBits,
-                                                            VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
-                                                            a_physDevice);
+    allocateInfo.memoryTypeIndex = vk_utils::findMemoryType(memoryRequirements.memoryTypeBits,
+      VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
+      a_physDevice);
 
     VK_CHECK_RESULT(vkAllocateMemory(a_device, &allocateInfo, nullptr, a_pBufferMemory));
 
