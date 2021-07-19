@@ -1,14 +1,18 @@
-#ifndef VK_SORT_VK_UTILS_H
-#define VK_SORT_VK_UTILS_H
+#ifndef VK_UTILS_H
+#define VK_UTILS_H
 
-#include "volk.h"
+#define USE_VOLK
+#include "vk_include.h"
+
 #include <string>
+#include <iostream>
 #include <vector>
 #include <cassert>
+#include <sstream>
 
 namespace vk_utils
 {
-  constexpr uint64_t FENCE_TIMEOUT = 100000000000l;
+  constexpr uint64_t DEFAULT_TIMEOUT = 100000000000l;
 
   struct QueueFID_T
   {
@@ -38,20 +42,25 @@ namespace vk_utils
   VkPipelineShaderStageCreateInfo loadShader(VkDevice a_device, const std::string& fileName, VkShaderStageFlagBits stage,
                                              std::vector<VkShaderModule> &modules);
 
-  VkDescriptorSetLayout createDescriptorSetLayout(VkDevice a_device, const std::vector<VkDescriptorType> &a_descrTypes);
-  VkDescriptorPool createDescriptorPool(VkDevice a_device, const std::vector<VkDescriptorType> &a_descrTypes,
-                                        const std::vector<uint32_t> &a_descrTypeCounts, unsigned a_maxSets);
-  VkDescriptorSet createDescriptorSet(VkDevice a_device, VkDescriptorSetLayout a_pDSLayout, VkDescriptorPool a_pDSPool,
-                                      const std::vector<VkDescriptorBufferInfo> &bufInfos);
-
+  // *** commands ***
+  //
+  VkCommandPool createCommandPool(VkDevice a_device,  uint32_t a_queueIdx, VkCommandPoolCreateFlagBits a_poolFlags);
   VkCommandBuffer createCommandBuffer(VkDevice a_device, VkCommandPool a_pool);
+  std::vector<VkCommandBuffer> createCommandBuffers(VkDevice a_device, VkCommandPool a_pool, uint32_t a_buffNum);
 
-  void createStagingBuffer(VkDevice a_device, VkPhysicalDevice a_physDevice, const size_t a_bufferSize,
-                           VkBuffer* a_pBuffer, VkDeviceMemory* a_pBufferMemory);
+  void executeCommandBufferNow(VkCommandBuffer a_cmdBuff, VkQueue a_queue, VkDevice a_device);
+  void executeCommandBufferNow(std::vector<VkCommandBuffer> a_cmdBuffers, VkQueue a_queue, VkDevice a_device);
+  // ****************
 
-  VkMemoryRequirements createBuffer(VkDevice a_dev, VkDeviceSize a_size, VkBufferUsageFlags a_usageFlags, VkBuffer &a_buf);
-  VkDeviceMemory allocateAndBindWithPadding(VkDevice a_dev, VkPhysicalDevice a_physDev, const std::vector<VkBuffer> &a_buffers,
-                                            VkMemoryAllocateFlags flags = {});
+  // *** errors and debugging ***
+  //
+  static FILE* log = stderr;
+
+  void setLogToFile(const std::string &path);
+
+  void runTimeError(const char* file, int line, const char* msg);
+
+  void logWarning(const std::string& msg);
 
   std::string errorString(VkResult errorCode);
 
@@ -65,6 +74,7 @@ namespace vk_utils
                                                             void*                      pUserData);
 
   void initDebugReportCallback(VkInstance a_instance, DebugReportCallbackFuncType a_callback, VkDebugReportCallbackEXT* a_debugReportCallback);
+  // ****************
 }
 
 #define VK_CHECK_RESULT(f) 													           \
@@ -72,10 +82,15 @@ namespace vk_utils
     VkResult __vk_check_result = (f);													 \
     if (__vk_check_result != VK_SUCCESS)											 \
     {																								           \
-        printf("Fatal : VkResult is %s in %s at line %d\n",    \
-               vk_utils::errorString(__vk_check_result).c_str(),  __FILE__, __LINE__); \
+        fprintf(vk_utils::log, "Fatal : VkResult is %s in %s at line %d\n",    \
+                vk_utils::errorString(__vk_check_result).c_str(),  __FILE__, __LINE__); \
         assert(__vk_check_result == VK_SUCCESS);							 \
     }																								           \
 }
 
-#endif //VK_SORT_VK_UTILS_H
+#undef  RUN_TIME_ERROR
+#undef  RUN_TIME_ERROR_AT
+#define RUN_TIME_ERROR(e) (vk_utils::runTimeError(__FILE__,__LINE__,(e)))
+#define RUN_TIME_ERROR_AT(e, file, line) (vk_utils::runTimeError((file),(line),(e)))
+
+#endif //VK_UTILS_H

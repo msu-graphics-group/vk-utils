@@ -10,8 +10,10 @@ namespace vk_utils {
 
   static const char *g_debugReportExtName = VK_EXT_DEBUG_REPORT_EXTENSION_NAME;
 
-  std::string errorString(VkResult errorCode) {
-    switch (errorCode) {
+  std::string errorString(VkResult errorCode)
+  {
+    switch (errorCode)
+    {
 #define STR(r) case VK_##r: return #r
       STR(NOT_READY);
       STR(TIMEOUT);
@@ -42,10 +44,29 @@ namespace vk_utils {
     }
   };
 
-  static void RunTimeError(const char* msg)
+  void setLogToFile(const std::string &path)
   {
-    printf("runtime error at %s, line %d : %s", __FILE__, __LINE__, msg);
+    FILE* log_fd = fopen( path.c_str(), "w" );
+    if(!log_fd)
+    {
+      std::perror("[setLogToFile] File opening failed, logging to stderr");
+    }
+    else
+    {
+      log = log_fd;
+    }
+  }
+
+  void runTimeError(const char* file, int line, const char* msg)
+  {
+    fprintf(log, "Runtime error at %s, line %d : %s", file, line, msg);
+    fflush(log);
     exit(99);
+  }
+
+  void logWarning(const std::string& msg)
+  {
+    fprintf(log, "Warning : %s", msg.c_str());
   }
 
   bool checkDeviceExtensionSupport(VkPhysicalDevice device, std::vector<const char *> &requestedExtensions)
@@ -73,19 +94,26 @@ namespace vk_utils {
 
     std::vector<VkLayerProperties> layerProperties(layerCount);
     vkEnumerateInstanceLayerProperties(&layerCount, layerProperties.data());
-    std::vector<std::string> allPresentLayers;//(requestedLayers.begin(), requestedLayers.end());
+    std::vector<std::string> allPresentLayers;
     allPresentLayers.reserve(layerCount);
     for (const auto &layerProp : layerProperties)
     {
       allPresentLayers.emplace_back(layerProp.layerName);
     }
 
-    for (const auto &layer : requestedLayers) {
+    for (const auto &layer : requestedLayers)
+    {
       auto found = std::find(allPresentLayers.begin(), allPresentLayers.end(), layer);
-      if (found != allPresentLayers.end()) {
+      if (found != allPresentLayers.end())
+      {
         supportedLayers.emplace_back(layer);
-      } else {
-        std::cout << "Warning. Requested layer not found: " << layer << std::endl;
+      }
+      else
+      {
+        std::stringstream ss;
+        ss << "Requested layer " << layer << " not found";
+        logWarning(ss.str());
+
         all_layers_supported = false;
       }
     }
@@ -93,7 +121,8 @@ namespace vk_utils {
     return all_layers_supported;
   }
 
-  VkInstance createInstance(bool &a_enableValidationLayers, std::vector<const char *> &a_requestedLayers, std::vector<const char *> &a_instanceExtensions, VkApplicationInfo *appInfo)
+  VkInstance createInstance(bool &a_enableValidationLayers, std::vector<const char *> &a_requestedLayers,
+    std::vector<const char *> &a_instanceExtensions, VkApplicationInfo *appInfo)
   {
     std::vector<const char *> enabledExtensions = a_instanceExtensions;
     std::vector<std::string> supportedLayers;
@@ -118,7 +147,7 @@ namespace vk_utils {
       }
 
       if (!foundExtension)
-        RunTimeError("Validation layers requested but extension VK_EXT_DEBUG_REPORT_EXTENSION_NAME not supported\n");
+        RUN_TIME_ERROR("Validation layers requested but extension VK_EXT_DEBUG_REPORT_EXTENSION_NAME not supported\n");
 
       enabledExtensions.push_back(g_debugReportExtName);
     }
@@ -193,9 +222,8 @@ namespace vk_utils {
 
     auto vkCreateDebugReportCallbackEXT = (PFN_vkCreateDebugReportCallbackEXT)vkGetInstanceProcAddr(a_instance, "vkCreateDebugReportCallbackEXT");
     if (vkCreateDebugReportCallbackEXT == nullptr)
-      RunTimeError("Could not load vkCreateDebugReportCallbackEXT");
+      RUN_TIME_ERROR("Could not load vkCreateDebugReportCallbackEXT");
 
-    // Create and register callback.
     VK_CHECK_RESULT(vkCreateDebugReportCallbackEXT(a_instance, &createInfo, nullptr, a_debugReportCallback));
   }
 
@@ -203,8 +231,9 @@ namespace vk_utils {
   {
     uint32_t deviceCount;
     vkEnumeratePhysicalDevices(a_instance, &deviceCount, nullptr);
-    if (deviceCount == 0) {
-      RunTimeError("vk_utils::findPhysicalDevice, no Vulkan devices found");
+    if (deviceCount == 0)
+    {
+      RUN_TIME_ERROR("vk_utils::findPhysicalDevice, no Vulkan devices found");
     }
 
     std::vector<VkPhysicalDevice> devices(deviceCount);
@@ -260,12 +289,12 @@ namespace vk_utils {
     }
 
     if (physicalDevice == VK_NULL_HANDLE)
-      RunTimeError("vk_utils::findPhysicalDevice, no Vulkan devices supporting requested extensions were found");
+      RUN_TIME_ERROR("vk_utils::findPhysicalDevice, no Vulkan devices supporting requested extensions were found");
 
     return physicalDevice;
   }
 
-  uint32_t GetQueueFamilyIndex(VkPhysicalDevice a_physicalDevice, int a_bits)
+  uint32_t GetQueueFamilyIndex(VkPhysicalDevice a_physicalDevice, VkQueueFlagBits a_bits)
   {
     uint32_t queueFamilyCount;
 
@@ -284,7 +313,7 @@ namespace vk_utils {
     }
 
     if (i == queueFamilies.size())
-      RunTimeError(" vk_utils::GetComputeQueueFamilyIndex: could not find a queue family that supports operations");
+      RUN_TIME_ERROR(" vk_utils::GetComputeQueueFamilyIndex: could not find a queue family that supports operations");
 
     return i;
   }
@@ -295,7 +324,7 @@ namespace vk_utils {
                                QueueFID_T &a_queueIDXs, VkQueueFlags requestedQueueTypes, void* pNextFeatures)
   {
     std::vector<VkDeviceQueueCreateInfo> queueCreateInfos{};
-    const float defaultQueuePriority(0.0f);
+    const float defaultQueuePriority {0.0f};
 
     // Graphics queue
     if (requestedQueueTypes & VK_QUEUE_GRAPHICS_BIT)
@@ -354,13 +383,16 @@ namespace vk_utils {
 
     VkDeviceCreateInfo deviceCreateInfo = {};
     deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-    deviceCreateInfo.enabledLayerCount = uint32_t(a_enabledLayers.size());
-    deviceCreateInfo.ppEnabledLayerNames = a_enabledLayers.data();
     deviceCreateInfo.pQueueCreateInfos = queueCreateInfos.data();
-    deviceCreateInfo.queueCreateInfoCount = 1;
+    deviceCreateInfo.queueCreateInfoCount = queueCreateInfos.size();
     deviceCreateInfo.pEnabledFeatures = &a_deviceFeatures;
     deviceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(a_extensions.size());
     deviceCreateInfo.ppEnabledExtensionNames = a_extensions.data();
+
+    // deprecated and ignored since Vulkan 1.2
+    // https://www.khronos.org/registry/vulkan/specs/1.2-extensions/html/vkspec.html#extendingvulkan-layers-devicelayerdeprecation
+    deviceCreateInfo.enabledLayerCount = uint32_t(a_enabledLayers.size());
+    deviceCreateInfo.ppEnabledLayerNames = a_enabledLayers.data();
 
     VkPhysicalDeviceFeatures2 physicalDeviceFeatures2{};
     if(pNextFeatures)
@@ -416,121 +448,44 @@ namespace vk_utils {
     return res;
   }
 
-
-  VkMemoryRequirements createBuffer(VkDevice a_dev, VkDeviceSize a_size, VkBufferUsageFlags a_usageFlags, VkBuffer &a_buf)
+  void ExecuteCommandBufferNow(VkCommandBuffer a_cmdBuff, VkQueue a_queue, VkDevice a_device)
   {
-    assert(a_dev != VK_NULL_HANDLE);
+    VkSubmitInfo submitInfo = {};
+    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    submitInfo.commandBufferCount = 1;
+    submitInfo.pCommandBuffers = &a_cmdBuff;
 
-    if (a_buf != VK_NULL_HANDLE)
-    {
-      vkDestroyBuffer(a_dev, a_buf, VK_NULL_HANDLE);
-    }
+    VkFence fence;
+    VkFenceCreateInfo fenceCreateInfo = {};
+    fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+    fenceCreateInfo.flags = 0;
+    VK_CHECK_RESULT(vkCreateFence(a_device, &fenceCreateInfo, NULL, &fence));
 
-    VkBufferCreateInfo bufferCreateInfo = {};
-    bufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-    bufferCreateInfo.size  = a_size;
-    bufferCreateInfo.usage = a_usageFlags;
-    bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    VK_CHECK_RESULT(vkQueueSubmit(a_queue, 1, &submitInfo, fence));
 
-    VK_CHECK_RESULT(vkCreateBuffer(a_dev, &bufferCreateInfo, VK_NULL_HANDLE, &a_buf));
+    VK_CHECK_RESULT(vkWaitForFences(a_device, 1, &fence, VK_TRUE, DEFAULT_TIMEOUT));
 
-    VkMemoryRequirements result;
-    vkGetBufferMemoryRequirements(a_dev, a_buf, &result);
-
-    return result;
+    vkDestroyFence(a_device, fence, NULL);
   }
 
-  size_t getPaddedSize(size_t a_size, size_t a_alignment)
+  void ExecuteCommandBufferNow(std::vector<VkCommandBuffer> a_cmdBuffers, VkQueue a_queue, VkDevice a_device)
   {
-    if (a_size % a_alignment == 0)
-      return a_size;
-    else
-    {
-      size_t sizeCut = a_size - (a_size % a_alignment);
-      return sizeCut + a_alignment;
-    }
-  }
+    VkSubmitInfo submitInfo = {};
+    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    submitInfo.commandBufferCount = a_cmdBuffers.size();
+    submitInfo.pCommandBuffers = a_cmdBuffers.data();
 
-  std::vector<size_t> AssignMemOffsetsWithPadding(const std::vector<VkMemoryRequirements> &a_memInfos)
-  {
-    assert(!a_memInfos.empty());
+    VkFence fence;
+    VkFenceCreateInfo fenceCreateInfo = {};
+    fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+    fenceCreateInfo.flags = 0;
+    VK_CHECK_RESULT(vkCreateFence(a_device, &fenceCreateInfo, NULL, &fence));
 
-    std::vector<VkDeviceSize> mem_offsets;
-    size_t currOffset = 0;
-    for (size_t i = 0; i < a_memInfos.size() - 1; i++)
-    {
-      mem_offsets.push_back(currOffset);
-      currOffset += vk_utils::getPaddedSize(a_memInfos[i].size, a_memInfos[i + 1].alignment);
-    }
+    VK_CHECK_RESULT(vkQueueSubmit(a_queue, 1, &submitInfo, fence));
 
-    // put mem offset for last element of 'a_memInfos'
-    //
-    size_t last = a_memInfos.size() - 1;
-    mem_offsets.push_back(currOffset);
-    currOffset += vk_utils::getPaddedSize(a_memInfos[last].size, a_memInfos[last].alignment);
+    VK_CHECK_RESULT(vkWaitForFences(a_device, 1, &fence, VK_TRUE, DEFAULT_TIMEOUT));
 
-    // put total mem amount in last vector element
-    //
-    mem_offsets.push_back(currOffset);
-    return mem_offsets;
-  }
-
-  VkDeviceMemory allocateAndBindWithPadding(VkDevice a_dev, VkPhysicalDevice a_physDev, const std::vector<VkBuffer> &a_buffers, VkMemoryAllocateFlags flags)
-  {
-    if(a_buffers.empty())
-    {
-      std::cout << "[allocateAndBindWithPadding]: error, zero input array" << std::endl;
-      return VK_NULL_HANDLE;
-    }
-
-    std::vector<VkMemoryRequirements> memInfos(a_buffers.size());
-    for(size_t i = 0; i < memInfos.size(); ++i)
-    {
-      if(a_buffers[i] != VK_NULL_HANDLE)
-        vkGetBufferMemoryRequirements(a_dev, a_buffers[i], &memInfos[i]);
-      else
-      {
-        memInfos[i] = memInfos[0];
-        memInfos[i].size = 0;
-      }
-    }
-    for(size_t i=1;i<memInfos.size();i++)
-    {
-      if(memInfos[i].memoryTypeBits != memInfos[0].memoryTypeBits)
-      {
-        std::cout << "[allocateAndBindWithPadding]: error, input buffers has different 'memReq.memoryTypeBits'" << std::endl;
-        return VK_NULL_HANDLE;
-      }
-    }
-
-    auto offsets  = AssignMemOffsetsWithPadding(memInfos);
-    auto memTotal = offsets[offsets.size() - 1];
-
-    VkDeviceMemory res;
-    VkMemoryAllocateInfo allocateInfo = {};
-    allocateInfo.sType           = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-    allocateInfo.pNext           = nullptr;
-    allocateInfo.allocationSize  = memTotal;
-    allocateInfo.memoryTypeIndex = vk_utils::findMemoryType(memInfos[0].memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, a_physDev);
-
-    VkMemoryAllocateFlagsInfo memoryAllocateFlagsInfo{};
-    if(flags)
-    {
-      memoryAllocateFlagsInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_FLAGS_INFO;
-      memoryAllocateFlagsInfo.flags = flags;
-
-      allocateInfo.pNext = &memoryAllocateFlagsInfo;
-    }
-
-    VK_CHECK_RESULT(vkAllocateMemory(a_dev, &allocateInfo, NULL, &res));
-
-    for (size_t i = 0; i < memInfos.size(); i++)
-    {
-      if(a_buffers[i] != VK_NULL_HANDLE)
-        vkBindBufferMemory(a_dev, a_buffers[i], res, offsets[i]);
-    }
-
-    return res;
+    vkDestroyFence(a_device, fence, NULL);
   }
 
   std::vector<uint32_t> readSPVFile(const char *filename)
@@ -539,23 +494,20 @@ namespace vk_utils {
     if (fp == nullptr)
     {
       std::string errorMsg = std::string("[vk_utils::readSPVFile]: can't open file ") + std::string(filename);
-      RunTimeError(errorMsg.c_str());
+      RUN_TIME_ERROR(errorMsg.c_str());
     }
 
     fseek(fp, 0, SEEK_END);
     long filesize = ftell(fp);
     fseek(fp, 0, SEEK_SET);
 
-    long filesizepadded = long(std::ceil(filesize / 4.0)) * 4;
+    auto filesize_padded = getPaddedSize(filesize, sizeof(uint32_t));
 
-    std::vector<uint32_t> resData(filesizepadded / 4);
+    std::vector<uint32_t> resData(filesize_padded / sizeof(resData[0]), 0);
 
     char *str = (char *)resData.data();
     fread(str, filesize, sizeof(char), fp);
     fclose(fp);
-
-    for (int i = filesize; i < filesizepadded; i++)
-      str[i] = 0;
 
     return resData;
   }
@@ -568,95 +520,22 @@ namespace vk_utils {
     createInfo.pCode = code.data();
 
     VkShaderModule shaderModule;
-    if (vkCreateShaderModule(a_device, &createInfo, nullptr, &shaderModule) != VK_SUCCESS)
-      RunTimeError("[createShaderModule]: failed to create shader module!");
+    VK_CHECK_RESULT(vkCreateShaderModule(a_device, &createInfo, nullptr, &shaderModule));
 
     return shaderModule;
   }
 
-  VkDescriptorSetLayout createDescriptorSetLayout(VkDevice a_device, const std::vector<VkDescriptorType> &a_descrTypes)
+  VkCommandPool createCommandPool(VkDevice a_device,  uint32_t a_queueIdx, VkCommandPoolCreateFlagBits a_poolFlags)
   {
-    VkDescriptorSetLayout layout;
+    VkCommandPoolCreateInfo poolInfo = {};
+    poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+    poolInfo.flags = a_poolFlags;
+    poolInfo.queueFamilyIndex = a_queueIdx;
 
-    std::vector<VkDescriptorSetLayoutBinding> bindings(a_descrTypes.size());
-    for(size_t i = 0; i < a_descrTypes.size(); ++i)
-    {
-      VkDescriptorSetLayoutBinding descriptorSetLayoutBinding = {};
-      descriptorSetLayoutBinding.binding = i;
-      descriptorSetLayoutBinding.descriptorType = a_descrTypes[i];
-      descriptorSetLayoutBinding.descriptorCount = 1;
-      descriptorSetLayoutBinding.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+    VkCommandPool commandPool;
+    VK_CHECK_RESULT(vkCreateCommandPool(a_device, &poolInfo, nullptr, &commandPool));
 
-      bindings[i] = descriptorSetLayoutBinding;
-    }
-
-    VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = {};
-    descriptorSetLayoutCreateInfo.sType        = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    descriptorSetLayoutCreateInfo.bindingCount = bindings.size();
-    descriptorSetLayoutCreateInfo.pBindings    = bindings.data();
-    VK_CHECK_RESULT(vkCreateDescriptorSetLayout(a_device, &descriptorSetLayoutCreateInfo, nullptr, &layout));
-
-    return layout;
-  }
-
-  VkDescriptorPool createDescriptorPool(VkDevice a_device, const std::vector<VkDescriptorType> &a_descrTypes,
-                                        const std::vector<uint32_t> &a_descrTypeCounts, unsigned a_maxSets)
-  {
-    assert(a_descrTypes.size() == a_descrTypeCounts.size());
-
-    VkDescriptorPool pool;
-
-    std::vector<VkDescriptorPoolSize> poolSizes(a_descrTypes.size());
-    for(size_t i = 0; i < a_descrTypes.size(); ++i)
-    {
-      VkDescriptorPoolSize descriptorPoolSize = {};
-      descriptorPoolSize.type = a_descrTypes[i];
-      descriptorPoolSize.descriptorCount = a_descrTypeCounts[i];
-
-      poolSizes[i] = descriptorPoolSize;
-    }
-
-    VkDescriptorPoolCreateInfo descriptorPoolCreateInfo = {};
-    descriptorPoolCreateInfo.sType         = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-    descriptorPoolCreateInfo.maxSets       = a_maxSets;
-    descriptorPoolCreateInfo.poolSizeCount = poolSizes.size();
-    descriptorPoolCreateInfo.pPoolSizes    = poolSizes.data();
-
-    VK_CHECK_RESULT(vkCreateDescriptorPool(a_device, &descriptorPoolCreateInfo, nullptr, &pool));
-
-    return pool;
-  }
-
-  VkDescriptorSet createDescriptorSet(VkDevice a_device, VkDescriptorSetLayout a_pDSLayout, VkDescriptorPool a_pDSPool,
-                                      const std::vector<VkDescriptorBufferInfo> &bufInfos)
-  {
-    VkDescriptorSet set;
-
-    VkDescriptorSetAllocateInfo descriptorSetAllocateInfo = {};
-    descriptorSetAllocateInfo.sType              = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-    descriptorSetAllocateInfo.descriptorPool     = a_pDSPool;
-    descriptorSetAllocateInfo.descriptorSetCount = 1;
-    descriptorSetAllocateInfo.pSetLayouts        = &a_pDSLayout;
-
-    VK_CHECK_RESULT(vkAllocateDescriptorSets(a_device, &descriptorSetAllocateInfo, &set));
-
-    std::vector<VkWriteDescriptorSet> writeSets(bufInfos.size());
-    for(size_t i = 0; i < bufInfos.size(); ++i)
-    {
-      VkWriteDescriptorSet writeDescriptorSet = {};
-      writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-      writeDescriptorSet.dstSet = set;
-      writeDescriptorSet.dstBinding = i;
-      writeDescriptorSet.descriptorCount = 1;
-      writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-      writeDescriptorSet.pBufferInfo = &bufInfos[i];
-
-      writeSets[i] = writeDescriptorSet;
-    }
-
-    vkUpdateDescriptorSets(a_device, writeSets.size(), writeSets.data(), 0, nullptr);
-
-    return set;
+    return commandPool;
   }
 
   VkCommandBuffer createCommandBuffer(VkDevice a_device, VkCommandPool a_pool)
@@ -672,31 +551,19 @@ namespace vk_utils {
     return cmd;
   }
 
-  void createStagingBuffer(VkDevice a_device, VkPhysicalDevice a_physDevice, const size_t a_bufferSize,
-                           VkBuffer* a_pBuffer, VkDeviceMemory* a_pBufferMemory)
+  std::vector<VkCommandBuffer> CreateCommandBuffers(VkDevice a_device, VkCommandPool a_pool, uint32_t a_buffNum)
   {
+    std::vector<VkCommandBuffer> commandBuffers(a_buffNum);
 
-    VkBufferCreateInfo bufferCreateInfo = {};
-    bufferCreateInfo.sType       = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-    bufferCreateInfo.size        = a_bufferSize;
-    bufferCreateInfo.usage       = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-    bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    VkCommandBufferAllocateInfo allocInfo = {};
+    allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+    allocInfo.commandPool = a_pool;
+    allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    allocInfo.commandBufferCount = a_buffNum;
 
-    VK_CHECK_RESULT(vkCreateBuffer(a_device, &bufferCreateInfo, nullptr, a_pBuffer));
+    VK_CHECK_RESULT(vkAllocateCommandBuffers(a_device, &allocInfo, commandBuffers.data()));
 
-    VkMemoryRequirements memoryRequirements;
-    vkGetBufferMemoryRequirements(a_device, (*a_pBuffer), &memoryRequirements);
-
-    VkMemoryAllocateInfo allocateInfo = {};
-    allocateInfo.sType           = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-    allocateInfo.allocationSize  = memoryRequirements.size;
-    allocateInfo.memoryTypeIndex = vk_utils::findMemoryType(memoryRequirements.memoryTypeBits,
-      VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
-      a_physDevice);
-
-    VK_CHECK_RESULT(vkAllocateMemory(a_device, &allocateInfo, nullptr, a_pBufferMemory));
-
-    VK_CHECK_RESULT(vkBindBufferMemory(a_device, (*a_pBuffer), (*a_pBufferMemory), 0));
+    return commandBuffers;
   }
 
 }
