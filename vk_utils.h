@@ -13,6 +13,10 @@
 namespace vk_utils
 {
   constexpr uint64_t DEFAULT_TIMEOUT = 100000000000l;
+  constexpr VkColorComponentFlags ALL_COLOR_COMPONENTS = VK_COLOR_COMPONENT_R_BIT |
+                                                         VK_COLOR_COMPONENT_G_BIT |
+                                                         VK_COLOR_COMPONENT_B_BIT |
+                                                         VK_COLOR_COMPONENT_A_BIT; // 0xF
 
   struct QueueFID_T
   {
@@ -52,16 +56,28 @@ namespace vk_utils
   void executeCommandBufferNow(std::vector<VkCommandBuffer> a_cmdBuffers, VkQueue a_queue, VkDevice a_device);
   // ****************
 
+  // *** render pass ***
+  //
+  struct RenderTargetInfo2D
+  {
+    VkExtent2D         size;
+    VkFormat           format;
+    VkAttachmentLoadOp loadOp;
+    VkImageLayout      initialLayout;
+    VkImageLayout      finalLayout;
+  };
+
+  VkRenderPass createDefaultRenderPass(VkDevice a_device, VkFormat a_imageFormat);
+  VkRenderPass createRenderPass(VkDevice a_device, RenderTargetInfo2D a_rtInfo);
+  // ****************
+
   // *** errors and debugging ***
   //
   static FILE* log = stderr;
 
   void setLogToFile(const std::string &path);
-
   void runTimeError(const char* file, int line, const char* msg);
-
   void logWarning(const std::string& msg);
-
   std::string errorString(VkResult errorCode);
 
   typedef VkBool32 (VKAPI_PTR *DebugReportCallbackFuncType)(VkDebugReportFlagsEXT      flags,
