@@ -525,6 +525,21 @@ namespace vk_utils {
     return shaderModule;
   }
 
+  VkPipelineShaderStageCreateInfo loadShader(VkDevice a_device, const std::string& fileName, VkShaderStageFlagBits stage,
+                                             std::vector<VkShaderModule> &modules)
+  {
+    VkPipelineShaderStageCreateInfo shaderStage = {};
+    shaderStage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    shaderStage.stage = stage;
+
+    shaderStage.module = createShaderModule(a_device, readSPVFile(fileName.c_str()));
+    shaderStage.pName = "main";
+    assert(shaderStage.module != VK_NULL_HANDLE);
+    modules.push_back(shaderStage.module);
+    return shaderStage;
+  }
+
+
   VkCommandPool createCommandPool(VkDevice a_device,  uint32_t a_queueIdx, VkCommandPoolCreateFlagBits a_poolFlags)
   {
     VkCommandPoolCreateInfo poolInfo = {};
@@ -551,7 +566,7 @@ namespace vk_utils {
     return cmd;
   }
 
-  std::vector<VkCommandBuffer> CreateCommandBuffers(VkDevice a_device, VkCommandPool a_pool, uint32_t a_buffNum)
+  std::vector<VkCommandBuffer> createCommandBuffers(VkDevice a_device, VkCommandPool a_pool, uint32_t a_buffNum)
   {
     std::vector<VkCommandBuffer> commandBuffers(a_buffNum);
 

@@ -25,7 +25,7 @@ namespace vk_utils
   bool isStencilFormat(VkFormat a_format);
   bool isDepthOrStencil(VkFormat a_format);
 
-  void createDepthTexture(VkDevice a_device, VkPhysicalDevice a_physDevice, const int a_width, const int a_height,
+  void createDepthTexture(VkDevice a_device, VkPhysicalDevice a_physDevice, const uint32_t a_width, const uint32_t a_height,
                           VulkanImageMem *a_depthImg);
   VkMemoryRequirements createImg(VkDevice a_device,
                                  VkFormat a_format,

@@ -59,6 +59,12 @@ namespace vk_utils
     }
   }
 
+  uint32_t getSBTAlignedSize(uint32_t value, uint32_t alignment)
+  {
+    return (value + alignment - 1) & ~(alignment - 1);
+  }
+
+
   std::vector<size_t> assignMemOffsetsWithPadding(const std::vector<VkMemoryRequirements> &a_memInfos)
   {
     assert(!a_memInfos.empty());

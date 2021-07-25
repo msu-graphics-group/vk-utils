@@ -162,7 +162,7 @@ namespace vk_utils
     return(isDepthFormat(a_format) || isStencilFormat(a_format));
   }
 
-  void createDepthTexture(VkDevice a_device, VkPhysicalDevice a_physDevice, const int a_width, const int a_height,
+  void createDepthTexture(VkDevice a_device, VkPhysicalDevice a_physDevice, const uint32_t a_width, const uint32_t a_height,
                           VulkanImageMem *a_depthImg)
   {
 
@@ -172,7 +172,7 @@ namespace vk_utils
     imgCreateInfo.flags = 0;
     imgCreateInfo.imageType = VK_IMAGE_TYPE_2D;
     imgCreateInfo.format = a_depthImg->format;
-    imgCreateInfo.extent = VkExtent3D{ uint32_t(a_width), uint32_t(a_height), 1 };
+    imgCreateInfo.extent = VkExtent3D{ a_width, a_height, 1u };
     imgCreateInfo.mipLevels = 1;
     imgCreateInfo.samples = VK_SAMPLE_COUNT_1_BIT;
     imgCreateInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
