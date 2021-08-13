@@ -31,10 +31,14 @@ namespace vk_utils
     void BindImageArray(uint32_t a_loc, const std::vector<VkImageView> &a_imageView, const std::vector<VkSampler> &a_sampler, VkDescriptorType a_bindType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VkImageLayout a_imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
     void BindEnd(VkDescriptorSet *a_pSet = nullptr, VkDescriptorSetLayout *a_pLayout = nullptr);
 
-    //    VkDescriptorSetLayout GetLayout(uint32_t a_setId) const {}
-    //    VkDescriptorSet       GetSet(uint32_t a_setId)    const {}
-
     VkDescriptorPool GetPool() const { return m_pool; }
+
+    enum class HASHING_MODE {
+      NONE,
+      LAYOUTS_ONLY,
+      LAYOUTS_AND_SETS
+    };
+    HASHING_MODE hashingMode = HASHING_MODE::LAYOUTS_AND_SETS;
 
   private:
     VkDevice m_device = VK_NULL_HANDLE;

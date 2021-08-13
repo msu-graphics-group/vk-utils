@@ -218,17 +218,38 @@ namespace vk_utils
       descrTypes[location] = { handle.type, count };
     }
 
-    // Check if we already had created such layout
-    LayoutKey layout_key = {m_currentStageFlags, descrTypes};
-    auto found_layout = m_layoutDict.find(layout_key);
-    if(found_layout != m_layoutDict.end())
+    if(hashingMode == HASHING_MODE::LAYOUTS_ONLY || hashingMode == HASHING_MODE::LAYOUTS_AND_SETS)
     {
-      layout = found_layout->second;
+      // Check if we already had created such layout
+      LayoutKey layout_key = { m_currentStageFlags, descrTypes };
+      auto found_layout = m_layoutDict.find(layout_key);
+      if (found_layout != m_layoutDict.end())
+      {
+        layout = found_layout->second;
+      }
+      else
+      {
+        layout = createDescriptorSetLayout(m_device, descrTypes, m_currentStageFlags);
+        m_layoutDict[layout_key] = layout;
+      }
     }
     else
     {
       layout = createDescriptorSetLayout(m_device, descrTypes, m_currentStageFlags);
-      m_layoutDict[layout_key] = layout;
+    }
+
+    SetKey set_key = { layout, loc_to_handles };
+    if(hashingMode == HASHING_MODE::LAYOUTS_AND_SETS)
+    {
+      // Check if we already had created such set
+      auto found_set = m_setDict.find(set_key);
+      if (found_set != m_setDict.end())
+      {
+        set = found_set->second;
+        *a_pSet = set;
+        *a_pLayout = layout;
+        return;
+      }
     }
 
     ///////////////////
@@ -309,17 +330,10 @@ namespace vk_utils
       writeSets[i] = writeDescriptorSet;
     }
 
-    // Check if we already had created such set
-    SetKey set_key = {layout, loc_to_handles};
-    auto found_set = m_setDict.find(set_key);
-    if(found_set != m_setDict.end())
+    vkUpdateDescriptorSets(m_device, writeSets.size(), writeSets.data(), 0, nullptr);
+    if(hashingMode == HASHING_MODE::LAYOUTS_AND_SETS)
     {
-      set = found_set->second;
-    }
-    else
-    {
-      vkUpdateDescriptorSets(m_device, writeSets.size(), writeSets.data(), 0, nullptr);
-      m_setDict[set_key] = set;
+        m_setDict[set_key] = set;
     }
 
     *a_pSet = set;
