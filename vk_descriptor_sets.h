@@ -50,15 +50,6 @@ namespace vk_utils
     std::unordered_map<LayoutKey, VkDescriptorSetLayout, LayoutHash> m_layoutDict;
     std::unordered_map<SetKey, VkDescriptorSet, SetHash> m_setDict;
 
-    //    struct DSData
-    //    {
-    //      DSData() { sets.reserve(4); }
-    //      DSData(VkDescriptorSetLayout a_layout) : layout(a_layout) { sets.reserve(4); }
-    //      VkDescriptorSetLayout        layout = {};
-    //      std::vector<VkDescriptorSet> sets;
-    //    };
-
-    //    std::unordered_map<PBKey, DSData> m_descriptors;
   };
 }// namespace vk_utils
 
