@@ -3,6 +3,8 @@
 
 #define USE_VOLK
 #include "vk_include.h"
+#include <array>
+#include <vector>
 
 namespace vk_rt_utils
 {
@@ -45,7 +47,7 @@ namespace vk_rt_utils
                                                                    uint32_t handleCount, uint32_t handleSizeAligned);
 
   struct RTPipelineMaker
-    {
+  {
     std::vector<VkRayTracingShaderGroupCreateInfoKHR> shaderGroups{};
     std::vector<VkShaderModule> shaderModules{};
     std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
@@ -59,9 +61,9 @@ namespace vk_rt_utils
       int              m_stagesNum = 0;
       VkPipeline       m_pipeline  = VK_NULL_HANDLE;
       VkPipelineLayout m_pipelineLayout = VK_NULL_HANDLE;
-    };
+  };
 
-  VkTransformMatrixKHR transformMatrixFromFloat4x4(const LiteMath::float4x4 &m);
+  VkTransformMatrixKHR transformMatrixFromRowMajArray(const std::array<float, 16> &m);
 }
 
 

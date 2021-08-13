@@ -1,4 +1,3 @@
-#include <LiteMath.h>
 #include "vk_rt_utils.h"
 #include "vk_utils.h"
 #include "vk_rt_funcs.h"
@@ -6,14 +5,14 @@
 namespace vk_rt_utils
 {
 
-  VkTransformMatrixKHR transformMatrixFromFloat4x4(const LiteMath::float4x4 &m)
+  VkTransformMatrixKHR transformMatrixFromRowMajArray(const std::array<float, 16> &m)
   {
     VkTransformMatrixKHR transformMatrix;
     for(int i = 0; i < 3; ++i)
     {
       for(int j = 0; j < 4; ++j)
       {
-        transformMatrix.matrix[i][j] = m.M(i, j);
+        transformMatrix.matrix[i][j] = m[i * 4 + j];
       }
     }
 
