@@ -5,6 +5,7 @@
 #include <iostream>
 #include <algorithm>
 #include <cmath>
+#include <array>
 
 namespace vk_utils {
 
