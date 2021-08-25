@@ -285,7 +285,7 @@ namespace vk_utils
       case VK_DESCRIPTOR_TYPE_SAMPLER:
         writeDescriptorSet.pImageInfo = &dImageInfos[imgInfoIdx];
         for(size_t j = 0; j < writeDescriptorSet.descriptorCount; ++j)
-          dImageInfos[imgInfoIdx++] = {m_bindings[i].imageSampler[j]};
+          dImageInfos[imgInfoIdx++] = {m_bindings[i].imageSampler[j], VK_NULL_HANDLE, VK_IMAGE_LAYOUT_UNDEFINED};
         break;
 
       case VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE:
@@ -305,6 +305,7 @@ namespace vk_utils
       case VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER:
       case VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER:
         writeDescriptorSet.pTexelBufferView = &m_bindings[i].buffView; //TODO: test and fix if needed
+        [[fallthrough]];
       case VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER:
       case VK_DESCRIPTOR_TYPE_STORAGE_BUFFER:
       case VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC:

@@ -16,19 +16,19 @@ namespace vk_utils
                                  VkImageCreateInfo *a_pImageCreateInfo)
   {
     VkImageAspectFlags aspectMask = 0;
-    VkImageLayout imageLayout;
+//    VkImageLayout imageLayout;
 
     a_pImgMem->format = a_format;
 
     if (a_usage & VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
     {
       aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-      imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+//      imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
     }
     if (a_usage & VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)
     {
       aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
-      imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+//      imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
     }
 
     assert(aspectMask > 0);
@@ -54,8 +54,6 @@ namespace vk_utils
       image.usage = a_usage | VK_IMAGE_USAGE_SAMPLED_BIT;
     }
 
-    VkMemoryAllocateInfo memAlloc{};
-    memAlloc.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
     VkMemoryRequirements memReqs;
 
     VK_CHECK_RESULT(vkCreateImage(a_device, &image, nullptr, &a_pImgMem->image));

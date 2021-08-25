@@ -32,6 +32,8 @@ struct IMeshData
   virtual size_t SingleIndexSize() = 0;
 
   virtual VkPipelineVertexInputStateCreateInfo VertexInputLayout() = 0;
+
+  virtual ~IMeshData() = default;
 };
 
 struct Mesh8F : IMeshData

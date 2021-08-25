@@ -58,7 +58,7 @@ namespace vk_utils
     VkPhysicalDevice physDev;
     VkDevice         dev;
 
-    SimpleCopyHelper(const SimpleCopyHelper& rhs) {}
+    SimpleCopyHelper(const SimpleCopyHelper& rhs) = delete;
     SimpleCopyHelper& operator=(const SimpleCopyHelper& rhs) { return *this; }
   };
 

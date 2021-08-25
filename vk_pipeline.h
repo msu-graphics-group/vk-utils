@@ -43,7 +43,7 @@ namespace vk_utils
                                   std::vector<VkDynamicState> a_dynamicStates = {},
                                   VkPipelineInputAssemblyStateCreateInfo a_inputAssembly = IA_TList());
   private:
-    int              m_stagesNum = 0;
+    uint32_t         m_stagesNum = 0;
     VkPipeline       m_pipeline  = VK_NULL_HANDLE;
     VkPipelineLayout m_pipelineLayout = VK_NULL_HANDLE;
   };

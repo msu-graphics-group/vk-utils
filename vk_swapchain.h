@@ -77,7 +77,7 @@ private:
                                            0.0f, 1.0f, 0.0, 0.0f,
                                            0.0f, 0.0f, 1.0, 0.0f,
                                            0.0f, 0.0f, 0.0, 1.0f};
-  static constexpr float DEG_TO_RAD = float(3.14159265358979323846f) / 180.0f;
+  static constexpr float DEG_TO_RAD = 3.14159265358979323846f / 180.0f;
   static std::array<float, 16> CreateSurfaceRotationMatrixZ(float phi)
   {
     std::array<float, 16> res = {

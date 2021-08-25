@@ -66,7 +66,7 @@ VkPipelineLayout vk_utils::GraphicsPipelineMaker::MakeLayout(VkDevice a_device, 
   auto m_device = a_device;
 
   pcRange.stageFlags = 0;
-  for (int i = 0; i < m_stagesNum; ++i)
+  for (unsigned i = 0; i < m_stagesNum; ++i)
     pcRange.stageFlags |= shaderStageInfos[i].stage;
   pcRange.offset     = 0;
   pcRange.size       = a_pcRangeSize;
@@ -94,7 +94,7 @@ VkPipelineLayout vk_utils::GraphicsPipelineMaker::MakeLayout(VkDevice a_device, 
 
 void vk_utils::GraphicsPipelineMaker::SetDefaultState(uint32_t a_width, uint32_t a_height)
 {
-  VkExtent2D a_screenExtent{ uint32_t(a_width), uint32_t(a_height) };
+  VkExtent2D a_screenExtent{ a_width, a_height };
 
   viewport.x        = 0.0f;
   viewport.y        = 0.0f;

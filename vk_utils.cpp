@@ -127,7 +127,7 @@ namespace vk_utils {
     std::vector<const char *> enabledExtensions = a_instanceExtensions;
     std::vector<std::string> supportedLayers;
 
-    auto all_layers_supported = checkLayerSupport(a_requestedLayers, supportedLayers);
+    checkLayerSupport(a_requestedLayers, supportedLayers);
     if (a_enableValidationLayers && !supportedLayers.empty())
     {
       uint32_t extensionCount;
@@ -247,7 +247,7 @@ namespace vk_utils {
     VkPhysicalDeviceProperties props;
     VkPhysicalDeviceFeatures features;
 
-    for (int i = 0; i < devices.size(); i++)
+    for (size_t i = 0; i < devices.size(); i++)
     {
       vkGetPhysicalDeviceProperties(devices[i], &props);
       vkGetPhysicalDeviceFeatures(devices[i], &features);
@@ -278,7 +278,7 @@ namespace vk_utils {
     //
     if (physicalDevice == VK_NULL_HANDLE)
     {
-      for (int i = 0; i < devices.size(); ++i)
+      for (size_t i = 0; i < devices.size(); ++i)
       {
         if (checkDeviceExtensionSupport(devices[i], a_deviceExt))
         {
@@ -365,7 +365,7 @@ namespace vk_utils {
     if (requestedQueueTypes & VK_QUEUE_TRANSFER_BIT)
     {
       a_queueIDXs.transfer = GetQueueFamilyIndex(physicalDevice, VK_QUEUE_TRANSFER_BIT);
-      if ((a_queueIDXs.transfer != a_queueIDXs.graphics) && (a_queueIDXs.transfer != a_queueIDXs.compute) || queueCreateInfos.empty())
+      if (((a_queueIDXs.transfer != a_queueIDXs.graphics) && (a_queueIDXs.transfer != a_queueIDXs.compute)) || queueCreateInfos.empty())
       {
         VkDeviceQueueCreateInfo queueInfo{};
         queueInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
@@ -419,11 +419,11 @@ namespace vk_utils {
 
     for (uint32_t i = 0; i < memoryProperties.memoryTypeCount; ++i)
     {
-      if ((memoryTypeBits & (1 << i)) && ((memoryProperties.memoryTypes[i].propertyFlags & properties) == properties))
+      if ((memoryTypeBits & (1u << i)) && ((memoryProperties.memoryTypes[i].propertyFlags & properties) == properties))
         return i;
     }
 
-    return -1;
+    return UINT32_MAX;
   }
 
   std::vector<std::string> subgroupOperationToString(VkSubgroupFeatureFlags flags)
@@ -498,7 +498,7 @@ namespace vk_utils {
     }
 
     fseek(fp, 0, SEEK_END);
-    long filesize = ftell(fp);
+    size_t filesize = ftell(fp);
     fseek(fp, 0, SEEK_SET);
 
     auto filesize_padded = getPaddedSize(filesize, sizeof(uint32_t));
@@ -506,7 +506,9 @@ namespace vk_utils {
     std::vector<uint32_t> resData(filesize_padded / sizeof(resData[0]), 0);
 
     char *str = (char *)resData.data();
-    fread(str, filesize, sizeof(char), fp);
+    size_t read_bytes = fread(str, filesize, sizeof(char), fp);
+    if(read_bytes != sizeof(char))
+      RUN_TIME_ERROR("[vk_utils::readSPVFile]: fread error");
     fclose(fp);
 
     return resData;

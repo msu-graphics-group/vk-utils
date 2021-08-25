@@ -329,7 +329,7 @@ void vk_utils::PingPongCopyHelper::UpdateBuffer(VkBuffer a_dst, size_t a_dstOffs
     return;
   }
 
-  int currStaging = 0;
+  uint32_t currStaging = 0;
   size_t currPos  = 0;
   size_t prevCopySize = 0;
 
