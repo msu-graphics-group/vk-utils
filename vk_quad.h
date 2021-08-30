@@ -5,30 +5,13 @@
 
 namespace vk_utils
 {
-  ///**
-  //\brief This struction contain enough info for enabling render-to-texture in Vulkan and creating all additional Vulkan objects
-  //*/
-  //struct RenderTargetInfo2D
-  //{
-  //  VkExtent2D         size;           //!< image resolution
-  //  VkFormat           fmt;            //!< image format 
-  //  VkAttachmentLoadOp loadOp;         //!< information for renderpass
-  //  VkImageLayout      initialLayout;  //!< information for renderpass
-  //  VkImageLayout      finalLayout;    //!< information for renderpass
-  //};
-
-  void CreateRenderPass(VkDevice a_device, RenderTargetInfo2D a_rtInfo,
-                        VkRenderPass* a_pRenderPass);
-
   /**
-  \brief simple helper for drawing textured quads (2D rectangles) on screen 
+  \brief simple API for drawing textured quads (2D rectangles) on screen 
   */
-  struct FSQuad
+  struct IQuad
   {
-    FSQuad() : m_pipeline(nullptr), m_layout(nullptr),  m_renderPass(nullptr), m_fbTarget(nullptr),
-               m_dlayout(nullptr) {}
-
-    virtual ~FSQuad();
+    IQuad(){}
+    virtual ~IQuad(){}
 
     /**
     \brief Create resources that are needed to draw textured quad
@@ -39,7 +22,7 @@ namespace vk_utils
                       I. e. you should know a lot in advance about images that you are going to render in to. 
 
     */
-    void Create(VkDevice a_device, const char* a_vspath, const char* a_fspath, RenderTargetInfo2D a_rtInfo);
+    virtual void Create(VkDevice a_device, const char* a_vspath, const char* a_fspath, RenderTargetInfo2D a_rtInfo) = 0;
 
     /**
     \brief This function allow you to set/change target image that you are going to render in to.
@@ -48,7 +31,7 @@ namespace vk_utils
       The future implementations is assume to have some cache of vulkan frame buffer objects for each input image view
       The current implementation make new framebuffer for each call of 'SetRenderTarget' (destroying the old one of cource).
     */
-    void SetRenderTarget(VkImageView a_imageView); 
+    virtual void SetRenderTarget(VkImageView a_imageView) = 0; 
 
 
     /**
@@ -56,9 +39,28 @@ namespace vk_utils
     \param a_cmdBuff         - output command buffer. 
     \param a_inTexDescriptor - input descriptor set for texture that will be assigned to a quad; it is assumed that user will create descriptor for current ... 
     \param a_offsAndScale    - input array of packed scale ([0],[1]) and offset ([2],[3]);
-   
     */
-    void DrawCmd(VkCommandBuffer a_cmdBuff, VkDescriptorSet a_inTexDescriptor, float a_offsAndScale[4]);
+    virtual void DrawCmd(VkCommandBuffer a_cmdBuff, VkDescriptorSet a_inTexDescriptor, float a_offsAndScale[4]) = 0;
+  };
+
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  /**
+  \brief simple helper for drawing textured quads (2D rectangles) on screen 
+  */
+  class FSQuad : public IQuad
+  {
+  public:
+    FSQuad() : m_pipeline(nullptr), m_layout(nullptr),  m_renderPass(nullptr), m_fbTarget(nullptr),
+               m_dlayout(nullptr) {}
+
+    virtual ~FSQuad();
+
+    void Create(VkDevice a_device, const char* a_vspath, const char* a_fspath, RenderTargetInfo2D a_rtInfo) override;
+    void SetRenderTarget(VkImageView a_imageView) override; 
+    void DrawCmd(VkCommandBuffer a_cmdBuff, VkDescriptorSet a_inTexDescriptor, float a_offsAndScale[4]) override;
 
   protected:
 
@@ -81,11 +83,10 @@ namespace vk_utils
 
   };
 
-  class QuadRenderer
+  class QuadRenderer // : public IQuad
   {
   public:
-    QuadRenderer() : m_pipeline(nullptr), m_layout(nullptr), m_renderPass(nullptr), m_fbTarget(nullptr),
-      m_dlayout(nullptr) {}
+    QuadRenderer() : m_pipeline(nullptr), m_layout(nullptr), m_renderPass(nullptr), m_fbTarget(nullptr), m_dlayout(nullptr) {}
     ~QuadRenderer();
 
     void Create(VkDevice a_device, const char* a_vspath, const char* a_fspath, RenderTargetInfo2D a_rtInfo, VkRect2D scissor);
@@ -112,6 +113,9 @@ namespace vk_utils
     RenderTargetInfo2D    m_rtCreateInfo = {};
     VkRect2D              rect;
   };
+
+  void CreateRenderPass(VkDevice a_device, RenderTargetInfo2D a_rtInfo,
+                        VkRenderPass* a_pRenderPass);
 
 };
 
