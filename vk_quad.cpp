@@ -7,11 +7,10 @@
 #include <sstream>
 #include <memory>
 
-
-void vkfw::CreateRenderPass(VkDevice a_device, vkfw::RenderTargetInfo2D a_rtInfo, VkRenderPass* a_pRenderPass)
+void vk_utils::CreateRenderPass(VkDevice a_device, vk_utils::RenderTargetInfo2D a_rtInfo, VkRenderPass* a_pRenderPass)
 {
   VkAttachmentDescription colorAttachment = {};
-  colorAttachment.format         = a_rtInfo.fmt;
+  colorAttachment.format         = a_rtInfo.format;
   colorAttachment.samples        = VK_SAMPLE_COUNT_1_BIT;
   colorAttachment.loadOp         = a_rtInfo.loadOp;
   colorAttachment.storeOp        = VK_ATTACHMENT_STORE_OP_STORE;
@@ -51,9 +50,7 @@ void vkfw::CreateRenderPass(VkDevice a_device, vkfw::RenderTargetInfo2D a_rtInfo
 }
 
 
-
-
-vkfw::FSQuad::~FSQuad()
+vk_utils::FSQuad::~FSQuad()
 {
   if(m_pipeline != nullptr)
   {
@@ -69,20 +66,20 @@ vkfw::FSQuad::~FSQuad()
     vkDestroyDescriptorSetLayout(m_device, m_dlayout, NULL);
 }
 
-void vkfw::FSQuad::Create(VkDevice a_device, const char* a_vspath, const char* a_fspath, vkfw::RenderTargetInfo2D a_rtInfo)
+void vk_utils::FSQuad::Create(VkDevice a_device, const char* a_vspath, const char* a_fspath, vk_utils::RenderTargetInfo2D a_rtInfo)
 {
   m_device       = a_device;
   m_fbSize       = a_rtInfo.size;
   m_rtCreateInfo = a_rtInfo;
   
-  auto vertShaderCode = vk_utils::ReadFile(a_vspath);
-  auto fragShaderCode = vk_utils::ReadFile(a_fspath);
+  auto vertShaderCode = vk_utils::readSPVFile(a_vspath);
+  auto fragShaderCode = vk_utils::readSPVFile(a_fspath);
   
   if(vertShaderCode.size() == 0 || fragShaderCode.size() == 0)
     RUN_TIME_ERROR("[FSQuad::Create]: can not load shaders");
 
-  VkShaderModule vertShaderModule = vk_utils::CreateShaderModule(a_device, vertShaderCode);
-  VkShaderModule fragShaderModule = vk_utils::CreateShaderModule(a_device, fragShaderCode);
+  VkShaderModule vertShaderModule = vk_utils::createShaderModule(a_device, vertShaderCode);
+  VkShaderModule fragShaderModule = vk_utils::createShaderModule(a_device, fragShaderCode);
 
   // create pipeline layout first
   //
@@ -194,7 +191,7 @@ void vkfw::FSQuad::Create(VkDevice a_device, const char* a_vspath, const char* a
   if (vkCreatePipelineLayout(a_device, &pipelineLayoutInfo, nullptr, &m_layout) != VK_SUCCESS)
     throw std::runtime_error("[FSQuad::Create]: failed to create pipeline layout!");
   
-  vkfw::CreateRenderPass(m_device, a_rtInfo, &m_renderPass);
+  vk_utils::CreateRenderPass(m_device, a_rtInfo, &m_renderPass);
   
   // finally create graphics pipeline
   //
@@ -220,7 +217,7 @@ void vkfw::FSQuad::Create(VkDevice a_device, const char* a_vspath, const char* a
   vkDestroyShaderModule(m_device, vertShaderModule, nullptr);
 }
 
-void vkfw::FSQuad::SetRenderTarget(VkImageView a_imageView)
+void vk_utils::FSQuad::SetRenderTarget(VkImageView a_imageView)
 {
   if(m_fbTarget != nullptr)
     vkDestroyFramebuffer(m_device, m_fbTarget, NULL);
@@ -244,7 +241,7 @@ void vkfw::FSQuad::SetRenderTarget(VkImageView a_imageView)
   m_targetView = a_imageView; 
 }
 
-void vkfw::FSQuad::DrawCmd(VkCommandBuffer a_cmdBuff, VkDescriptorSet a_inTexDescriptor, float a_offsAndScale[4])
+void vk_utils::FSQuad::DrawCmd(VkCommandBuffer a_cmdBuff, VkDescriptorSet a_inTexDescriptor, float a_offsAndScale[4])
 {
   VkRenderPassBeginInfo renderPassInfo = {};
   renderPassInfo.sType             = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -280,7 +277,7 @@ void vkfw::FSQuad::DrawCmd(VkCommandBuffer a_cmdBuff, VkDescriptorSet a_inTexDes
   vkCmdEndRenderPass(a_cmdBuff);
 }
 
-namespace vkfw
+namespace vk_utils
 {
 
 QuadRenderer::~QuadRenderer()
@@ -299,20 +296,20 @@ QuadRenderer::~QuadRenderer()
     vkDestroyDescriptorSetLayout(m_device, m_dlayout, NULL);
 }
 
-void QuadRenderer::Create(VkDevice a_device, const char* a_vspath, const char* a_fspath, vkfw::RenderTargetInfo2D a_rtInfo, VkRect2D scissor)
+void QuadRenderer::Create(VkDevice a_device, const char* a_vspath, const char* a_fspath, vk_utils::RenderTargetInfo2D a_rtInfo, VkRect2D scissor)
 {
   m_device = a_device;
   m_fbSize = a_rtInfo.size;
   m_rtCreateInfo = a_rtInfo;
 
-  auto vertShaderCode = vk_utils::ReadFile(a_vspath);
-  auto fragShaderCode = vk_utils::ReadFile(a_fspath);
+  auto vertShaderCode = vk_utils::readSPVFile(a_vspath);
+  auto fragShaderCode = vk_utils::readSPVFile(a_fspath);
 
   if (vertShaderCode.size() == 0 || fragShaderCode.size() == 0)
     RUN_TIME_ERROR("[FSQuad::Create]: can not load shaders");
 
-  VkShaderModule vertShaderModule = vk_utils::CreateShaderModule(a_device, vertShaderCode);
-  VkShaderModule fragShaderModule = vk_utils::CreateShaderModule(a_device, fragShaderCode);
+  VkShaderModule vertShaderModule = vk_utils::createShaderModule(a_device, vertShaderCode);
+  VkShaderModule fragShaderModule = vk_utils::createShaderModule(a_device, fragShaderCode);
 
   // create pipeline layout first
   //
@@ -422,7 +419,7 @@ void QuadRenderer::Create(VkDevice a_device, const char* a_vspath, const char* a
   if (vkCreatePipelineLayout(a_device, &pipelineLayoutInfo, nullptr, &m_layout) != VK_SUCCESS)
     throw std::runtime_error("[FSQuad::Create]: failed to create pipeline layout!");
 
-  vkfw::CreateRenderPass(m_device, a_rtInfo, &m_renderPass);
+  vk_utils::CreateRenderPass(m_device, a_rtInfo, &m_renderPass);
 
   // finally create graphics pipeline
   //
@@ -495,4 +492,7 @@ void QuadRenderer::DrawCmd(VkCommandBuffer a_cmdBuff, VkDescriptorSet a_inTexDes
 
   vkCmdEndRenderPass(a_cmdBuff);
 }
+
+
+
 }

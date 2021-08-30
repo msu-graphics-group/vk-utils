@@ -3,19 +3,19 @@
 
 #include "vk_utils.h"
 
-namespace vkfw
+namespace vk_utils
 {
-  /**
-  \brief This struction contain enough info for enabling render-to-texture in Vulkan and creating all additional Vulkan objects
-  */
-  struct RenderTargetInfo2D
-  {
-    VkExtent2D         size;           //!< image resolution
-    VkFormat           fmt;            //!< image format 
-    VkAttachmentLoadOp loadOp;         //!< information for renderpass
-    VkImageLayout      initialLayout;  //!< information for renderpass
-    VkImageLayout      finalLayout;    //!< information for renderpass
-  };
+  ///**
+  //\brief This struction contain enough info for enabling render-to-texture in Vulkan and creating all additional Vulkan objects
+  //*/
+  //struct RenderTargetInfo2D
+  //{
+  //  VkExtent2D         size;           //!< image resolution
+  //  VkFormat           fmt;            //!< image format 
+  //  VkAttachmentLoadOp loadOp;         //!< information for renderpass
+  //  VkImageLayout      initialLayout;  //!< information for renderpass
+  //  VkImageLayout      finalLayout;    //!< information for renderpass
+  //};
 
   void CreateRenderPass(VkDevice a_device, RenderTargetInfo2D a_rtInfo,
                         VkRenderPass* a_pRenderPass);
