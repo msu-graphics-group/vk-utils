@@ -9,17 +9,6 @@
 #undef min
 #endif
 
-static size_t Padding(size_t a_size, size_t a_aligment)
-{
-  if (a_size % a_aligment == 0)
-    return a_size;
-  else
-  {
-    size_t sizeCut = a_size - (a_size % a_aligment);
-    return sizeCut + a_aligment;
-  }
-}
-
 static bool CheckFilterable(const vk_utils::ImageParameters& a_params)
 {
   return a_params.format != VK_FORMAT_R32G32B32A32_UINT;
@@ -40,33 +29,6 @@ static VkImageUsageFlags GetTextureUsage(const vk_utils::ImageParameters& a_para
     usage |= VK_IMAGE_USAGE_STORAGE_BIT;
   return usage;
 }
-
-static void BindImageToMemoryAndCreateImageView(VkDevice a_device, VkImage a_image, VkFormat a_format, uint32_t a_mipLevels,
-  VkDeviceMemory a_memStorage, size_t a_offset,
-  VkImageView* a_pView)
-{
-  VK_CHECK_RESULT(vkBindImageMemory(a_device, a_image, a_memStorage, a_offset));
-
-  const bool isDepthTexture = vk_utils::isDepthFormat(a_format);
-
-  VkImageViewCreateInfo imageViewInfo = {};
-  {
-    imageViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-    imageViewInfo.flags = 0;
-    imageViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-    imageViewInfo.format = a_format;
-    imageViewInfo.components = { VK_COMPONENT_SWIZZLE_R, VK_COMPONENT_SWIZZLE_G, VK_COMPONENT_SWIZZLE_B, VK_COMPONENT_SWIZZLE_A };
-    imageViewInfo.subresourceRange.aspectMask = isDepthTexture ? VK_IMAGE_ASPECT_DEPTH_BIT : VK_IMAGE_ASPECT_COLOR_BIT;
-    imageViewInfo.subresourceRange.baseMipLevel = 0;
-    imageViewInfo.subresourceRange.baseArrayLayer = 0;
-    imageViewInfo.subresourceRange.layerCount = 1;
-    imageViewInfo.subresourceRange.levelCount = a_mipLevels;
-    imageViewInfo.image = a_image;     // The view will be based on the texture's image
-  }
-  VK_CHECK_RESULT(vkCreateImageView(a_device, &imageViewInfo, nullptr, a_pView));
-}
-
-
 
 namespace vk_utils
 {
@@ -161,7 +123,7 @@ namespace vk_utils
     VK_CHECK_RESULT(vkCreateSampler(a_device, &samplerInfo, nullptr, &m_sampler));
 
     m_createImageInfo = imgCreateInfo;
-    memoryRequirements.size = Padding(memoryRequirements.size, memoryRequirements.alignment * 4);
+    memoryRequirements.size = vk_utils::getPaddedSize(memoryRequirements.size, memoryRequirements.alignment * 4);
     return memoryRequirements;
   }
 
@@ -171,10 +133,20 @@ namespace vk_utils
     assert(m_view == nullptr); // may be later ...
 
     m_memStorage = a_memStorage;
+    
+    VulkanImageMem toPass;
+    toPass.format     = m_params.format;
+    toPass.aspectMask = vk_utils::isDepthFormat(m_params.format) ? VK_IMAGE_ASPECT_DEPTH_BIT : VK_IMAGE_ASPECT_COLOR_BIT; 
+    toPass.image      = m_image;
+    toPass.view       = VK_NULL_HANDLE;
+    toPass.mem        = a_memStorage;
+    toPass.mem_offset = a_offset;
 
-    BindImageToMemoryAndCreateImageView(m_device, m_image, m_params.format, m_params.mipLevels,
-                                        a_memStorage, a_offset,
-                                        &(m_view));
+    vk_utils::createImageViewAndBindMem(m_device, &toPass, nullptr);
+    m_view = toPass.view;
+
+    //BindImageToMemoryAndCreateImageView(m_device, m_image, m_params.format, m_params.mipLevels, a_memStorage, a_offset,
+    //                                    &(m_view));
   }
 
   void BaseTexture2D::Update(const void* a_src, int a_width, int a_height, int a_bpp, vk_utils::ICopyEngine* a_pCopyImpl)

@@ -18,6 +18,7 @@ namespace vk_utils
     VkImageView view;
     VkDeviceMemory mem;
     VkDeviceSize mem_offset;
+    VkMemoryRequirements memReq;
   };
 
   VkBool32 getSupportedDepthFormat(VkPhysicalDevice physicalDevice, const std::vector<VkFormat> &depthFormats, VkFormat *depthFormat);
@@ -27,26 +28,16 @@ namespace vk_utils
 
   void createDepthTexture(VkDevice a_device, VkPhysicalDevice a_physDevice, const uint32_t a_width, const uint32_t a_height,
                           VulkanImageMem *a_depthImg);
-  VkMemoryRequirements createImg(VkDevice a_device,
-                                 VkFormat a_format,
-                                 VkImageUsageFlags a_usage,
-                                 VulkanImageMem *a_pImgMem,
-                                 uint32_t a_width,
-                                 uint32_t a_height,
-                                 VkImageCreateInfo *a_pImageCreateInfo = nullptr);
+  
+                          
+  VulkanImageMem createImg(VkDevice a_device, uint32_t a_width, uint32_t a_height, VkFormat a_format, VkImageUsageFlags a_usage);
 
-  void createImageViewAndBindMem(VkDevice a_device, VulkanImageMem *a_pImgMem,
-                                 VkImageViewCreateInfo *a_pViewCreateInfo = nullptr);
+  VkImageView createImageViewAndBindMem(VkDevice a_device, VulkanImageMem *a_pImgMem, const VkImageViewCreateInfo *a_pViewCreateInfo = nullptr);
 
-  void createImgAllocAndBind(VkDevice a_device,
-                             VkPhysicalDevice a_physicalDevice,
-                             VkFormat a_format,
-                             VkImageUsageFlags a_usage,
+  void createImgAllocAndBind(VkDevice a_device, VkPhysicalDevice a_physicalDevice,
+                             uint32_t a_width, uint32_t a_height, VkFormat a_format,  VkImageUsageFlags a_usage,
                              VulkanImageMem *a_pImgMem,
-                             uint32_t a_width,
-                             uint32_t a_height,
-                             VkImageCreateInfo *a_pImageCreateInfo = nullptr,
-                             VkImageViewCreateInfo *a_pViewCreateInfo = nullptr);
+                             const VkImageCreateInfo *a_pImageCreateInfo = nullptr, const VkImageViewCreateInfo *a_pViewCreateInfo = nullptr);
 
 
   // *** layout transitions and image barriers ***

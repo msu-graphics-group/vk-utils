@@ -700,5 +700,3 @@ namespace vk_utils {
 
 }
 
-
-

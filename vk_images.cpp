@@ -7,63 +7,38 @@
 namespace vk_utils
 {
 
-  VkMemoryRequirements createImg(VkDevice a_device,
-                                 VkFormat a_format,
-                                 VkImageUsageFlags a_usage,
-                                 VulkanImageMem *a_pImgMem,
-                                 uint32_t a_width,
-                                 uint32_t a_height,
-                                 VkImageCreateInfo *a_pImageCreateInfo)
+  VulkanImageMem createImg(VkDevice a_device, uint32_t a_width, uint32_t a_height, VkFormat a_format, VkImageUsageFlags a_usage)
   {
-    VkImageAspectFlags aspectMask = 0;
-//    VkImageLayout imageLayout;
+    VulkanImageMem result = {};
 
-    a_pImgMem->format = a_format;
-
+    result.format = a_format;
     if (a_usage & VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
-    {
-      aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-//      imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-    }
+      result.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
     if (a_usage & VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)
-    {
-      aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
-//      imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-    }
+      result.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
 
-    assert(aspectMask > 0);
-    a_pImgMem->aspectMask = aspectMask;
+    assert(result.aspectMask > 0);
 
     VkImageCreateInfo image{};
-    if(a_pImageCreateInfo != nullptr)
-    {
-      image = *a_pImageCreateInfo;
-    }
-    else
-    {
-      image.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-      image.imageType = VK_IMAGE_TYPE_2D;
-      image.format = a_format;
-      image.extent.width = a_width;
-      image.extent.height = a_height;
-      image.extent.depth = 1;
-      image.mipLevels = 1;
-      image.arrayLayers = 1;
-      image.samples = VK_SAMPLE_COUNT_1_BIT;
-      image.tiling = VK_IMAGE_TILING_OPTIMAL;
-      image.usage = a_usage | VK_IMAGE_USAGE_SAMPLED_BIT;
-    }
-
-    VkMemoryRequirements memReqs;
-
-    VK_CHECK_RESULT(vkCreateImage(a_device, &image, nullptr, &a_pImgMem->image));
-    vkGetImageMemoryRequirements(a_device, a_pImgMem->image, &memReqs);
-
-    return memReqs;
+    image.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+    image.imageType = VK_IMAGE_TYPE_2D;
+    image.format = a_format;
+    image.extent.width = a_width;
+    image.extent.height = a_height;
+    image.extent.depth = 1;
+    image.mipLevels = 1;
+    image.arrayLayers = 1;
+    image.samples = VK_SAMPLE_COUNT_1_BIT;
+    image.tiling = VK_IMAGE_TILING_OPTIMAL;
+    image.usage = a_usage | VK_IMAGE_USAGE_SAMPLED_BIT;
+    
+    VK_CHECK_RESULT(vkCreateImage(a_device, &image, nullptr, &result.image));
+    vkGetImageMemoryRequirements(a_device, result.image, &result.memReq);
+    
+    return result;
   }
 
-  void createImageViewAndBindMem(VkDevice a_device, VulkanImageMem *a_pImgMem,
-                                 VkImageViewCreateInfo *a_pViewCreateInfo)
+  VkImageView createImageViewAndBindMem(VkDevice a_device, VulkanImageMem *a_pImgMem, const VkImageViewCreateInfo *a_pViewCreateInfo)
   {
     VK_CHECK_RESULT(vkBindImageMemory(a_device, a_pImgMem->image, a_pImgMem->mem, a_pImgMem->mem_offset));
 
@@ -87,24 +62,42 @@ namespace vk_utils
     imageView.image = a_pImgMem->image;
 
     VK_CHECK_RESULT(vkCreateImageView(a_device, &imageView, nullptr, &a_pImgMem->view));
+    return a_pImgMem->view;
   }
 
-  void createImgAllocAndBind(VkDevice a_device,
-                             VkPhysicalDevice a_physicalDevice,
-                             VkFormat a_format,
-                             VkImageUsageFlags a_usage,
+  void createImgAllocAndBind(VkDevice a_device, VkPhysicalDevice a_physicalDevice,
+                             uint32_t a_width, uint32_t a_height, VkFormat a_format,  VkImageUsageFlags a_usage,
                              VulkanImageMem *a_pImgMem,
-                             uint32_t a_width,
-                             uint32_t a_height,
-                             VkImageCreateInfo *a_pImageCreateInfo,
-                             VkImageViewCreateInfo *a_pViewCreateInfo)
+                             const VkImageCreateInfo *a_pImageCreateInfo, const VkImageViewCreateInfo *a_pViewCreateInfo)
   {
-    auto memReqs = createImg(a_device, a_format, a_usage, a_pImgMem, a_width, a_height, a_pImageCreateInfo);
+    
+    VkImageCreateInfo image{};
+    if(a_pImageCreateInfo != nullptr)
+    {
+      image = *a_pImageCreateInfo;
+    }
+    else
+    {
+      image.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+      image.imageType = VK_IMAGE_TYPE_2D;
+      image.format = a_format;
+      image.extent.width = a_width;
+      image.extent.height = a_height;
+      image.extent.depth = 1;
+      image.mipLevels = 1;
+      image.arrayLayers = 1;
+      image.samples = VK_SAMPLE_COUNT_1_BIT;
+      image.tiling = VK_IMAGE_TILING_OPTIMAL;
+      image.usage = a_usage | VK_IMAGE_USAGE_SAMPLED_BIT;
+    }             
+
+    VK_CHECK_RESULT(vkCreateImage(a_device, &image, nullptr, &a_pImgMem->image));
+    vkGetImageMemoryRequirements(a_device, a_pImgMem->image, &a_pImgMem->memReq);            
 
     VkMemoryAllocateInfo memAlloc{};
-    memAlloc.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-    memAlloc.allocationSize = memReqs.size;
-    memAlloc.memoryTypeIndex = findMemoryType(memReqs.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, a_physicalDevice);
+    memAlloc.sType           = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+    memAlloc.allocationSize  = a_pImgMem->memReq.size;
+    memAlloc.memoryTypeIndex = findMemoryType(a_pImgMem->memReq.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, a_physicalDevice);
     VK_CHECK_RESULT(vkAllocateMemory(a_device, &memAlloc, nullptr, &a_pImgMem->mem));
 
     createImageViewAndBindMem(a_device, a_pImgMem, a_pViewCreateInfo);
@@ -191,8 +184,9 @@ namespace vk_utils
     imageViewInfo.subresourceRange.levelCount = 1;
     imageViewInfo.image = a_depthImg->image;
 
-    createImgAllocAndBind(a_device, a_physDevice, a_depthImg->format, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
-                          a_depthImg, a_width, a_height, &imgCreateInfo, &imageViewInfo);
+    createImgAllocAndBind(a_device, a_physDevice, a_width, a_height, a_depthImg->format, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+                          a_depthImg, 
+                          &imgCreateInfo, &imageViewInfo);
   }
 
 
