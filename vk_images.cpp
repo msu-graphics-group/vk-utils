@@ -153,16 +153,16 @@ namespace vk_utils
     return(isDepthFormat(a_format) || isStencilFormat(a_format));
   }
 
-  void createDepthTexture(VkDevice a_device, VkPhysicalDevice a_physDevice, const uint32_t a_width, const uint32_t a_height,
-                          VulkanImageMem *a_depthImg)
+  VulkanImageMem createDepthTexture(VkDevice a_device, VkPhysicalDevice a_physDevice, const uint32_t a_width, const uint32_t a_height, VkFormat a_format)
   {
+    VulkanImageMem result = {};
 
     VkImageCreateInfo imgCreateInfo = {};
     imgCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
     imgCreateInfo.pNext = nullptr;
     imgCreateInfo.flags = 0;
     imgCreateInfo.imageType = VK_IMAGE_TYPE_2D;
-    imgCreateInfo.format = a_depthImg->format;
+    imgCreateInfo.format = a_format;
     imgCreateInfo.extent = VkExtent3D{ a_width, a_height, 1u };
     imgCreateInfo.mipLevels = 1;
     imgCreateInfo.samples = VK_SAMPLE_COUNT_1_BIT;
@@ -182,11 +182,13 @@ namespace vk_utils
     imageViewInfo.subresourceRange.baseArrayLayer = 0;
     imageViewInfo.subresourceRange.layerCount = 1;
     imageViewInfo.subresourceRange.levelCount = 1;
-    imageViewInfo.image = a_depthImg->image;
+    imageViewInfo.image = VK_NULL_HANDLE;
 
-    createImgAllocAndBind(a_device, a_physDevice, a_width, a_height, a_depthImg->format, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
-                          a_depthImg, 
+    createImgAllocAndBind(a_device, a_physDevice, a_width, a_height, a_format, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+                          &result, 
                           &imgCreateInfo, &imageViewInfo);
+
+    return result;
   }
 
 
