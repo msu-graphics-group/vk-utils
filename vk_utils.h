@@ -56,6 +56,9 @@ namespace vk_utils
   void executeCommandBufferNow(std::vector<VkCommandBuffer> a_cmdBuffers, VkQueue a_queue, VkDevice a_device);
   // ****************
 
+  void setDefaultViewport(VkCommandBuffer a_cmdBuff, float a_width, float a_height);
+  void setDefaultScissor(VkCommandBuffer a_cmdBuff, uint32_t a_width, uint32_t a_height);
+
   // *** render pass ***
   //
   struct RenderTargetInfo2D

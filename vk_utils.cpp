@@ -698,5 +698,27 @@ namespace vk_utils {
     return res;
   }
 
+  void setDefaultViewport(VkCommandBuffer a_cmdBuff, float a_width, float a_height)
+  {
+    VkViewport viewport{};
+    viewport.x = 0.0f;
+    viewport.y = 0.0f;
+    viewport.width  = a_width;
+    viewport.height = a_height;
+    viewport.minDepth = 0.0f;
+    viewport.maxDepth = 1.0f;
+
+    vkCmdSetViewport(a_cmdBuff, 0, 1, &viewport);
+  }
+
+  void setDefaultScissor(VkCommandBuffer a_cmdBuff, uint32_t a_width, uint32_t a_height)
+  {
+    VkRect2D scissor{};
+    scissor.offset = {0, 0};
+    scissor.extent = { a_width, a_height };
+
+    vkCmdSetScissor(a_cmdBuff, 0, 1, &scissor);
+  }
+
 }
 
