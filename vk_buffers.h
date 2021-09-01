@@ -10,7 +10,8 @@
 
 namespace vk_utils
 {
-  VkMemoryRequirements createBuffer(VkDevice a_dev, VkDeviceSize a_size, VkBufferUsageFlags a_usageFlags, VkBuffer &a_buf);
+  VkBuffer createBuffer(VkDevice a_dev, VkDeviceSize a_size, VkBufferUsageFlags a_usageFlags, VkMemoryRequirements* a_pMemReq = nullptr);
+
   void createBufferStaging(VkDevice a_device, VkPhysicalDevice a_physDevice, size_t a_bufferSize,
                            VkBuffer &a_buf, VkDeviceMemory& a_mem);
 

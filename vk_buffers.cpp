@@ -3,20 +3,20 @@
 
 namespace vk_utils
 {
-  VkMemoryRequirements createBuffer(VkDevice a_dev, VkDeviceSize a_size, VkBufferUsageFlags a_usageFlags, VkBuffer &a_buf)
+  VkBuffer createBuffer(VkDevice a_dev, VkDeviceSize a_size, VkBufferUsageFlags a_usageFlags, VkMemoryRequirements* a_pMemReq)
   {
     assert(a_dev != VK_NULL_HANDLE);
-
+    
+    VkBuffer result = VK_NULL_HANDLE;
     VkBufferCreateInfo bufferCreateInfo = {};
-    bufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-    bufferCreateInfo.size  = a_size;
-    bufferCreateInfo.usage = a_usageFlags;
+    bufferCreateInfo.sType       = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+    bufferCreateInfo.size        = a_size;
+    bufferCreateInfo.usage       = a_usageFlags;
     bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-    VK_CHECK_RESULT(vkCreateBuffer(a_dev, &bufferCreateInfo, VK_NULL_HANDLE, &a_buf));
-
-    VkMemoryRequirements result;
-    vkGetBufferMemoryRequirements(a_dev, a_buf, &result);
+    VK_CHECK_RESULT(vkCreateBuffer(a_dev, &bufferCreateInfo, VK_NULL_HANDLE, &result));
+    if(a_pMemReq != nullptr) 
+      vkGetBufferMemoryRequirements(a_dev, result, a_pMemReq);
 
     return result;
   }
@@ -44,7 +44,6 @@ namespace vk_utils
                                                             a_physDevice);
 
     VK_CHECK_RESULT(vkAllocateMemory(a_device, &allocateInfo, nullptr, &a_mem));
-
     VK_CHECK_RESULT(vkBindBufferMemory(a_device, a_buf, a_mem, 0));
   }
 
