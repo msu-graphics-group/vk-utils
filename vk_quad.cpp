@@ -296,7 +296,7 @@ QuadRenderer::~QuadRenderer()
     vkDestroyDescriptorSetLayout(m_device, m_dlayout, NULL);
 }
 
-void QuadRenderer::Create(VkDevice a_device, const char* a_vspath, const char* a_fspath, vk_utils::RenderTargetInfo2D a_rtInfo, VkRect2D scissor)
+void QuadRenderer::Create(VkDevice a_device, const char* a_vspath, const char* a_fspath, vk_utils::RenderTargetInfo2D a_rtInfo)
 {
   m_device = a_device;
   m_fbSize = a_rtInfo.size;
@@ -335,12 +335,23 @@ void QuadRenderer::Create(VkDevice a_device, const char* a_vspath, const char* a
   inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
   inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP;
   inputAssembly.primitiveRestartEnable = VK_FALSE;
+  
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  VkRect2D scissor; // #TODO: FIX THIS !!!, THIS IS DEBUG CODE
+  {
+    scissor.offset = VkOffset2D{0,0};
+    scissor.extent = VkExtent2D{256,256};
+  }
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
   VkViewport viewport = {};
-  viewport.x = 0.0f;
-  viewport.y = 0.0f;
-  viewport.width = (float)scissor.extent.width;
-  viewport.height = (float)scissor.extent.height;
+  viewport.x        = 0.0f;
+  viewport.y        = 0.0f;
+  viewport.width    = (float)scissor.extent.width;
+  viewport.height   = (float)scissor.extent.height;
   viewport.minDepth = 0.0f;
   viewport.maxDepth = 1.0f;
 
@@ -469,7 +480,7 @@ void QuadRenderer::SetRenderTarget(VkImageView a_imageView)
   m_targetView = a_imageView;
 }
 
-void QuadRenderer::DrawCmd(VkCommandBuffer a_cmdBuff, VkDescriptorSet a_inTexDescriptor)
+void QuadRenderer::DrawCmd(VkCommandBuffer a_cmdBuff, VkDescriptorSet a_inTexDescriptor, float a_offsAndScale[4])
 {
   VkRenderPassBeginInfo renderPassInfo = {};
   renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;

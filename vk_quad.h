@@ -83,15 +83,15 @@ namespace vk_utils
 
   };
 
-  class QuadRenderer // : public IQuad
+  class QuadRenderer : public IQuad
   {
   public:
     QuadRenderer() : m_pipeline(nullptr), m_layout(nullptr), m_renderPass(nullptr), m_fbTarget(nullptr), m_dlayout(nullptr) {}
     ~QuadRenderer();
 
-    void Create(VkDevice a_device, const char* a_vspath, const char* a_fspath, RenderTargetInfo2D a_rtInfo, VkRect2D scissor);
-    void SetRenderTarget(VkImageView a_imageView);
-    void DrawCmd(VkCommandBuffer a_cmdBuff, VkDescriptorSet a_inTexDescriptor);
+    void Create(VkDevice a_device, const char* a_vspath, const char* a_fspath, RenderTargetInfo2D a_rtInfo) override;
+    void SetRenderTarget(VkImageView a_imageView)                                                           override;
+    void DrawCmd(VkCommandBuffer a_cmdBuff, VkDescriptorSet a_inTexDescriptor, float a_offsAndScale[4])     override;
 
   private:
 
