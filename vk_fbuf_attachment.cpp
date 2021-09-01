@@ -102,7 +102,7 @@ RenderTarget::~RenderTarget()
 
   void RenderTarget::CreateViewAndBindMemory(VkDeviceMemory a_mem, const std::vector<VkDeviceSize> &a_offsets)
   {
-  assert(a_offsets.size() <= m_attachments.size());
+    assert(a_offsets.size() <= m_attachments.size());
     for(size_t i = 0; i < m_attachments.size(); ++i)
     {
       VK_CHECK_RESULT(vkBindImageMemory(m_device, m_attachments[i].image, a_mem, a_offsets[i]));
@@ -272,7 +272,7 @@ RenderTarget::~RenderTarget()
     return result;
   }
 
-  VkResult RenderTarget::CreateRenderPassWithSwapchainOut(VulkanSwapChain &a_swapchain)
+  VkResult RenderTarget::CreateRenderPassWithSwapchainOut(VkFormat a_swapChainFormat, const std::vector<VkImageView> &a_swapChainImageViews)
   {
     std::vector<VkAttachmentDescription> attachmentDescriptions;
     for (auto& attachment : m_attachments)
@@ -281,7 +281,7 @@ RenderTarget::~RenderTarget()
     };
 
     VkAttachmentDescription colorAttachment = {};
-    colorAttachment.format =  a_swapchain.GetFormat();
+    colorAttachment.format = a_swapChainFormat;
     colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
     colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
     colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -369,14 +369,14 @@ RenderTarget::~RenderTarget()
       }
     }
 
-    for (size_t i = 0; i < a_swapchain.GetImageCount(); i++)
+    for (size_t i = 0; i < a_swapChainImageViews.size(); i++)
     {
       std::vector<VkImageView> attachmentViews;
       for (auto attachment : m_attachments)
       {
         attachmentViews.push_back(attachment.view);
       }
-      attachmentViews.push_back(a_swapchain.GetAttachment(i).view);
+      attachmentViews.push_back(a_swapChainImageViews[i]);
 
       VkFramebufferCreateInfo framebufferInfo = {};
       framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;

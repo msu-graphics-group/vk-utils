@@ -34,7 +34,7 @@ namespace vk_utils
   struct RenderTarget
   {
     VkDevice m_device = VK_NULL_HANDLE;
-    VkExtent2D m_resolution{};
+    VkExtent2D m_resolution {};
     std::vector<VkFramebuffer> m_framebuffers;
     VkRenderPass m_renderPass = VK_NULL_HANDLE;
     VkSampler m_sampler = VK_NULL_HANDLE;
@@ -49,7 +49,7 @@ namespace vk_utils
     void CreateViewAndBindMemory(VkDeviceMemory a_mem, const std::vector<VkDeviceSize> &a_offsets);
     VkResult CreateDefaultSampler();
     VkResult CreateDefaultRenderPass();
-    VkResult CreateRenderPassWithSwapchainOut(VulkanSwapChain &a_swapchain);
+    VkResult CreateRenderPassWithSwapchainOut(VkFormat a_swapChainFormat, const std::vector<VkImageView> &a_swapChainImageViews);
 
     VkRenderPassBeginInfo GetRenderPassBeginInfo(uint32_t a_fbufIdx, const std::vector<VkClearValue> &a_clearValues,
                                                  VkOffset2D a_renderOffset = {0, 0}) const;
