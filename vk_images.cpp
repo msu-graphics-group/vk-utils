@@ -153,9 +153,11 @@ namespace vk_utils
     return(isDepthFormat(a_format) || isStencilFormat(a_format));
   }
 
-  VulkanImageMem createDepthTexture(VkDevice a_device, VkPhysicalDevice a_physDevice, const uint32_t a_width, const uint32_t a_height, VkFormat a_format)
+  VulkanImageMem createDepthTexture(VkDevice a_device, VkPhysicalDevice a_physDevice,
+    const uint32_t a_width, const uint32_t a_height, VkFormat a_format)
   {
     VulkanImageMem result = {};
+    result.format = a_format;
 
     VkImageCreateInfo imgCreateInfo = {};
     imgCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;

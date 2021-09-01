@@ -504,7 +504,7 @@ namespace vk_utils {
 
     auto filesize_padded = getPaddedSize(filesize, sizeof(uint32_t));
 
-    std::vector<uint32_t> resData(filesize_padded / sizeof(resData[0]), 0);
+    std::vector<uint32_t> resData(filesize_padded / sizeof(uint32_t), 0);
 
     char *str = (char *)resData.data();
     size_t read_bytes = fread(str, filesize, sizeof(char), fp);

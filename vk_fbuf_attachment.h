@@ -43,13 +43,17 @@ namespace vk_utils
     explicit RenderTarget(const VkExtent2D &a_resolution) : m_resolution(a_resolution){}
     ~RenderTarget();
 
-    uint32_t getNumColorAttachments() const {return m_numColorAttachments;}
-    uint32_t createAttachment(const AttachmentInfo &info);
-//    uint32_t addAttachment(const AttachmentInfo &info, VkImage img);
-    void createViewAndBindMemory(VkDeviceMemory mem, const std::vector<VkDeviceSize> &offsets);
-    VkResult createDefaultSampler();
-    VkResult createDefaultRenderPass();
-    VkResult createRenderPassWithSwapchainOut(VulkanSwapChain &a_swapchain);
+    uint32_t GetNumColorAttachments() const {return m_numColorAttachments;}
+    uint32_t CreateAttachment(const AttachmentInfo &a_info);
+
+    void CreateViewAndBindMemory(VkDeviceMemory a_mem, const std::vector<VkDeviceSize> &a_offsets);
+    VkResult CreateDefaultSampler();
+    VkResult CreateDefaultRenderPass();
+    VkResult CreateRenderPassWithSwapchainOut(VulkanSwapChain &a_swapchain);
+
+    VkRenderPassBeginInfo GetRenderPassBeginInfo(uint32_t a_fbufIdx, const std::vector<VkClearValue> &a_clearValues,
+                                                 VkOffset2D a_renderOffset = {0, 0}) const;
+    std::vector<VkMemoryRequirements> GetMemoryRequirements() const;
   private:
     uint32_t m_numColorAttachments = 0;
   };
