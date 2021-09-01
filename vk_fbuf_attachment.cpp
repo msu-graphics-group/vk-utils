@@ -7,7 +7,7 @@
 namespace vk_utils
 {
 
-RenderTarget::~RenderTarget()
+  RenderTarget::~RenderTarget()
   {
     assert(m_device);
     for (auto &attachment : m_attachments)
@@ -18,7 +18,7 @@ RenderTarget::~RenderTarget()
 
     vkDestroySampler(m_device, m_sampler, nullptr);
     vkDestroyRenderPass(m_device, m_renderPass, nullptr);
-    for(auto& fbuf : m_framebuffers)
+    for (auto &fbuf : m_framebuffers)
     {
       vkDestroyFramebuffer(m_device, fbuf, nullptr);
     }
@@ -79,19 +79,16 @@ RenderTarget::~RenderTarget()
     attachment.description = {};
     attachment.description.samples = a_info.imageSampleCount;
     attachment.description.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-    attachment.description.storeOp = (a_info.usage & VK_IMAGE_USAGE_SAMPLED_BIT) ? VK_ATTACHMENT_STORE_OP_STORE : VK_ATTACHMENT_STORE_OP_DONT_CARE;
+    attachment.description.storeOp = (a_info.usage & VK_IMAGE_USAGE_SAMPLED_BIT) ? VK_ATTACHMENT_STORE_OP_STORE
+                                                                                 : VK_ATTACHMENT_STORE_OP_DONT_CARE;
     attachment.description.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
     attachment.description.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
     attachment.description.format = a_info.format;
     attachment.description.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    attachment.description.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
-    if (vk_utils::isDepthFormat(a_info.format) || vk_utils::isStencilFormat(a_info.format))
+    if (!vk_utils::isDepthFormat(a_info.format) || !vk_utils::isStencilFormat(a_info.format))
     {
-      attachment.description.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-    }
-    else
-    {
-      attachment.description.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
       m_numColorAttachments++;
     }
 
@@ -100,10 +97,10 @@ RenderTarget::~RenderTarget()
     return static_cast<uint32_t>(m_attachments.size() - 1);
   }
 
-  void RenderTarget::CreateViewAndBindMemory(VkDeviceMemory a_mem, const std::vector<VkDeviceSize> &a_offsets)
+  void RenderTarget::CreateViewAndBindMemory(VkDeviceMemory a_mem, const std::vector <VkDeviceSize> &a_offsets)
   {
     assert(a_offsets.size() <= m_attachments.size());
-    for(size_t i = 0; i < m_attachments.size(); ++i)
+    for (size_t i = 0; i < m_attachments.size(); ++i)
     {
       VK_CHECK_RESULT(vkBindImageMemory(m_device, m_attachments[i].image, a_mem, a_offsets[i]));
       m_attachments[i].mem = a_mem;
@@ -140,13 +137,13 @@ RenderTarget::~RenderTarget()
 
   VkResult RenderTarget::CreateDefaultRenderPass()
   {
-    std::vector<VkAttachmentDescription> attachmentDescriptions;
-    for (auto& attachment : m_attachments)
+    std::vector <VkAttachmentDescription> attachmentDescriptions;
+    for (auto &attachment : m_attachments)
     {
       attachmentDescriptions.push_back(attachment.description);
     };
 
-    std::vector<VkAttachmentReference> colorReferences;
+    std::vector <VkAttachmentReference> colorReferences;
     VkAttachmentReference depthReference = {};
 
     bool hasDepth = false;
@@ -162,7 +159,7 @@ RenderTarget::~RenderTarget()
       }
       else
       {
-        colorReferences.push_back({ i, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL });
+        colorReferences.push_back({i, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL});
         hasColor = true;
       }
     }
@@ -184,7 +181,7 @@ RenderTarget::~RenderTarget()
     dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
     dependencies[0].dstSubpass = 0;
     dependencies[0].srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-    dependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT|
+    dependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT |
                                    VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT |
                                    VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;;
     dependencies[0].srcAccessMask = VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_INPUT_ATTACHMENT_READ_BIT;
@@ -211,7 +208,7 @@ RenderTarget::~RenderTarget()
     renderPassInfo.pDependencies = dependencies.data();
     VK_CHECK_RESULT(vkCreateRenderPass(m_device, &renderPassInfo, nullptr, &m_renderPass));
 
-    std::vector<VkImageView> attachmentViews;
+    std::vector <VkImageView> attachmentViews;
     for (auto attachment : m_attachments)
     {
       attachmentViews.push_back(attachment.view);
@@ -241,30 +238,31 @@ RenderTarget::~RenderTarget()
     return VK_SUCCESS;
   }
 
-  VkRenderPassBeginInfo RenderTarget::GetRenderPassBeginInfo(uint32_t a_fbufIdx, const std::vector<VkClearValue> &a_clearValues,
-                                                             VkOffset2D a_renderOffset) const
+  VkRenderPassBeginInfo
+  RenderTarget::GetRenderPassBeginInfo(uint32_t a_fbufIdx, std::vector <VkClearValue> &a_clearValues,
+                                       VkOffset2D a_renderOffset) const
   {
-    if(a_clearValues.size() != m_attachments.size())
+    if (a_clearValues.size() != m_attachments.size())
     {
       vk_utils::logWarning("[RenderTarget::GetRenderPassBeginInfo] clear values size doesn't match attachment count");
     }
 
     VkRenderPassBeginInfo renderPassInfo = {};
-    renderPassInfo.sType             = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-    renderPassInfo.renderPass        = m_renderPass;
-    renderPassInfo.framebuffer       = m_framebuffers[a_fbufIdx];
+    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+    renderPassInfo.renderPass = m_renderPass;
+    renderPassInfo.framebuffer = m_framebuffers[a_fbufIdx];
     renderPassInfo.renderArea.offset = a_renderOffset;
     renderPassInfo.renderArea.extent = m_resolution;
-    renderPassInfo.clearValueCount   = a_clearValues.size();
-    renderPassInfo.pClearValues      = a_clearValues.data();
+    renderPassInfo.clearValueCount = a_clearValues.size();
+    renderPassInfo.pClearValues = a_clearValues.data();
 
     return renderPassInfo;
   }
 
-  std::vector<VkMemoryRequirements> RenderTarget::GetMemoryRequirements() const
+  std::vector <VkMemoryRequirements> RenderTarget::GetMemoryRequirements() const
   {
-    std::vector<VkMemoryRequirements> result;
-    for(size_t i = 0; i < m_attachments.size(); ++i)
+    std::vector <VkMemoryRequirements> result;
+    for (size_t i = 0; i < m_attachments.size(); ++i)
     {
       result.push_back(m_attachments[i].mem_req);
     }
@@ -272,10 +270,11 @@ RenderTarget::~RenderTarget()
     return result;
   }
 
-  VkResult RenderTarget::CreateRenderPassWithSwapchainOut(VkFormat a_swapChainFormat, const std::vector<VkImageView> &a_swapChainImageViews)
+  VkResult RenderTarget::CreateRenderPassWithSwapchainOut(VkFormat a_swapChainFormat,
+                                                          const std::vector <VkImageView> &a_swapChainImageViews)
   {
-    std::vector<VkAttachmentDescription> attachmentDescriptions;
-    for (auto& attachment : m_attachments)
+    std::vector <VkAttachmentDescription> attachmentDescriptions;
+    for (auto &attachment : m_attachments)
     {
       attachmentDescriptions.push_back(attachment.description);
     };
@@ -292,7 +291,7 @@ RenderTarget::~RenderTarget()
 
     attachmentDescriptions.push_back(colorAttachment);
 
-    std::vector<VkAttachmentReference> colorReferences;
+    std::vector <VkAttachmentReference> colorReferences;
     VkAttachmentReference depthReference = {};
 
     bool hasDepth = false;
@@ -308,7 +307,7 @@ RenderTarget::~RenderTarget()
       }
       else
       {
-        colorReferences.push_back({ i, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL });
+        colorReferences.push_back({i, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL});
         hasColor = true;
       }
     }
@@ -332,9 +331,9 @@ RenderTarget::~RenderTarget()
     dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
     dependencies[0].dstSubpass = 0;
     dependencies[0].srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-    dependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT|
+    dependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT |
                                    VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT |
-                                   VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;;
+                                   VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
     dependencies[0].srcAccessMask = VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_INPUT_ATTACHMENT_READ_BIT;
     dependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
     dependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
@@ -371,7 +370,7 @@ RenderTarget::~RenderTarget()
 
     for (size_t i = 0; i < a_swapChainImageViews.size(); i++)
     {
-      std::vector<VkImageView> attachmentViews;
+      std::vector <VkImageView> attachmentViews;
       for (auto attachment : m_attachments)
       {
         attachmentViews.push_back(attachment.view);
