@@ -87,7 +87,7 @@ namespace vk_utils
     attachment.description.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
     attachment.description.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
-    if (!vk_utils::isDepthFormat(a_info.format) || !vk_utils::isStencilFormat(a_info.format))
+    if (!vk_utils::isDepthFormat(a_info.format) && !vk_utils::isStencilFormat(a_info.format))
     {
       m_numColorAttachments++;
     }
