@@ -30,7 +30,7 @@ class VulkanSwapChain
 public:
 
   VkQueue CreateSwapChain(const VkPhysicalDevice &physicalDevice, const VkDevice &logicalDevice, VkSurfaceKHR &a_surface,
-                          uint32_t &width, uint32_t &height, bool vsync = false);
+                          uint32_t &width, uint32_t &height, uint32_t a_imageCount = 2, bool vsync = false);
 
   static VkSurfaceFormatKHR ChooseSurfaceFormat(const std::vector<VkSurfaceFormatKHR> &availableFormats);
 
@@ -44,6 +44,7 @@ public:
 
   VkFormat GetFormat() const {return m_colorFormat; }
   uint32_t GetImageCount() const {return m_imageCount; }
+  uint32_t GetMinImageCount() const {return m_minImageCount; }
   VkExtent2D GetExtent() const {return m_swapchainExtent; }
   SwapchainAttachment GetAttachment(uint32_t i) const { assert(i < m_imageCount); return m_attachments[i]; }
 
@@ -57,6 +58,7 @@ private:
   VkSurfaceTransformFlagsKHR m_surfaceTransformFlags = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
   VkFormat m_colorFormat;
   uint32_t m_imageCount;
+  uint32_t m_minImageCount;
   VkExtent2D m_swapchainExtent {};
   VkColorSpaceKHR m_colorSpace;
 
@@ -69,7 +71,7 @@ private:
   VkDevice m_logicalDevice = VK_NULL_HANDLE;
   VkPhysicalDevice m_physicalDevice = VK_NULL_HANDLE;
 
-  void Create(uint32_t &width, uint32_t &height, bool vsync = false);
+  void Create(uint32_t &width, uint32_t &height, uint32_t imageCount, bool vsync = false);
   void InitSurface(VkSurfaceKHR &a_surface);
 
   // 4x4 matrix stored by columns
@@ -93,8 +95,8 @@ private:
 
 namespace vk_utils
 {
-  std::vector<VkFramebuffer> CreateFrameBuffers(VkDevice a_device, VulkanSwapChain &a_swapchain,
-                                                VkRenderPass a_renderPass, VkImageView a_depthView);
+  std::vector<VkFramebuffer> createFrameBuffers(VkDevice a_device, VulkanSwapChain &a_swapchain,
+                                                VkRenderPass a_renderPass, VkImageView a_depthView = VK_NULL_HANDLE);
 
   SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device, const VkSurfaceKHR &surface);
 }
