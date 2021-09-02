@@ -5,6 +5,7 @@
 #include "vk_include.h"
 #include <array>
 #include <vector>
+#include <string>
 
 namespace vk_rt_utils
 {
