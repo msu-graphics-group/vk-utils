@@ -93,7 +93,7 @@ private:
 
 namespace vk_utils
 {
-  std::vector<VkFramebuffer> CreateFrameBuffers(VkDevice a_device, VulkanSwapChain &a_swapchain,
+  std::vector<VkFramebuffer> createFrameBuffers(VkDevice a_device, VulkanSwapChain &a_swapchain,
                                                 VkRenderPass a_renderPass, VkImageView a_depthView);
 
   SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device, const VkSurfaceKHR &surface);

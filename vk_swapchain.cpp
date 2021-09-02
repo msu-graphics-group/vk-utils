@@ -1,7 +1,7 @@
 #include "vk_swapchain.h"
 #include "vk_utils.h"
 
-std::vector<VkFramebuffer> vk_utils::CreateFrameBuffers(VkDevice a_device, VulkanSwapChain &a_swapchain,
+std::vector<VkFramebuffer> vk_utils::createFrameBuffers(VkDevice a_device, VulkanSwapChain &a_swapchain,
   VkRenderPass a_renderPass, VkImageView a_depthView)
 {
   std::vector<VkFramebuffer> result(a_swapchain.GetImageCount());
