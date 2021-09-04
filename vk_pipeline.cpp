@@ -195,3 +195,68 @@ VkPipeline vk_utils::GraphicsPipelineMaker::MakePipeline(VkDevice a_device, VkPi
 ////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+void vk_utils::ComputePipelineMaker::LoadShader(VkDevice a_device, const std::string& a_shaderPath,
+                                                const VkSpecializationInfo *a_specInfo, const char* a_mainName)
+{
+  shaderStageInfo = {};
+  shaderStageInfo.sType  = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+  shaderStageInfo.stage  = VK_SHADER_STAGE_COMPUTE_BIT;
+
+  auto shaderCode = vk_utils::readSPVFile(a_shaderPath.c_str());
+  shaderModule    = vk_utils::createShaderModule(a_device, shaderCode);
+
+  shaderStageInfo.module = shaderModule;
+  shaderStageInfo.pName  = "main";
+}
+
+VkPipelineLayout vk_utils::ComputePipelineMaker::MakeLayout(VkDevice a_device, std::vector<VkDescriptorSetLayout> a_dslayouts,
+                                                            uint32_t a_pcRangeSize)
+{
+
+  assert(a_device);
+
+  if (a_pcRangeSize)
+  {
+    pcRange.stageFlags = shaderStageInfo.stage;
+    pcRange.offset     = 0;
+    pcRange.size       = a_pcRangeSize;
+  }
+
+  pipelineLayoutInfo                        = {};
+  pipelineLayoutInfo.sType                  = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+  pipelineLayoutInfo.pushConstantRangeCount = a_pcRangeSize ? 1 : 0;
+  pipelineLayoutInfo.pPushConstantRanges    = a_pcRangeSize ? &pcRange : nullptr;
+
+  if (!a_dslayouts.empty())
+  {
+    pipelineLayoutInfo.pSetLayouts    = a_dslayouts.data();
+    pipelineLayoutInfo.setLayoutCount = a_dslayouts.size();
+  }
+  else
+  {
+    pipelineLayoutInfo.pSetLayouts    = VK_NULL_HANDLE;
+    pipelineLayoutInfo.setLayoutCount = 0;
+  }
+
+  VK_CHECK_RESULT(vkCreatePipelineLayout(a_device, &pipelineLayoutInfo, nullptr, &m_pipelineLayout));
+
+  return m_pipelineLayout;
+}
+
+VkPipeline vk_utils::ComputePipelineMaker::MakePipeline(VkDevice a_device)
+{
+  pipelineInfo                    = {};
+  pipelineInfo.sType              = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
+  pipelineInfo.flags              = 0;
+  pipelineInfo.stage              = shaderStageInfo;
+  pipelineInfo.layout             = m_pipelineLayout;
+  pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
+  VK_CHECK_RESULT(vkCreateComputePipelines(a_device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_pipeline));
+
+  if (shaderModule != VK_NULL_HANDLE)
+    vkDestroyShaderModule(a_device, shaderModule, VK_NULL_HANDLE);
+
+  return m_pipeline;
+}

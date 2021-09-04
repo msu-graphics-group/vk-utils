@@ -48,5 +48,22 @@ namespace vk_utils
     VkPipeline       m_pipeline  = VK_NULL_HANDLE;
     VkPipelineLayout m_pipelineLayout = VK_NULL_HANDLE;
   };
+
+  struct ComputePipelineMaker
+  {
+    VkShaderModule                  shaderModule;
+    VkPipelineShaderStageCreateInfo shaderStageInfo;
+    VkPushConstantRange             pcRange {};
+    VkPipelineLayoutCreateInfo      pipelineLayoutInfo {};
+    VkComputePipelineCreateInfo     pipelineInfo {};
+
+    void             LoadShader(VkDevice a_device, const std::string& a_shaderPath, const VkSpecializationInfo *a_specInfo = nullptr,
+                                const char* a_mainName = "main");
+    VkPipelineLayout MakeLayout(VkDevice a_device, std::vector<VkDescriptorSetLayout> a_dslayouts, uint32_t a_pcRangeSize);
+    VkPipeline       MakePipeline(VkDevice a_device);
+  private:
+    VkPipeline       m_pipeline  = VK_NULL_HANDLE;
+    VkPipelineLayout m_pipelineLayout = VK_NULL_HANDLE;
+  };
 }
 

@@ -295,7 +295,7 @@ namespace vk_utils {
     return physicalDevice;
   }
 
-  uint32_t GetQueueFamilyIndex(VkPhysicalDevice a_physicalDevice, VkQueueFlagBits a_bits)
+  uint32_t getQueueFamilyIndex(VkPhysicalDevice a_physicalDevice, VkQueueFlagBits a_bits)
   {
     uint32_t queueFamilyCount;
 
@@ -330,7 +330,7 @@ namespace vk_utils {
     // Graphics queue
     if (requestedQueueTypes & VK_QUEUE_GRAPHICS_BIT)
     {
-      a_queueIDXs.graphics = GetQueueFamilyIndex(physicalDevice, VK_QUEUE_GRAPHICS_BIT);
+      a_queueIDXs.graphics = getQueueFamilyIndex(physicalDevice, VK_QUEUE_GRAPHICS_BIT);
       VkDeviceQueueCreateInfo queueInfo{};
       queueInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
       queueInfo.queueFamilyIndex = a_queueIDXs.graphics;
@@ -346,7 +346,7 @@ namespace vk_utils {
     // Dedicated compute queue
     if (requestedQueueTypes & VK_QUEUE_COMPUTE_BIT)
     {
-      a_queueIDXs.compute = GetQueueFamilyIndex(physicalDevice, VK_QUEUE_COMPUTE_BIT);
+      a_queueIDXs.compute = getQueueFamilyIndex(physicalDevice, VK_QUEUE_COMPUTE_BIT);
       if (a_queueIDXs.compute != a_queueIDXs.graphics || queueCreateInfos.empty())
       {
         VkDeviceQueueCreateInfo queueInfo{};
@@ -365,7 +365,7 @@ namespace vk_utils {
     // Dedicated transfer queue
     if (requestedQueueTypes & VK_QUEUE_TRANSFER_BIT)
     {
-      a_queueIDXs.transfer = GetQueueFamilyIndex(physicalDevice, VK_QUEUE_TRANSFER_BIT);
+      a_queueIDXs.transfer = getQueueFamilyIndex(physicalDevice, VK_QUEUE_TRANSFER_BIT);
       if (((a_queueIDXs.transfer != a_queueIDXs.graphics) && (a_queueIDXs.transfer != a_queueIDXs.compute)) || queueCreateInfos.empty())
       {
         VkDeviceQueueCreateInfo queueInfo{};
