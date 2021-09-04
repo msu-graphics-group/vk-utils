@@ -51,8 +51,8 @@ namespace vk_utils
 
   struct ComputePipelineMaker
   {
-    VkShaderModule                  shaderModule;
-    VkPipelineShaderStageCreateInfo shaderStageInfo;
+    VkShaderModule                  shaderModule = VK_NULL_HANDLE;
+    VkPipelineShaderStageCreateInfo shaderStageInfo {};
     VkPushConstantRange             pcRange {};
     VkPipelineLayoutCreateInfo      pipelineLayoutInfo {};
     VkComputePipelineCreateInfo     pipelineInfo {};
