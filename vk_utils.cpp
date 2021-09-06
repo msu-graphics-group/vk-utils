@@ -295,7 +295,7 @@ namespace vk_utils {
     return physicalDevice;
   }
 
-  uint32_t getQueueFamilyIndex(VkPhysicalDevice a_physicalDevice, VkQueueFlagBits a_bits)
+  uint32_t getQueueFamilyIndex(VkPhysicalDevice a_physicalDevice, VkQueueFlags a_bits)
   {
     uint32_t queueFamilyCount;
 

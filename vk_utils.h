@@ -35,7 +35,7 @@ namespace vk_utils
                                QueueFID_T &a_queueIDXs, VkQueueFlags requestedQueueTypes = VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_TRANSFER_BIT,
                                void* pNextFeatures = nullptr);
   uint32_t findMemoryType(uint32_t memoryTypeBits, VkMemoryPropertyFlags properties, VkPhysicalDevice physicalDevice);
-  uint32_t getQueueFamilyIndex(VkPhysicalDevice a_physicalDevice, VkQueueFlagBits a_bits);
+  uint32_t getQueueFamilyIndex(VkPhysicalDevice a_physicalDevice, VkQueueFlags a_bits);
   std::vector<std::string> subgroupOperationToString(VkSubgroupFeatureFlags flags);
 
   size_t getPaddedSize(size_t a_size, size_t a_alignment);
