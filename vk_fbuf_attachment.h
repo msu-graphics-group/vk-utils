@@ -40,7 +40,7 @@ namespace vk_utils
     VkSampler m_sampler = VK_NULL_HANDLE;
     std::vector<FbufAttachment> m_attachments;
 
-    explicit RenderTarget(const VkExtent2D &a_resolution) : m_resolution(a_resolution){}
+    explicit RenderTarget(VkDevice a_device, const VkExtent2D &a_resolution) : m_device(a_device), m_resolution(a_resolution){}
     ~RenderTarget();
 
     uint32_t GetNumColorAttachments() const {return m_numColorAttachments;}
