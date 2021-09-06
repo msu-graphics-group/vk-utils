@@ -1,26 +1,30 @@
 #include "vk_swapchain.h"
 #include "vk_utils.h"
 
-std::vector<VkFramebuffer> vk_utils::createFrameBuffers(VkDevice a_device, VulkanSwapChain &a_swapchain,
+std::vector<VkFramebuffer> vk_utils::createFrameBuffers(VkDevice a_device, const VulkanSwapChain &a_swapchain,
   VkRenderPass a_renderPass, VkImageView a_depthView)
 {
   std::vector<VkFramebuffer> result(a_swapchain.GetImageCount());
   for (size_t i = 0; i < result.size(); i++)
   {
-    VkImageView attachments[] = { a_swapchain.GetAttachment(i).view, a_depthView };
+    std::vector<VkImageView> attachments;
+    attachments.push_back(a_swapchain.GetAttachment(i).view);
+    if(a_depthView != VK_NULL_HANDLE)
+    {
+      attachments.push_back(a_depthView);
+    }
 
     VkFramebufferCreateInfo framebufferInfo = {};
-    framebufferInfo.sType           = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-    framebufferInfo.renderPass      = a_renderPass;
-    framebufferInfo.attachmentCount = 2;
-    framebufferInfo.pAttachments    = attachments;
-    framebufferInfo.width           = a_swapchain.GetExtent().width;
-    framebufferInfo.height          = a_swapchain.GetExtent().height;
-    framebufferInfo.layers          = 1;
+    framebufferInfo.sType                   = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+    framebufferInfo.renderPass              = a_renderPass;
+    framebufferInfo.attachmentCount         = attachments.size();
+    framebufferInfo.pAttachments            = attachments.data();
+    framebufferInfo.width                   = a_swapchain.GetExtent().width;
+    framebufferInfo.height                  = a_swapchain.GetExtent().height;
+    framebufferInfo.layers                  = 1;
 
     VK_CHECK_RESULT(vkCreateFramebuffer(a_device, &framebufferInfo, nullptr, &result[i]));
   }
-
   return result;
 }
 
@@ -53,14 +57,14 @@ SwapChainSupportDetails vk_utils::querySwapChainSupport(VkPhysicalDevice device,
 }
 
 VkQueue VulkanSwapChain::CreateSwapChain(const VkPhysicalDevice &physicalDevice, const VkDevice &logicalDevice, VkSurfaceKHR &surface,
-                                         uint32_t &width, uint32_t &height, bool vsync)
+                                         uint32_t &width, uint32_t &height, uint32_t imageCount, bool vsync)
 {
   m_physicalDevice = physicalDevice;
   m_logicalDevice = logicalDevice;
   m_surface = surface;
 
   InitSurface(surface);
-  Create(width, height, vsync);
+  Create(width, height, imageCount, vsync);
 
   VkQueue presentQueue;
   vkGetDeviceQueue(logicalDevice, m_queuePresentIndex, 0, &presentQueue);
@@ -187,7 +191,7 @@ VkPresentModeKHR VulkanSwapChain::ChoosePresentMode(const std::vector<VkPresentM
 * @param height Pointer to the height of the swapchain (may be adjusted to fit the requirements of the swapchain)
 * @param vsync (Optional) Can be used to force vsync'd rendering (by using VK_PRESENT_MODE_FIFO_KHR as presentation mode)
 */
-void VulkanSwapChain::Create(uint32_t &width, uint32_t &height, bool vsync)
+void VulkanSwapChain::Create(uint32_t &width, uint32_t &height, uint32_t imageCount, bool vsync)
 {
   VkSwapchainKHR oldSwapchain = m_swapChain;
 
@@ -217,7 +221,8 @@ void VulkanSwapChain::Create(uint32_t &width, uint32_t &height, bool vsync)
 
   VkPresentModeKHR swapchainPresentMode = ChoosePresentMode(presentModes, vsync);
 
-  uint32_t desiredNumberOfSwapchainImages = surfaceCaps.minImageCount;// + 1;
+  m_minImageCount = surfaceCaps.minImageCount;
+  uint32_t desiredNumberOfSwapchainImages = std::max(imageCount, surfaceCaps.minImageCount);
   if ((surfaceCaps.maxImageCount > 0) && (desiredNumberOfSwapchainImages > surfaceCaps.maxImageCount))
   {
     desiredNumberOfSwapchainImages = surfaceCaps.maxImageCount;

@@ -4,6 +4,7 @@
 #include <array>
 #include <algorithm>
 
+
 namespace vk_utils
 {
 
@@ -30,7 +31,7 @@ namespace vk_utils
     image.arrayLayers = 1;
     image.samples = VK_SAMPLE_COUNT_1_BIT;
     image.tiling = VK_IMAGE_TILING_OPTIMAL;
-    image.usage = a_usage | VK_IMAGE_USAGE_SAMPLED_BIT;
+    image.usage = a_usage;
     
     VK_CHECK_RESULT(vkCreateImage(a_device, &image, nullptr, &result.image));
     vkGetImageMemoryRequirements(a_device, result.image, &result.memReq);
@@ -65,12 +66,52 @@ namespace vk_utils
     return a_pImgMem->view;
   }
 
+  VulkanImageMem allocateColorTextureFromDataLDR(VkDevice a_device, VkPhysicalDevice a_physDevice, const unsigned char *pixels,
+                                                 uint32_t w, uint32_t h, uint32_t a_mipLevels, VkFormat a_format,
+                                                 std::shared_ptr<vk_utils::ICopyEngine> a_pCopy, VkImageUsageFlags a_usageFlags)
+  {
+    VulkanImageMem result = {};
+
+    result.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    result.format     = a_format;
+
+    VkImageCreateInfo image{};
+    image.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+    image.imageType = VK_IMAGE_TYPE_2D;
+    image.format = result.format;
+    image.extent.width = w;
+    image.extent.height = h;
+    image.extent.depth = 1;
+    image.mipLevels = a_mipLevels;
+    image.arrayLayers = 1;
+    image.samples = VK_SAMPLE_COUNT_1_BIT;
+    image.tiling = VK_IMAGE_TILING_OPTIMAL;
+    image.usage = a_usageFlags | VK_IMAGE_USAGE_SAMPLED_BIT;
+
+    VK_CHECK_RESULT(vkCreateImage(a_device, &image, nullptr, &result.image));
+    vkGetImageMemoryRequirements(a_device, result.image, &result.memReq);
+
+    VkMemoryAllocateInfo memAlloc{};
+    memAlloc.sType           = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+    memAlloc.allocationSize  = result.memReq.size;
+    memAlloc.memoryTypeIndex = findMemoryType(result.memReq.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, a_physDevice);
+    VK_CHECK_RESULT(vkAllocateMemory(a_device, &memAlloc, nullptr, &result.mem));
+
+    createImageViewAndBindMem(a_device, &result);
+
+    a_pCopy->UpdateImage(result.image, pixels, w, h, 4);
+
+    return result;
+  }
+
   void createImgAllocAndBind(VkDevice a_device, VkPhysicalDevice a_physicalDevice,
                              uint32_t a_width, uint32_t a_height, VkFormat a_format,  VkImageUsageFlags a_usage,
                              VulkanImageMem *a_pImgMem,
                              const VkImageCreateInfo *a_pImageCreateInfo, const VkImageViewCreateInfo *a_pViewCreateInfo)
   {
-    
+
+    a_pImgMem->format = a_format;
+    // aspect mask ?
     VkImageCreateInfo image{};
     if(a_pImageCreateInfo != nullptr)
     {
@@ -89,10 +130,10 @@ namespace vk_utils
       image.samples = VK_SAMPLE_COUNT_1_BIT;
       image.tiling = VK_IMAGE_TILING_OPTIMAL;
       image.usage = a_usage | VK_IMAGE_USAGE_SAMPLED_BIT;
-    }             
+    }
 
     VK_CHECK_RESULT(vkCreateImage(a_device, &image, nullptr, &a_pImgMem->image));
-    vkGetImageMemoryRequirements(a_device, a_pImgMem->image, &a_pImgMem->memReq);            
+    vkGetImageMemoryRequirements(a_device, a_pImgMem->image, &a_pImgMem->memReq);
 
     VkMemoryAllocateInfo memAlloc{};
     memAlloc.sType           = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
@@ -364,5 +405,115 @@ namespace vk_utils
         0, nullptr,
         0, nullptr,
         1, &imageMemoryBarrier);
+  }
+
+  VkSampler createSampler(VkDevice a_device, VkFilter a_filterMode, VkSamplerAddressMode a_addressMode,
+                          VkBorderColor a_border_color, uint32_t a_mipLevels)
+  {
+    VkSampler result;
+
+    VkSamplerCreateInfo samplerCreateInfo = {};
+    samplerCreateInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+    samplerCreateInfo.maxAnisotropy = 1.0f;
+    samplerCreateInfo.magFilter = a_filterMode;
+    samplerCreateInfo.minFilter = a_filterMode;
+    samplerCreateInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+    samplerCreateInfo.addressModeU = a_addressMode;
+    samplerCreateInfo.addressModeV = a_addressMode;
+    samplerCreateInfo.addressModeW = a_addressMode;
+    samplerCreateInfo.mipLodBias = 0.0f;
+    samplerCreateInfo.compareOp = VK_COMPARE_OP_NEVER;
+    samplerCreateInfo.minLod = 0.0f;
+    samplerCreateInfo.maxLod = 0.0f;
+    samplerCreateInfo.borderColor = a_border_color;
+    samplerCreateInfo.maxAnisotropy = 1.0;
+    samplerCreateInfo.anisotropyEnable = VK_FALSE;
+
+    samplerCreateInfo.maxLod = (float)a_mipLevels;
+
+    VK_CHECK_RESULT(vkCreateSampler(a_device, &samplerCreateInfo, nullptr, &result));
+
+    return result;
+  }
+
+  void recordMipChainGenerationCmdBuf(VkDevice a_device, VkCommandBuffer a_cmdBuf, const VulkanImageMem& imageMem,
+                                      uint32_t a_width, uint32_t a_height, uint32_t a_mipLevels, VkImageLayout a_targetLayout)
+  {
+    VkCommandBufferBeginInfo beginInfo = {};
+    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+
+    vkBeginCommandBuffer(a_cmdBuf, &beginInfo);
+    // Copy down mips from n-1 to n
+    for (uint32_t i = 1; i < a_mipLevels; i++) //TODO: rewrite with staging buffer and possibly move this to copy helper
+    {
+      VkImageBlit imageBlit{};
+
+      // Source
+      imageBlit.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+      imageBlit.srcSubresource.layerCount = 1;
+      imageBlit.srcSubresource.mipLevel = i - 1;
+      imageBlit.srcOffsets[1].x = int32_t(a_width >> (i - 1));
+      imageBlit.srcOffsets[1].y = int32_t(a_height >> (i - 1));
+      imageBlit.srcOffsets[1].z = 1;
+
+      // Destination
+      imageBlit.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+      imageBlit.dstSubresource.layerCount = 1;
+      imageBlit.dstSubresource.mipLevel = i;
+      imageBlit.dstOffsets[1].x = int32_t(a_width >> i);
+      imageBlit.dstOffsets[1].y = int32_t(a_height >> i);
+      imageBlit.dstOffsets[1].z = 1;
+
+      VkImageSubresourceRange mipSubRange = {};
+      mipSubRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+      mipSubRange.baseMipLevel = i;
+      mipSubRange.levelCount = 1;
+      mipSubRange.layerCount = 1;
+
+      // Transition current mip level to transfer dest
+      vk_utils::setImageLayout(
+          a_cmdBuf,
+          imageMem.image,
+          VK_IMAGE_LAYOUT_UNDEFINED,
+          VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+          mipSubRange,
+          VK_PIPELINE_STAGE_TRANSFER_BIT,
+          VK_PIPELINE_STAGE_TRANSFER_BIT);
+
+      // Blit from previous level
+      vkCmdBlitImage(
+          a_cmdBuf,
+          imageMem.image,
+          VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+          imageMem.image,
+          VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+          1,
+          &imageBlit,
+          VK_FILTER_LINEAR);
+
+      // Transition current mip level to transfer source for read in next iteration
+      vk_utils::setImageLayout(
+          a_cmdBuf,
+          imageMem.image,
+          VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+          VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+          mipSubRange,
+          VK_PIPELINE_STAGE_TRANSFER_BIT,
+          VK_PIPELINE_STAGE_TRANSFER_BIT);
+    }
+
+    // After the loop, all mip layers are in TRANSFER_SRC layout, so transition all to SHADER_READ
+    VkImageSubresourceRange subresourceRange = {};
+    subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    subresourceRange.levelCount = a_mipLevels;
+    subresourceRange.layerCount = 1;
+    vk_utils::setImageLayout(
+        a_cmdBuf,
+        imageMem.image,
+        VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+        a_targetLayout,
+        subresourceRange);
+
+    vkEndCommandBuffer(a_cmdBuf);
   }
 }

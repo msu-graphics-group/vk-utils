@@ -3,10 +3,13 @@
 
 #define USE_VOLK
 #include "vk_include.h"
+#include "vk_copy.h"
 
 #include <string>
 #include <vector>
 #include <cassert>
+#include <memory>
+#include <cmath>
 
 namespace vk_utils
 {
@@ -16,9 +19,12 @@ namespace vk_utils
     VkImageAspectFlags aspectMask;
     VkImage image;
     VkImageView view;
+
     VkDeviceMemory mem;
     VkDeviceSize mem_offset;
     VkMemoryRequirements memReq;
+
+    VkImageLayout currentLayout;
   };
 
   VkBool32 getSupportedDepthFormat(VkPhysicalDevice physicalDevice, const std::vector<VkFormat> &depthFormats, VkFormat *depthFormat);
@@ -38,6 +44,24 @@ namespace vk_utils
                              VulkanImageMem *a_pImgMem,
                              const VkImageCreateInfo *a_pImageCreateInfo = nullptr, const VkImageViewCreateInfo *a_pViewCreateInfo = nullptr);
 
+  VulkanImageMem allocateColorTextureFromDataLDR(VkDevice a_device, VkPhysicalDevice a_physDevice, const unsigned char *pixels,
+                                                 uint32_t w, uint32_t h, uint32_t a_mipLevels, VkFormat a_format,
+                                                 std::shared_ptr<vk_utils::ICopyEngine> a_pCopy,
+                                                 VkImageUsageFlags a_usageFlags = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT);
+
+  VkSampler createSampler(VkDevice a_device,
+                          VkFilter a_filterMode = VK_FILTER_LINEAR,
+                          VkSamplerAddressMode a_addressMode = VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT,
+                          VkBorderColor a_border_color = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE,
+                          uint32_t a_mipLevels = 1);
+
+  inline uint32_t calcMipLevelsCount(uint32_t w, uint32_t h)
+  {
+    return static_cast<uint32_t>(floor(log2(std::max(w, h))) + 1);
+  }
+
+  void recordMipChainGenerationCmdBuf(VkDevice a_device, VkCommandBuffer a_cmdBuf, const VulkanImageMem& imageMem,
+                                      uint32_t a_width, uint32_t a_height, uint32_t a_mipLevels, VkImageLayout a_targetLayout);
 
   // *** layout transitions and image barriers ***
   // taken from https://github.com/SaschaWillems/Vulkan
