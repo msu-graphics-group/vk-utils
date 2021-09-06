@@ -18,8 +18,6 @@ namespace vk_utils
     if (a_usage & VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)
       result.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
 
-    assert(result.aspectMask > 0);
-
     VkImageCreateInfo image{};
     image.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
     image.imageType = VK_IMAGE_TYPE_2D;
@@ -42,6 +40,8 @@ namespace vk_utils
   VkImageView createImageViewAndBindMem(VkDevice a_device, VulkanImageMem *a_pImgMem, const VkImageViewCreateInfo *a_pViewCreateInfo)
   {
     VK_CHECK_RESULT(vkBindImageMemory(a_device, a_pImgMem->image, a_pImgMem->mem, a_pImgMem->mem_offset));
+
+    assert(a_pImgMem->aspectMask > 0);
 
     VkImageViewCreateInfo imageView{};
     if(a_pViewCreateInfo != nullptr)
