@@ -41,8 +41,6 @@ namespace vk_utils
   {
     VK_CHECK_RESULT(vkBindImageMemory(a_device, a_pImgMem->image, a_pImgMem->mem, a_pImgMem->mem_offset));
 
-    assert(a_pImgMem->aspectMask > 0);
-
     VkImageViewCreateInfo imageView{};
     if(a_pViewCreateInfo != nullptr)
     {
