@@ -200,6 +200,8 @@ VkPipeline vk_utils::GraphicsPipelineMaker::MakePipeline(VkDevice a_device, VkPi
 void vk_utils::ComputePipelineMaker::LoadShader(VkDevice a_device, const std::string& a_shaderPath,
                                                 const VkSpecializationInfo *a_specInfo, const char* a_mainName)
 {
+  m_mainName = a_mainName;
+
   shaderStageInfo = {};
   shaderStageInfo.sType  = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
   shaderStageInfo.stage  = VK_SHADER_STAGE_COMPUTE_BIT;
@@ -208,7 +210,7 @@ void vk_utils::ComputePipelineMaker::LoadShader(VkDevice a_device, const std::st
   shaderModule    = vk_utils::createShaderModule(a_device, shaderCode);
 
   shaderStageInfo.module = shaderModule;
-  shaderStageInfo.pName  = "main";
+  shaderStageInfo.pName  = m_mainName.c_str();
 }
 
 VkPipelineLayout vk_utils::ComputePipelineMaker::MakeLayout(VkDevice a_device, std::vector<VkDescriptorSetLayout> a_dslayouts,
