@@ -100,8 +100,13 @@ namespace vk_utils
   {
     assert(m_device != VK_NULL_HANDLE);
 
-    //    for (auto& l : m_dsLayouts)
-    //      vkDestroyDescriptorSetLayout(m_device, l.second.layout, NULL);
+    for (auto& l : m_layoutDict)
+    {
+      if(l.second != VK_NULL_HANDLE)
+      {
+        vkDestroyDescriptorSetLayout(m_device, l.second, nullptr);
+      }
+    }
 
     vkDestroyDescriptorPool(m_device, m_pool, nullptr);
   }
