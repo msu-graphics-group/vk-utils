@@ -1,6 +1,12 @@
 #ifndef VK_UTILS_H
 #define VK_UTILS_H
 
+#if defined(__ANDROID__)
+#include <android_native_app_glue.h>
+#include <android/log.h>
+
+#endif
+
 #define USE_VOLK
 #include "vk_include.h"
 
@@ -96,6 +102,22 @@ namespace vk_utils
   // ****************
 }
 
+
+#ifdef __ANDROID__
+#define VK_CHECK_RESULT(f) 													           \
+{																										           \
+    VkResult __vk_check_result = (f);													 \
+    if (__vk_check_result != VK_SUCCESS)											 \
+    {																								           \
+        __android_log_print(ANDROID_LOG_ERROR, "vk_utils", "Fatal : VkResult is %s in %s at line %d\n",    \
+                vk_utils::errorString(__vk_check_result).c_str(),  __FILE__, __LINE__); \
+        assert(__vk_check_result == VK_SUCCESS);							 \
+    }																								           \
+}
+
+
+#else
+
 #define VK_CHECK_RESULT(f) 													           \
 {																										           \
     VkResult __vk_check_result = (f);													 \
@@ -106,6 +128,8 @@ namespace vk_utils
         assert(__vk_check_result == VK_SUCCESS);							 \
     }																								           \
 }
+
+#endif
 
 #undef  RUN_TIME_ERROR
 #undef  RUN_TIME_ERROR_AT

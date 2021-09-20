@@ -188,6 +188,7 @@ namespace vk_utils {
       createInfo.enabledLayerCount = uint32_t(layer_names.size());
       createInfo.ppEnabledLayerNames = layer_names.data();
 
+#ifndef __ANDROID__
       VkValidationFeaturesEXT validationFeatures = {};
       validationFeatures.sType = VK_STRUCTURE_TYPE_VALIDATION_FEATURES_EXT;
       validationFeatures.enabledValidationFeatureCount = 1;
@@ -196,6 +197,7 @@ namespace vk_utils {
 
 //      validationFeatures.pNext = createInfo.pNext;
       createInfo.pNext = &validationFeatures;
+#endif
     }
     else
     {
