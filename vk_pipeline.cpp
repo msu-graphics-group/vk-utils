@@ -1,6 +1,13 @@
 #include "vk_pipeline.h"
 #include "vk_utils.h"
 
+#ifdef __ANDROID__
+namespace vk_android
+{
+  extern AAssetManager *g_pMgr;
+}
+#endif
+
 VkPipelineInputAssemblyStateCreateInfo vk_utils::IA_TList()
 {
   VkPipelineInputAssemblyStateCreateInfo inputAssembly = {};
@@ -46,7 +53,11 @@ void vk_utils::GraphicsPipelineMaker::LoadShaders(VkDevice a_device, const std::
     stage_info.sType  = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     stage_info.stage  = stage;
 
-    auto shaderCode             = vk_utils::readSPVFile(path.c_str());
+#ifdef __ANDROID__
+    auto shaderCode = vk_utils::readSPVFile(vk_android::g_pMgr, path.c_str());
+#else
+    auto shaderCode = vk_utils::readSPVFile(path.c_str());
+#endif
     VkShaderModule shaderModule = vk_utils::createShaderModule(a_device, shaderCode);
     shaderModules[top]          = shaderModule;
 
@@ -206,7 +217,11 @@ void vk_utils::ComputePipelineMaker::LoadShader(VkDevice a_device, const std::st
   shaderStageInfo.sType  = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
   shaderStageInfo.stage  = VK_SHADER_STAGE_COMPUTE_BIT;
 
+#ifdef __ANDROID__
+  auto shaderCode = vk_utils::readSPVFile(vk_android::g_pMgr, a_shaderPath.c_str());
+#else
   auto shaderCode = vk_utils::readSPVFile(a_shaderPath.c_str());
+#endif
   shaderModule    = vk_utils::createShaderModule(a_device, shaderCode);
 
   shaderStageInfo.module = shaderModule;
