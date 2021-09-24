@@ -336,33 +336,32 @@ void QuadRenderer::Create(VkDevice a_device, const char* a_vspath, const char* a
   inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP;
   inputAssembly.primitiveRestartEnable = VK_FALSE;
   
-  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  VkRect2D scissor; // #TODO: FIX THIS !!!, THIS IS DEBUG CODE
-  {
-    scissor.offset = VkOffset2D{0,0};
-    scissor.extent = VkExtent2D{256,256};
-  }
-  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  // VkRect2D scissor; // #TODO: FIX THIS !!!, THIS IS DEBUG CODE
+  // {
+  //   scissor.offset = VkOffset2D{0,0};
+  //   scissor.extent = VkExtent2D{512,512};
+  // }
+  // rect = scissor;
+  // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
   VkViewport viewport = {};
   viewport.x        = 0.0f;
   viewport.y        = 0.0f;
-  viewport.width    = (float)scissor.extent.width;
-  viewport.height   = (float)scissor.extent.height;
+  viewport.width    = (float)rect.extent.width;
+  viewport.height   = (float)rect.extent.height;
   viewport.minDepth = 0.0f;
   viewport.maxDepth = 1.0f;
-
-  rect = scissor;
 
   VkPipelineViewportStateCreateInfo viewportState = {};
   viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
   viewportState.viewportCount = 1;
-  viewportState.pViewports = &viewport;
-  viewportState.scissorCount = 1;
-  viewportState.pScissors = &scissor;
+  viewportState.pViewports    = &viewport;
+  viewportState.scissorCount  = 1;
+  viewportState.pScissors     = &rect;
 
   VkPipelineRasterizationStateCreateInfo rasterizer = {};
   rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
@@ -493,9 +492,14 @@ void QuadRenderer::DrawCmd(VkCommandBuffer a_cmdBuff, VkDescriptorSet a_inTexDes
   clearValues[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
   renderPassInfo.clearValueCount = 1;
   renderPassInfo.pClearValues = &clearValues[0];
+   
+  //VkRect2D scissor{};
+  //scissor.offset = {0, 0};
+  //scissor.extent = {1024, 1024};
+  //vkCmdSetScissor(a_cmdBuff, 0, 1, &scissor); // this should be enabled for pipeline, can't require that ("when the graphics pipeline is created with VK_DYNAMIC_STATE_SCISSOR")
 
   vkCmdBeginRenderPass(a_cmdBuff, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-
+   
   vkCmdBindPipeline(a_cmdBuff, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline);
   vkCmdBindDescriptorSets(a_cmdBuff, VK_PIPELINE_BIND_POINT_GRAPHICS, m_layout, 0, 1, &a_inTexDescriptor, 0, NULL);
 
