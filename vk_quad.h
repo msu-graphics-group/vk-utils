@@ -86,7 +86,8 @@ namespace vk_utils
   class QuadRenderer : public IQuad
   {
   public:
-    QuadRenderer(int32_t a_startX, int32_t a_startY, uint32_t a_sizeX, uint32_t a_sizeY) : m_pipeline(nullptr), m_layout(nullptr), m_renderPass(nullptr), m_fbTarget(nullptr), m_dlayout(nullptr) 
+    QuadRenderer(int32_t a_startX, int32_t a_startY, uint32_t a_sizeX, uint32_t a_sizeY) : m_pipeline(nullptr),
+                m_layout(nullptr), m_renderPass(nullptr), m_fbTarget(nullptr), m_dlayout(nullptr)
     {
       rect.offset = VkOffset2D{a_startX, a_startY};
       rect.extent = VkExtent2D{a_sizeX, a_sizeY};

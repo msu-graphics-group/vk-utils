@@ -7,46 +7,46 @@
 #include <sstream>
 #include <memory>
 
-void vk_utils::CreateRenderPass(VkDevice a_device, vk_utils::RenderTargetInfo2D a_rtInfo, VkRenderPass* a_pRenderPass)
-{
-  VkAttachmentDescription colorAttachment = {};
-  colorAttachment.format         = a_rtInfo.format;
-  colorAttachment.samples        = VK_SAMPLE_COUNT_1_BIT;
-  colorAttachment.loadOp         = a_rtInfo.loadOp;
-  colorAttachment.storeOp        = VK_ATTACHMENT_STORE_OP_STORE;
-  colorAttachment.stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-  colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-  colorAttachment.initialLayout  = a_rtInfo.initialLayout;           //  VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL/VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL ? 
-  colorAttachment.finalLayout    = a_rtInfo.finalLayout;
-
-  VkAttachmentReference colorAttachmentRef = {};
-  colorAttachmentRef.attachment = 0;
-  colorAttachmentRef.layout     = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL; 
-
-  VkSubpassDescription subpass = {};
-  subpass.pipelineBindPoint    = VK_PIPELINE_BIND_POINT_GRAPHICS;
-  subpass.colorAttachmentCount = 1;
-  subpass.pColorAttachments    = &colorAttachmentRef;
-
-  VkSubpassDependency dependency = {};
-  dependency.srcSubpass    = VK_SUBPASS_EXTERNAL;
-  dependency.dstSubpass    = 0;
-  dependency.srcStageMask  = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-  dependency.srcAccessMask = 0;
-  dependency.dstStageMask  = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-  dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-
-  VkRenderPassCreateInfo renderPassInfo = {};
-  renderPassInfo.sType           = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-  renderPassInfo.attachmentCount = 1;
-  renderPassInfo.pAttachments    = &colorAttachment;
-  renderPassInfo.subpassCount    = 1;
-  renderPassInfo.pSubpasses      = &subpass;
-  renderPassInfo.dependencyCount = 1;
-  renderPassInfo.pDependencies   = &dependency;
-
-  if (vkCreateRenderPass(a_device, &renderPassInfo, nullptr, a_pRenderPass) != VK_SUCCESS)
-    throw std::runtime_error("[CreateRenderPass]: failed to create render pass!");
+//void vk_utils::CreateRenderPass(VkDevice a_device, vk_utils::RenderTargetInfo2D a_rtInfo, VkRenderPass* a_pRenderPass)
+//{
+//  VkAttachmentDescription colorAttachment = {};
+//  colorAttachment.format         = a_rtInfo.format;
+//  colorAttachment.samples        = VK_SAMPLE_COUNT_1_BIT;
+//  colorAttachment.loadOp         = a_rtInfo.loadOp;
+//  colorAttachment.storeOp        = VK_ATTACHMENT_STORE_OP_STORE;
+//  colorAttachment.stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+//  colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+//  colorAttachment.initialLayout  = a_rtInfo.initialLayout;
+//  colorAttachment.finalLayout    = a_rtInfo.finalLayout;
+//
+//  VkAttachmentReference colorAttachmentRef = {};
+//  colorAttachmentRef.attachment = 0;
+//  colorAttachmentRef.layout     = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+//
+//  VkSubpassDescription subpass = {};
+//  subpass.pipelineBindPoint    = VK_PIPELINE_BIND_POINT_GRAPHICS;
+//  subpass.colorAttachmentCount = 1;
+//  subpass.pColorAttachments    = &colorAttachmentRef;
+//
+//  VkSubpassDependency dependency = {};
+//  dependency.srcSubpass    = VK_SUBPASS_EXTERNAL;
+//  dependency.dstSubpass    = 0;
+//  dependency.srcStageMask  = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+//  dependency.srcAccessMask = 0;
+//  dependency.dstStageMask  = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+//  dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+//
+//  VkRenderPassCreateInfo renderPassInfo = {};
+//  renderPassInfo.sType           = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+//  renderPassInfo.attachmentCount = 1;
+//  renderPassInfo.pAttachments    = &colorAttachment;
+//  renderPassInfo.subpassCount    = 1;
+//  renderPassInfo.pSubpasses      = &subpass;
+//  renderPassInfo.dependencyCount = 1;
+//  renderPassInfo.pDependencies   = &dependency;
+//
+//  if (vkCreateRenderPass(a_device, &renderPassInfo, nullptr, a_pRenderPass) != VK_SUCCESS)
+//    throw std::runtime_error("[CreateRenderPass]: failed to create render pass!");
 }
 
 
@@ -188,10 +188,9 @@ void vk_utils::FSQuad::Create(VkDevice a_device, const char* a_vspath, const cha
   pipelineLayoutInfo.pSetLayouts            = &m_dlayout;
   pipelineLayoutInfo.setLayoutCount         = 1;
 
-  if (vkCreatePipelineLayout(a_device, &pipelineLayoutInfo, nullptr, &m_layout) != VK_SUCCESS)
-    throw std::runtime_error("[FSQuad::Create]: failed to create pipeline layout!");
-  
-  vk_utils::CreateRenderPass(m_device, a_rtInfo, &m_renderPass);
+  VK_CHECK_RESULT(vkCreatePipelineLayout(a_device, &pipelineLayoutInfo, nullptr, &m_layout));
+
+  m_renderPass = vk_utils::createRenderPass(m_device, a_rtInfo);
   
   // finally create graphics pipeline
   //
@@ -210,8 +209,7 @@ void vk_utils::FSQuad::Create(VkDevice a_device, const char* a_vspath, const cha
   pipelineInfo.subpass             = 0;
   pipelineInfo.basePipelineHandle  = VK_NULL_HANDLE;  
   
-  if (vkCreateGraphicsPipelines(a_device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_pipeline) != VK_SUCCESS)
-    throw std::runtime_error("[FSQuad::Create]: failed to create graphics pipeline!");
+  VK_CHECK_RESULT(vkCreateGraphicsPipelines(a_device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_pipeline));
 
   vkDestroyShaderModule(m_device, fragShaderModule, nullptr);
   vkDestroyShaderModule(m_device, vertShaderModule, nullptr);
@@ -235,8 +233,7 @@ void vk_utils::FSQuad::SetRenderTarget(VkImageView a_imageView)
   framebufferInfo.height          = m_rtCreateInfo.size.height;
   framebufferInfo.layers          = 1;  
 
-  if (vkCreateFramebuffer(m_device, &framebufferInfo, nullptr, &m_fbTarget) != VK_SUCCESS)
-    throw std::runtime_error("[FSQuad]: failed to create framebuffer!");
+  VK_CHECK_RESULT(vkCreateFramebuffer(m_device, &framebufferInfo, nullptr, &m_fbTarget));
 
   m_targetView = a_imageView; 
 }
@@ -426,8 +423,7 @@ void QuadRenderer::Create(VkDevice a_device, const char* a_vspath, const char* a
   pipelineLayoutInfo.pSetLayouts = &m_dlayout;
   pipelineLayoutInfo.setLayoutCount = 1;
 
-  if (vkCreatePipelineLayout(a_device, &pipelineLayoutInfo, nullptr, &m_layout) != VK_SUCCESS)
-    throw std::runtime_error("[FSQuad::Create]: failed to create pipeline layout!");
+  VK_CHECK_RESULT(vkCreatePipelineLayout(a_device, &pipelineLayoutInfo, nullptr, &m_layout));
 
   vk_utils::CreateRenderPass(m_device, a_rtInfo, &m_renderPass);
 
@@ -448,8 +444,7 @@ void QuadRenderer::Create(VkDevice a_device, const char* a_vspath, const char* a
   pipelineInfo.subpass = 0;
   pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 
-  if (vkCreateGraphicsPipelines(a_device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_pipeline) != VK_SUCCESS)
-    throw std::runtime_error("[FSQuad::Create]: failed to create graphics pipeline!");
+  VK_CHECK_RESULT(vkCreateGraphicsPipelines(a_device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_pipeline));
 
   vkDestroyShaderModule(m_device, fragShaderModule, nullptr);
   vkDestroyShaderModule(m_device, vertShaderModule, nullptr);
@@ -473,8 +468,7 @@ void QuadRenderer::SetRenderTarget(VkImageView a_imageView)
   framebufferInfo.height = m_rtCreateInfo.size.height;
   framebufferInfo.layers = 1;
 
-  if (vkCreateFramebuffer(m_device, &framebufferInfo, nullptr, &m_fbTarget) != VK_SUCCESS)
-    throw std::runtime_error("[FSQuad]: failed to create framebuffer!");
+  VK_CHECK_RESULT(vkCreateFramebuffer(m_device, &framebufferInfo, nullptr, &m_fbTarget));
 
   m_targetView = a_imageView;
 }
