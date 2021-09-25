@@ -383,7 +383,7 @@ void QuadRenderer::Create(VkDevice a_device, const char* a_vspath, const char* a
 
   VK_CHECK_RESULT(vkCreatePipelineLayout(a_device, &pipelineLayoutInfo, nullptr, &m_layout));
 
-  vk_utils::CreateRenderPass(m_device, a_rtInfo, &m_renderPass);
+  m_renderPass = vk_utils::createRenderPass(m_device, a_rtInfo);
 
   // finally create graphics pipeline
   //
