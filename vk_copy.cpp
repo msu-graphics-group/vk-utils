@@ -4,10 +4,7 @@
 
 #include <cstring>
 #include <cassert>
-#include <iostream>
-
 #include <cmath>
-#include <cassert>
 
 #include <algorithm>
 #ifdef WIN32

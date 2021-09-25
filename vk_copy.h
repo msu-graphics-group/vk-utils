@@ -38,7 +38,7 @@ namespace vk_utils
   {
     SimpleCopyHelper(); // fill everything with VK_NULL_HANDLE
     SimpleCopyHelper(VkPhysicalDevice a_physicalDevice, VkDevice a_device, VkQueue a_transferQueue, uint32_t a_transferQueueIDX, size_t a_stagingBuffSize);
-    virtual ~SimpleCopyHelper();
+    ~SimpleCopyHelper() override;
 
     void UpdateBuffer(VkBuffer a_dst, size_t a_dstOffset, const void* a_src, size_t a_size) override;
     void ReadBuffer  (VkBuffer a_src, size_t a_srcOffset, void* a_dst, size_t a_size) override;
@@ -50,16 +50,16 @@ namespace vk_utils
 
   protected:
     static constexpr uint32_t SMALL_BUFF = 65536;
-    VkQueue         queue;
-    VkCommandPool   cmdPool;
-    VkCommandBuffer cmdBuff;
+    VkQueue         queue = VK_NULL_HANDLE;
+    VkCommandPool   cmdPool = VK_NULL_HANDLE;
+    VkCommandBuffer cmdBuff = VK_NULL_HANDLE;
 
-    VkBuffer        stagingBuff;
-    VkDeviceMemory  stagingBuffMemory;
-    size_t          stagingSize;
+    VkBuffer        stagingBuff = VK_NULL_HANDLE;
+    VkDeviceMemory  stagingBuffMemory = VK_NULL_HANDLE;
+    size_t          stagingSize = 0u;
 
-    VkPhysicalDevice physDev;
-    VkDevice         dev;
+    VkPhysicalDevice physDev = VK_NULL_HANDLE;
+    VkDevice         dev = VK_NULL_HANDLE;
 
     SimpleCopyHelper(const SimpleCopyHelper& rhs) = delete;
     SimpleCopyHelper& operator=(const SimpleCopyHelper& rhs) { return *this; }
@@ -68,7 +68,7 @@ namespace vk_utils
   struct PingPongCopyHelper : SimpleCopyHelper
   {
     PingPongCopyHelper(VkPhysicalDevice a_physicalDevice, VkDevice a_device, VkQueue a_transferQueue, uint32_t a_transferQueueIDX, size_t a_stagingBuffSize);
-    ~PingPongCopyHelper();
+    ~PingPongCopyHelper() override;
 
     void UpdateBuffer(VkBuffer a_dst, size_t a_dstOffset, const void* a_src, size_t a_size) override;
 
@@ -76,7 +76,7 @@ namespace vk_utils
 
     void SubmitCopy(VkBuffer a_dst, size_t a_dstOffset, size_t a_size, int a_currStagingId);
 
-    VkFence  fence;
+    VkFence  fence = VK_NULL_HANDLE;;
     VkBuffer staging[2];
     size_t   stagingSizeHalf;
   };
@@ -90,25 +90,25 @@ namespace vk_utils
                       size_t a_stagingBuffSize, const char *a_csCopyPath,
                       size_t a_auxBuffSize);
 
-    ~ComputeCopyHelper();
+    ~ComputeCopyHelper() override;
 
     void ReadBuffer(VkBuffer a_src, size_t a_srcOffset, void* a_dst, size_t a_size) override;
 
   private:
     
-    VkBuffer        auxBuff;
-    VkDeviceMemory  auxBuffMemory;
+    VkBuffer        auxBuff = VK_NULL_HANDLE;;
+    VkDeviceMemory  auxBuffMemory = VK_NULL_HANDLE;;
 
-    VkPipeline       copyPipeline;
-    VkPipelineLayout copyPipelineLayout;
-    VkShaderModule   csCopy;
+    VkPipeline       copyPipeline = VK_NULL_HANDLE;;
+    VkPipelineLayout copyPipelineLayout = VK_NULL_HANDLE;;
+    VkShaderModule   csCopy = VK_NULL_HANDLE;;
 
-    VkDescriptorSet       copyDescriptorSet;
-    VkDescriptorSetLayout copyDescriptorSetLayout;
+    VkDescriptorSet       copyDescriptorSet = VK_NULL_HANDLE;;
+    VkDescriptorSetLayout copyDescriptorSetLayout = VK_NULL_HANDLE;;
 
-    VkDescriptorPool      m_dsPool;
+    VkDescriptorPool      m_dsPool = VK_NULL_HANDLE;;
   };
 
-};
+}
 
 #endif
