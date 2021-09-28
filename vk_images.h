@@ -11,6 +11,11 @@
 #include <memory>
 #include <cmath>
 
+#ifdef WIN32
+  #undef min
+  #undef max
+#endif
+
 namespace vk_utils
 {
   struct VulkanImageMem
