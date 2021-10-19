@@ -1,5 +1,6 @@
 #include "vk_images.h"
 #include "vk_utils.h"
+#include "vk_buffers.h"
 
 #include <array>
 #include <algorithm>
@@ -8,24 +9,23 @@
 namespace vk_utils
 {
 
-  VulkanImageMem createImg(VkDevice a_device, uint32_t a_width, uint32_t a_height, VkFormat a_format, VkImageUsageFlags a_usage)
+  VulkanImageMem createImg(VkDevice a_device, uint32_t a_width, uint32_t a_height, VkFormat a_format, VkImageUsageFlags a_usage,
+    VkImageAspectFlags a_aspectFlags, uint32_t a_mipLvls)
   {
     VulkanImageMem result = {};
 
     result.format = a_format;
-    if (a_usage & VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
-      result.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    if (a_usage & VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)
-      result.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+    result.aspectMask = a_aspectFlags;
+    result.mipLvls = a_mipLvls;
 
     VkImageCreateInfo image{};
     image.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
     image.imageType = VK_IMAGE_TYPE_2D;
-    image.format = a_format;
+    image.format = result.format;
     image.extent.width = a_width;
     image.extent.height = a_height;
     image.extent.depth = 1;
-    image.mipLevels = 1;
+    image.mipLevels = result.mipLvls;
     image.arrayLayers = 1;
     image.samples = VK_SAMPLE_COUNT_1_BIT;
     image.tiling = VK_IMAGE_TILING_OPTIMAL;
@@ -52,6 +52,54 @@ namespace vk_utils
     }
   }
 
+  VkDeviceMemory allocateImgsBindCreateView(VkDevice a_device, VkPhysicalDevice a_physDevice, std::vector<VulkanImageMem> &a_images)
+  {
+    std::vector<VkMemoryRequirements> memInfos(a_images.size());
+    for(size_t i = 0; i < memInfos.size(); ++i)
+    {
+      memInfos[i] = a_images[i].memReq;
+    }
+
+    for(size_t i = 1; i < memInfos.size(); i++)
+    {
+      if(memInfos[i].memoryTypeBits != memInfos[0].memoryTypeBits)
+      {
+        logWarning("[allocateAndBindWithPadding]: input buffers have different memReq.memoryTypeBits");
+        return VK_NULL_HANDLE;
+      }
+    }
+
+    auto offsets  = vk_utils::calculateMemOffsets(memInfos);
+    auto memTotal = offsets[offsets.size() - 1];
+
+    VkDeviceMemory res;
+    VkMemoryAllocateInfo allocateInfo = {};
+    allocateInfo.sType           = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+    allocateInfo.pNext           = nullptr;
+    allocateInfo.allocationSize  = memTotal;
+    allocateInfo.memoryTypeIndex = vk_utils::findMemoryType(memInfos[0].memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, a_physDevice);
+
+//    VkMemoryAllocateFlagsInfo memoryAllocateFlagsInfo{};
+//    if(flags)
+//    {
+//      memoryAllocateFlagsInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_FLAGS_INFO;
+//      memoryAllocateFlagsInfo.flags = flags;
+//
+//      allocateInfo.pNext = &memoryAllocateFlagsInfo;
+//    }
+
+    VK_CHECK_RESULT(vkAllocateMemory(a_device, &allocateInfo, NULL, &res));
+
+    for (size_t i = 0; i < a_images.size(); i++)
+    {
+      a_images[i].mem = res;
+      a_images[i].mem_offset = offsets[i];
+      createImageViewAndBindMem(a_device, &a_images[i]);
+    }
+
+    return res;
+  }
+
   VkImageView createImageViewAndBindMem(VkDevice a_device, VulkanImageMem *a_pImgMem, const VkImageViewCreateInfo *a_pViewCreateInfo)
   {
     VK_CHECK_RESULT(vkBindImageMemory(a_device, a_pImgMem->image, a_pImgMem->mem, a_pImgMem->mem_offset));
@@ -69,7 +117,7 @@ namespace vk_utils
       imageView.subresourceRange = {};
       imageView.subresourceRange.aspectMask = a_pImgMem->aspectMask;
       imageView.subresourceRange.baseMipLevel = 0;
-      imageView.subresourceRange.levelCount = 1;
+      imageView.subresourceRange.levelCount = a_pImgMem->mipLvls;
       imageView.subresourceRange.baseArrayLayer = 0;
       imageView.subresourceRange.layerCount = 1;
     }
@@ -87,6 +135,7 @@ namespace vk_utils
 
     result.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
     result.format     = a_format;
+    result.mipLvls    = a_mipLevels;
 
     VkImageCreateInfo image{};
     image.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -95,7 +144,7 @@ namespace vk_utils
     image.extent.width = w;
     image.extent.height = h;
     image.extent.depth = 1;
-    image.mipLevels = a_mipLevels;
+    image.mipLevels = result.mipLvls;
     image.arrayLayers = 1;
     image.samples = VK_SAMPLE_COUNT_1_BIT;
     image.tiling = VK_IMAGE_TILING_OPTIMAL;
@@ -132,13 +181,15 @@ namespace vk_utils
     }
     else
     {
+      a_pImgMem->mipLvls = 1;
+
       image.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
       image.imageType = VK_IMAGE_TYPE_2D;
       image.format = a_format;
       image.extent.width = a_width;
       image.extent.height = a_height;
       image.extent.depth = 1;
-      image.mipLevels = 1;
+      image.mipLevels = a_pImgMem->mipLvls;
       image.arrayLayers = 1;
       image.samples = VK_SAMPLE_COUNT_1_BIT;
       image.tiling = VK_IMAGE_TILING_OPTIMAL;

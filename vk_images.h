@@ -28,6 +28,8 @@ namespace vk_utils
     VkDeviceMemory mem;
     VkDeviceSize mem_offset;
     VkMemoryRequirements memReq;
+
+    uint32_t mipLvls;
   };
 
   VkBool32 getSupportedDepthFormat(VkPhysicalDevice physicalDevice, const std::vector<VkFormat> &depthFormats, VkFormat *depthFormat);
@@ -35,11 +37,13 @@ namespace vk_utils
   bool isStencilFormat(VkFormat a_format);
   bool isDepthOrStencil(VkFormat a_format);
 
-  VulkanImageMem createImg(VkDevice a_device, uint32_t a_width, uint32_t a_height, VkFormat a_format, VkImageUsageFlags a_usage);
+  VulkanImageMem createImg(VkDevice a_device, uint32_t a_width, uint32_t a_height, VkFormat a_format, VkImageUsageFlags a_usage,
+    VkImageAspectFlags a_aspectFlags = VK_IMAGE_ASPECT_COLOR_BIT, uint32_t a_mipLvls = 1);
   VulkanImageMem createDepthTexture(VkDevice a_device, VkPhysicalDevice a_physDevice,
     const uint32_t a_width, const uint32_t a_height, VkFormat a_format);
   void deleteImg(VkDevice a_device, VulkanImageMem *a_pImgMem);
 
+  VkDeviceMemory allocateImgsBindCreateView(VkDevice a_device, VkPhysicalDevice a_physDevice, std::vector<VulkanImageMem> &a_images);
 
   VkImageView createImageViewAndBindMem(VkDevice a_device, VulkanImageMem *a_pImgMem, const VkImageViewCreateInfo *a_pViewCreateInfo = nullptr);
 
