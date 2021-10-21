@@ -142,7 +142,6 @@ void vk_utils::SimpleCopyHelper::UpdateImage(VkImage a_image, const void* a_src,
 {
   const size_t lineSize  = a_width * a_bpp;
   const size_t n_lines   = a_height;
-  const size_t a_size    = lineSize * n_lines;
   const size_t linesPerStage = stagingSize / lineSize;
 
   VkCommandBufferBeginInfo beginInfo = {};

@@ -35,7 +35,7 @@ namespace vk_utils
     VkDescriptorPool pool;
 
     std::vector<VkDescriptorPoolSize> poolSizes(a_descrTypes.size());
-    for(auto i = 0; i < a_descrTypes.size(); ++i)
+    for(size_t i = 0; i < a_descrTypes.size(); ++i)
     {
       VkDescriptorPoolSize descriptorPoolSize = {};
       descriptorPoolSize.type = a_descrTypes[i].first;
