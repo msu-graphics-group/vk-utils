@@ -161,7 +161,7 @@ namespace vk_utils
 
     createImageViewAndBindMem(a_device, &result);
 
-    a_pCopy->UpdateImage(result.image, pixels, w, h, 4);
+    a_pCopy->UpdateImage(result.image, pixels, w, h, 4, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
     return result;
   }

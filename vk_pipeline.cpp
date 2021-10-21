@@ -37,6 +37,20 @@ VkPipelineInputAssemblyStateCreateInfo vk_utils::IA_LSList()
   return inputAssembly;
 }
 
+void vk_utils::destroyPipelineIfExists(VkDevice a_device, VkPipeline &a_pipeline, VkPipelineLayout &a_layout)
+{
+  if(a_layout != VK_NULL_HANDLE)
+  {
+    vkDestroyPipelineLayout(a_device, a_layout, nullptr);
+    a_layout= VK_NULL_HANDLE;
+  }
+  if(a_pipeline != VK_NULL_HANDLE)
+  {
+    vkDestroyPipeline(a_device, a_pipeline, nullptr);
+    a_pipeline = VK_NULL_HANDLE;
+  }
+}
+
 void vk_utils::GraphicsPipelineMaker::LoadShaders(VkDevice a_device, const std::unordered_map<VkShaderStageFlagBits, std::string> &shader_paths)
 {
   int top = 0;
