@@ -12,6 +12,7 @@
 #include <cmath>
 
 #ifdef WIN32
+#include <algorithm>
   #undef min
   #undef max
 #endif
