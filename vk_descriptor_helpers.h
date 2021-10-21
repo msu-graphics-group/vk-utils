@@ -2,11 +2,13 @@
 #define VKUTILS_VK_DESCRIPTOR_HELPERS_H
 
 #include <vector>
+#include <unordered_map>
 #include <tuple>
 
 namespace vk_utils
 {
-  using DescriptorTypesVec = std::vector <std::pair<VkDescriptorType, uint32_t>>;
+  using DescriptorTypesMap = std::unordered_map<uint32_t, std::pair<VkDescriptorType, uint32_t>>;
+  using DescriptorTypesVec = std::vector<std::pair<VkDescriptorType, uint32_t>>;
 
   // from boost
   // https://www.boost.org/doc/libs/1_55_0/doc/html/hash/reference.html#boost.hash_combine
@@ -39,7 +41,7 @@ namespace vk_utils
   struct LayoutKey
   {
     VkShaderStageFlags stageFlags;
-    DescriptorTypesVec descriptorTypes;
+    DescriptorTypesMap descriptorTypes;
 
     bool operator==(const LayoutKey &rhs) const
     {
@@ -53,10 +55,11 @@ namespace vk_utils
     {
       size_t currHash = std::hash<VkShaderStageFlags>()(key.stageFlags);
       hash_combine(currHash, key.descriptorTypes.size());
-      for (const auto &[dtype, count] : key.descriptorTypes)
+      for (const auto &[location, descriptor] : key.descriptorTypes)
       {
-        hash_combine(currHash, dtype);
-        hash_combine(currHash, count);
+        hash_combine(currHash, location);
+        hash_combine(currHash, descriptor.first);
+        hash_combine(currHash, descriptor.second);
       }
       return currHash;
     }
@@ -65,11 +68,11 @@ namespace vk_utils
   struct SetKey
   {
     VkDescriptorSetLayout layout;
-    std::vector <DescriptorHandles> handles;
+    std::unordered_map<uint32_t, DescriptorHandles> bindings;
 
     bool operator==(const SetKey &rhs) const
     {
-      return std::tie(layout, handles) == std::tie(rhs.layout, rhs.handles);
+      return std::tie(layout, bindings) == std::tie(rhs.layout, rhs.bindings);
     }
   };
 
@@ -78,8 +81,9 @@ namespace vk_utils
     size_t operator()(const SetKey &key) const
     {
       size_t currHash = std::hash<VkDescriptorSetLayout>()(key.layout);
-      for (const auto &handle : key.handles)
+      for (const auto &[location, handle] : key.bindings)
       {
+        hash_combine(currHash, location);
         hash_combine(currHash, handle.type);
         for (const auto &samp : handle.imageSampler)
           hash_combine(currHash, samp);

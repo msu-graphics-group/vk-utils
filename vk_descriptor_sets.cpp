@@ -3,21 +3,22 @@
 
 namespace vk_utils
 {
-  VkDescriptorSetLayout createDescriptorSetLayout(VkDevice a_device, const DescriptorTypesVec &a_descrTypes,
+  VkDescriptorSetLayout createDescriptorSetLayout(VkDevice a_device, const DescriptorTypesMap &a_descrTypes,
                                                   VkShaderStageFlags a_stage)
   {
     VkDescriptorSetLayout layout;
 
-    std::vector<VkDescriptorSetLayoutBinding> bindings(a_descrTypes.size());
-    for (size_t i = 0; i < a_descrTypes.size(); ++i)
+    std::vector<VkDescriptorSetLayoutBinding> bindings;
+    bindings.reserve(a_descrTypes.size());
+    for (auto& [location, descriptor] : a_descrTypes)
     {
       VkDescriptorSetLayoutBinding descriptorSetLayoutBinding = {};
-      descriptorSetLayoutBinding.binding = i;
-      descriptorSetLayoutBinding.descriptorType = a_descrTypes[i].first;
-      descriptorSetLayoutBinding.descriptorCount = a_descrTypes[i].second;
-      descriptorSetLayoutBinding.stageFlags = a_stage;
+      descriptorSetLayoutBinding.binding                      = location;
+      descriptorSetLayoutBinding.descriptorType               = descriptor.first;
+      descriptorSetLayoutBinding.descriptorCount              = descriptor.second;
+      descriptorSetLayoutBinding.stageFlags                   = a_stage;
 
-      bindings[i] = descriptorSetLayoutBinding;
+      bindings.push_back(descriptorSetLayoutBinding);
     }
 
     VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = {};
@@ -34,7 +35,7 @@ namespace vk_utils
     VkDescriptorPool pool;
 
     std::vector<VkDescriptorPoolSize> poolSizes(a_descrTypes.size());
-    for (size_t i = 0; i < a_descrTypes.size(); ++i)
+    for(auto i = 0; i < a_descrTypes.size(); ++i)
     {
       VkDescriptorPoolSize descriptorPoolSize = {};
       descriptorPoolSize.type = a_descrTypes[i].first;
@@ -150,6 +151,18 @@ namespace vk_utils
   void DescriptorMaker::BindImageArray(uint32_t a_loc, const std::vector<VkImageView> &a_imageView,
     const std::vector<VkSampler> &a_sampler, VkDescriptorType a_bindType, VkImageLayout a_imageLayout)
   {
+    if(a_imageView.empty())
+    {
+      logWarning("[DescriptorMaker::BindImage] binding ignored - empty image views array");
+      return;
+    }
+
+    if(a_bindType == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER && a_sampler.empty())
+    {
+      logWarning("[DescriptorMaker::BindImage] binding ignored - empty samplers array for combined image sampler");
+      return;
+    }
+
     DescriptorHandles h{};
     h.imageView = a_imageView;
     h.imageSampler = a_sampler;
@@ -178,16 +191,13 @@ namespace vk_utils
   {
     VkDescriptorSetLayout layout = VK_NULL_HANDLE;
     VkDescriptorSet set = VK_NULL_HANDLE;
-    DescriptorTypesVec descrTypes;
+    DescriptorTypesMap descrTypes;
 
-    descrTypes.resize(m_bindings.size());
     size_t totalImageInfos = 0;
     size_t totalBufferInfos = 0;
     size_t totalAccStructsInfos = 0;
-    std::vector<DescriptorHandles> loc_to_handles(m_bindings.size());
     for (const auto &[location, handle] : m_bindings)
     {
-      loc_to_handles[location] = handle;
       uint32_t count = 1;
       switch (handle.type)
       {
@@ -216,7 +226,7 @@ namespace vk_utils
       //case VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_NV:
       //case VK_DESCRIPTOR_TYPE_INLINE_UNIFORM_BLOCK_EXT: //TODO
       default:
-        count = 1;
+        count = 0;
         break;
       }
 
@@ -243,7 +253,7 @@ namespace vk_utils
       layout = createDescriptorSetLayout(m_device, descrTypes, m_currentStageFlags);
     }
 
-    SetKey set_key = { layout, loc_to_handles };
+    SetKey set_key = { layout, m_bindings };
     if(hashingMode == HASHING_MODE::LAYOUTS_AND_SETS)
     {
       // Check if we already had created such set
@@ -268,7 +278,8 @@ namespace vk_utils
     VK_CHECK_RESULT(vkAllocateDescriptorSets(m_device, &descriptorSetAllocateInfo, &set));
 
     const size_t descriptorsInSet = descrTypes.size();
-    std::vector<VkWriteDescriptorSet> writeSets(descriptorsInSet);
+    std::vector<VkWriteDescriptorSet> writeSets;
+    writeSets.reserve(descriptorsInSet);
     std::vector<VkDescriptorBufferInfo> dBufferInfos(totalBufferInfos);
     std::vector<VkDescriptorImageInfo> dImageInfos(totalImageInfos);
     std::vector<VkWriteDescriptorSetAccelerationStructureKHR> dAccStructInfos(totalAccStructsInfos);
@@ -276,21 +287,21 @@ namespace vk_utils
     size_t imgInfoIdx = 0;
     size_t bufInfoIdx = 0;
     size_t accStructInfoIdx = 0;
-    for (size_t i = 0; i < descriptorsInSet; ++i)
+    for(auto& [location, descriptor] : descrTypes)
     {
       VkWriteDescriptorSet writeDescriptorSet = {};
       writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
       writeDescriptorSet.dstSet = set;
-      writeDescriptorSet.dstBinding = i;
-      writeDescriptorSet.descriptorCount = descrTypes[i].second;
-      writeDescriptorSet.descriptorType = descrTypes[i].first;
+      writeDescriptorSet.dstBinding = location;
+      writeDescriptorSet.descriptorCount = descriptor.second;
+      writeDescriptorSet.descriptorType = descriptor.first;
 
       switch (writeDescriptorSet.descriptorType)
       {
       case VK_DESCRIPTOR_TYPE_SAMPLER:
         writeDescriptorSet.pImageInfo = &dImageInfos[imgInfoIdx];
         for(size_t j = 0; j < writeDescriptorSet.descriptorCount; ++j)
-          dImageInfos[imgInfoIdx++] = {m_bindings[i].imageSampler[j], VK_NULL_HANDLE, VK_IMAGE_LAYOUT_UNDEFINED};
+          dImageInfos[imgInfoIdx++] = {m_bindings[location].imageSampler[j], VK_NULL_HANDLE, VK_IMAGE_LAYOUT_UNDEFINED};
         break;
 
       case VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE:
@@ -298,30 +309,30 @@ namespace vk_utils
       case VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT:
         writeDescriptorSet.pImageInfo = &dImageInfos[imgInfoIdx];
         for(size_t j = 0; j < writeDescriptorSet.descriptorCount; ++j)
-          dImageInfos[imgInfoIdx++] = {VK_NULL_HANDLE, m_bindings[i].imageView[j], m_bindings[i].imageLayout};
+          dImageInfos[imgInfoIdx++] = {VK_NULL_HANDLE, m_bindings[location].imageView[j], m_bindings[location].imageLayout};
         break;
 
       case VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER:
         writeDescriptorSet.pImageInfo = &dImageInfos[imgInfoIdx];
         for(size_t j = 0; j < writeDescriptorSet.descriptorCount; ++j)
-          dImageInfos[imgInfoIdx++] = {m_bindings[i].imageSampler[j], m_bindings[i].imageView[j], m_bindings[i].imageLayout};
+          dImageInfos[imgInfoIdx++] = {m_bindings[location].imageSampler[j], m_bindings[location].imageView[j], m_bindings[location].imageLayout};
         break;
 
       case VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER:
       case VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER:
-        writeDescriptorSet.pTexelBufferView = &m_bindings[i].buffView; //TODO: test and fix if needed
+        writeDescriptorSet.pTexelBufferView = &m_bindings[location].buffView; //TODO: test and fix if needed
         [[fallthrough]];
       case VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER:
       case VK_DESCRIPTOR_TYPE_STORAGE_BUFFER:
       case VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC:
       case VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC:
-        dBufferInfos[bufInfoIdx] = {m_bindings[i].buffer, 0, VK_WHOLE_SIZE}; //TODO: buffer range
+        dBufferInfos[bufInfoIdx] = {m_bindings[location].buffer, 0, VK_WHOLE_SIZE}; //TODO: buffer range
         writeDescriptorSet.pBufferInfo = &dBufferInfos[bufInfoIdx];
         bufInfoIdx++;
         break;
       case VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR:
         dAccStructInfos[accStructInfoIdx] = {VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR,
-          VK_NULL_HANDLE,1,&m_bindings[i].accelStruct}; //TODO: support accStruct arrays
+          VK_NULL_HANDLE,1,&m_bindings[location].accelStruct}; //TODO: support accStruct arrays
         writeDescriptorSet.pNext = &dAccStructInfos[accStructInfoIdx];
         accStructInfoIdx++;
         break;
@@ -333,7 +344,7 @@ namespace vk_utils
         break;
       }
 
-      writeSets[i] = writeDescriptorSet;
+      writeSets.push_back(writeDescriptorSet);
     }
 
     vkUpdateDescriptorSets(m_device, writeSets.size(), writeSets.data(), 0, nullptr);

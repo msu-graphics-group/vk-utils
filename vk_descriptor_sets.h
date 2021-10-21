@@ -14,7 +14,7 @@
 namespace vk_utils
 {
 
-  VkDescriptorSetLayout createDescriptorSetLayout(VkDevice a_device, const DescriptorTypesVec &a_descrTypes, VkShaderStageFlags a_stage = VK_SHADER_STAGE_COMPUTE_BIT);
+  VkDescriptorSetLayout createDescriptorSetLayout(VkDevice a_device, const DescriptorTypesMap &a_descrTypes, VkShaderStageFlags a_stage = VK_SHADER_STAGE_COMPUTE_BIT);
   VkDescriptorPool createDescriptorPool(VkDevice a_device, const DescriptorTypesVec &a_descrTypes, unsigned a_maxSets);
   VkDescriptorSet createDescriptorSet(VkDevice a_device, VkDescriptorSetLayout a_pDSLayout, VkDescriptorPool a_pDSPool, const std::vector<VkDescriptorBufferInfo> &bufInfos);
 
