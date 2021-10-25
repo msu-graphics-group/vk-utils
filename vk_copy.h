@@ -19,7 +19,7 @@ namespace vk_utils
 
     virtual void UpdateBuffer(VkBuffer a_dst, size_t a_dstOffset, const void* a_src, size_t a_size) = 0;     // mandatory if ICopyEngine devivative object used for meshes
     virtual void ReadBuffer  (VkBuffer a_src, size_t a_srcOffset,       void* a_dst, size_t a_size) {};      // optional
-    virtual void UpdateImage (VkImage a_image, const void* a_src, int a_width, int a_height, int a_bpp) {};  // mandatory if ICopyEngine devivative object used for textures
+    virtual void UpdateImage (VkImage a_image, const void* a_src, int a_width, int a_height, int a_bpp, VkImageLayout a_finalLayout) {};  // mandatory if ICopyEngine devivative object used for textures
 
     virtual VkQueue         TransferQueue() const { return VK_NULL_HANDLE; }
     virtual VkCommandBuffer CmdBuffer()     const { return VK_NULL_HANDLE; }
@@ -41,7 +41,7 @@ namespace vk_utils
 
     void UpdateBuffer(VkBuffer a_dst, size_t a_dstOffset, const void* a_src, size_t a_size) override;
     void ReadBuffer  (VkBuffer a_src, size_t a_srcOffset, void* a_dst, size_t a_size) override;
-    void UpdateImage (VkImage a_image, const void* a_src, int a_width, int a_height, int a_bpp) override;
+    void UpdateImage (VkImage a_image, const void* a_src, int a_width, int a_height, int a_bpp, VkImageLayout a_finalLayout) override;
     //void ReadImage (VkImage a_image, const void* a_src, int a_width, int a_height, int a_bpp) override; // TODO: implement this in future
 
     VkQueue  TransferQueue() const override { return queue; }

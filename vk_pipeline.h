@@ -65,5 +65,7 @@ namespace vk_utils
     VkPipelineLayout m_pipelineLayout = VK_NULL_HANDLE;
     std::string      m_mainName;
   };
+
+  void destroyPipelineIfExists(VkDevice a_device, VkPipeline &a_pipeline, VkPipelineLayout &a_layout);
 }
 
