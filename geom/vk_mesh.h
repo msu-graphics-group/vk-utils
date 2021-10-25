@@ -89,4 +89,9 @@ static inline float as_float(unsigned int x)
   return res;
 }
 
+namespace vk_utils
+{
+  void AddInstanceMatrixAttributeToVertexLayout(uint32_t a_binding, VkDeviceSize a_stride, VkPipelineVertexInputStateCreateInfo &a_vertexLayout);
+}
+
 #endif//VK_MESH_H

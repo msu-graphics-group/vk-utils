@@ -1,5 +1,63 @@
 #include "vk_mesh.h"
 
+void vk_utils::AddInstanceMatrixAttributeToVertexLayout(uint32_t a_binding, VkDeviceSize a_stride,
+  VkPipelineVertexInputStateCreateInfo &a_vertexLayout)
+{
+  static std::vector<VkVertexInputBindingDescription>   tmpVertexInputBindings;
+  static std::vector<VkVertexInputAttributeDescription> tmpVertexInputAttribDescr;
+
+  auto oldAttrDescrCount = a_vertexLayout.vertexAttributeDescriptionCount;
+  auto oldBindDescrCount = a_vertexLayout.vertexBindingDescriptionCount;
+
+  tmpVertexInputBindings.resize(oldBindDescrCount);
+  tmpVertexInputAttribDescr.resize(oldAttrDescrCount);
+
+  for(int i = 0; i < oldBindDescrCount; ++i)
+  {
+    tmpVertexInputBindings[i] = a_vertexLayout.pVertexBindingDescriptions[i];
+  }
+  for(int i = 0; i < oldAttrDescrCount; ++i)
+  {
+    tmpVertexInputAttribDescr[i] = a_vertexLayout.pVertexAttributeDescriptions[i];
+  }
+
+  VkVertexInputAttributeDescription float4x4AttrDescription{};
+  float4x4AttrDescription.location = oldAttrDescrCount;
+  float4x4AttrDescription.binding  = a_binding;
+  float4x4AttrDescription.format   = VK_FORMAT_R32G32B32A32_SFLOAT;
+  float4x4AttrDescription.offset   = 0;
+  tmpVertexInputAttribDescr.push_back(float4x4AttrDescription);
+
+  float4x4AttrDescription.location = oldAttrDescrCount + 1;
+  float4x4AttrDescription.binding  = a_binding;
+  float4x4AttrDescription.format   = VK_FORMAT_R32G32B32A32_SFLOAT;
+  float4x4AttrDescription.offset   = sizeof(float) * 4;
+  tmpVertexInputAttribDescr.push_back(float4x4AttrDescription);
+
+  float4x4AttrDescription.location = oldAttrDescrCount + 2;
+  float4x4AttrDescription.binding  = a_binding;
+  float4x4AttrDescription.format   = VK_FORMAT_R32G32B32A32_SFLOAT;
+  float4x4AttrDescription.offset   = sizeof(float) * 8;
+  tmpVertexInputAttribDescr.push_back(float4x4AttrDescription);
+
+  float4x4AttrDescription.location = oldAttrDescrCount + 3;
+  float4x4AttrDescription.binding  = a_binding;
+  float4x4AttrDescription.format   = VK_FORMAT_R32G32B32A32_SFLOAT;
+  float4x4AttrDescription.offset   = sizeof(float) * 12;
+  tmpVertexInputAttribDescr.push_back(float4x4AttrDescription);
+
+  VkVertexInputBindingDescription perInstanceBinding {};
+  perInstanceBinding.binding   = a_binding;
+  perInstanceBinding.stride    = a_stride;
+  perInstanceBinding.inputRate = VK_VERTEX_INPUT_RATE_INSTANCE;
+  tmpVertexInputBindings.push_back(perInstanceBinding);
+
+  a_vertexLayout.vertexBindingDescriptionCount   = tmpVertexInputBindings.size();
+  a_vertexLayout.pVertexBindingDescriptions      = tmpVertexInputBindings.data();
+  a_vertexLayout.vertexAttributeDescriptionCount = tmpVertexInputAttribDescr.size();
+  a_vertexLayout.pVertexAttributeDescriptions    = tmpVertexInputAttribDescr.data();
+}
+
 VkPipelineVertexInputStateCreateInfo Mesh8F::VertexInputLayout()
 {
   m_inputBinding.binding   = 0;
@@ -9,12 +67,12 @@ VkPipelineVertexInputStateCreateInfo Mesh8F::VertexInputLayout()
   m_inputAttributes[0].binding  = 0;
   m_inputAttributes[0].location = 0;
   m_inputAttributes[0].format   = VK_FORMAT_R32G32B32A32_SFLOAT;
-  m_inputAttributes[0].offset   = 0;
+  m_inputAttributes[0].offset   = static_cast<uint32_t >(offsetof(vertex, posNorm)); // 0
 
   m_inputAttributes[1].binding  = 0;
   m_inputAttributes[1].location = 1;
   m_inputAttributes[1].format   = VK_FORMAT_R32G32B32A32_SFLOAT;
-  m_inputAttributes[1].offset   = sizeof(float) * 4;
+  m_inputAttributes[1].offset   = static_cast<uint32_t >(offsetof(vertex, texCoordTang)); // 4 floats =  16 bytes
 
   VkPipelineVertexInputStateCreateInfo vertexInputInfo = {};
   vertexInputInfo.sType                           = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
