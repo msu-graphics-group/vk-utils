@@ -1,7 +1,6 @@
 #ifndef VK_MESH_H
 #define VK_MESH_H
 
-#define USE_VOLK
 #include "vk_include.h"
 #include <cstring>
 

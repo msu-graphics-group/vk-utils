@@ -1,7 +1,7 @@
 #ifndef CHIMERA_RT_FUNCS_H
 #define CHIMERA_RT_FUNCS_H
 
-#include "volk.h"
+#include "vk_include.h"
 
 extern PFN_vkGetBufferDeviceAddressKHR vkGetBufferDeviceAddressKHR;
 extern PFN_vkCreateAccelerationStructureKHR vkCreateAccelerationStructureKHR;

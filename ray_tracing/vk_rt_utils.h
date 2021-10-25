@@ -1,7 +1,6 @@
 #ifndef CHIMERA_VK_RT_UTILS_H
 #define CHIMERA_VK_RT_UTILS_H
 
-#define USE_VOLK
 #include "vk_include.h"
 #include <array>
 #include <vector>

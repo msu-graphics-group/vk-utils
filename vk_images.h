@@ -1,7 +1,6 @@
 #ifndef VK_SORT_VK_TEXTURES_H
 #define VK_SORT_VK_TEXTURES_H
 
-#define USE_VOLK
 #include "vk_include.h"
 #include "vk_copy.h"
 

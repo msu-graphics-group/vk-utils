@@ -1,6 +1,5 @@
 #pragma once
 
-#define USE_VOLK
 #include "vk_include.h"
 
 #include <unordered_map>

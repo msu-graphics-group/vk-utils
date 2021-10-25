@@ -1,7 +1,6 @@
 #ifndef VULKAN_COPY_H
 #define VULKAN_COPY_H
 
-#define USE_VOLK
 #include "vk_include.h"
 
 #include <vector>

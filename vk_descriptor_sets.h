@@ -1,7 +1,6 @@
 #ifndef VK_SORT_VK_UTILS_H
 #define VK_SORT_VK_UTILS_H
 
-#define USE_VOLK
 #include "vk_include.h"
 
 #include "vk_descriptor_helpers.h"

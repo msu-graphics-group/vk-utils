@@ -1,7 +1,6 @@
 #ifndef VK_SWAPCHAIN_H
 #define VK_SWAPCHAIN_H
 
-#define USE_VOLK
 #include "vk_include.h"
 
 #include <vector>
