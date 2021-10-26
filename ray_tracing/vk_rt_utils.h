@@ -17,31 +17,30 @@ namespace vk_rt_utils
 
   struct AccelStructure
   {
-    VkAccelerationStructureKHR handle = VK_NULL_HANDLE;
     uint64_t deviceAddress = 0;
     VkBuffer buffer = VK_NULL_HANDLE;
-    VkDeviceMemory memory = VK_NULL_HANDLE;
+    VkAccelerationStructureKHR handle = VK_NULL_HANDLE;
   };
 
   struct BLASInput
   {
-    VkAccelerationStructureGeometryKHR geom;
-    VkAccelerationStructureBuildRangeInfoKHR offsetInfo;
+    VkAccelerationStructureGeometryKHR geom = {};
+    VkAccelerationStructureBuildRangeInfoKHR offsetInfo = {};
   };
 
   struct ShaderBindingTable
   {
-    VkBuffer buf;
-    VkDeviceSize size;
-    VkStridedDeviceAddressRegionKHR stridedDeviceAddress;
+    VkBuffer buf = VK_NULL_HANDLE;
+    VkDeviceSize size = 0;
+    VkStridedDeviceAddressRegionKHR stridedDeviceAddress = {};
   };
 
   uint64_t getBufferDeviceAddress(VkDevice a_device, VkBuffer a_buffer);
   RTScratchBuffer allocScratchBuffer(VkDevice a_device, VkPhysicalDevice a_physDevice, VkDeviceSize size);
 
-  void createAccelerationStructure(AccelStructure& accel, VkAccelerationStructureTypeKHR type,
-                                   VkAccelerationStructureBuildSizesInfoKHR buildSizeInfo,
-                                   VkDevice a_device, VkPhysicalDevice a_physicalDevice);
+  AccelStructure createAccelStruct(VkDevice a_device, VkAccelerationStructureTypeKHR type, VkAccelerationStructureBuildSizesInfoKHR buildSizeInfo);
+  VkDeviceMemory allocAndGetAddressAccelStructs(VkDevice a_device, VkPhysicalDevice a_physicalDevice, std::vector<AccelStructure> &a_as);
+  VkDeviceMemory allocAndGetAddressAccelStruct(VkDevice a_device, VkPhysicalDevice a_physicalDevice, AccelStructure &a_as);
 
   VkStridedDeviceAddressRegionKHR getSBTStridedDeviceAddressRegion(VkDevice a_device, VkBuffer buffer,
                                                                    uint32_t handleCount, uint32_t handleSizeAligned);
@@ -55,7 +54,7 @@ namespace vk_rt_utils
     void             LoadShaders(VkDevice a_device, const std::vector<std::pair<VkShaderStageFlagBits, std::string>> &shader_paths);
     VkPipelineLayout MakeLayout(VkDevice a_device, VkDescriptorSetLayout a_dslayout);
     VkPipelineLayout MakeLayout(VkDevice a_device, std::vector<VkDescriptorSetLayout> a_dslayouts);
-    VkPipeline       MakePipeline(VkDevice a_device);
+    VkPipeline       MakePipeline(VkDevice a_device, uint32_t a_maxDepth = 2);
 
     private:
       int              m_stagesNum = 0;
