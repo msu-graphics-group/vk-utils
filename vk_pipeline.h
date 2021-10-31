@@ -25,7 +25,7 @@ namespace vk_utils
     VkPipelineViewportStateCreateInfo      viewportState {};
     VkPipelineRasterizationStateCreateInfo rasterizer {};
     VkPipelineMultisampleStateCreateInfo   multisampling {};
-    VkPipelineColorBlendAttachmentState    colorBlendAttachment {};
+    std::vector<VkPipelineColorBlendAttachmentState>    colorBlendAttachments {};
     VkPipelineColorBlendStateCreateInfo    colorBlending {};
     VkPushConstantRange                    pcRange {};
     VkPipelineLayoutCreateInfo             pipelineLayoutInfo {};
@@ -37,7 +37,7 @@ namespace vk_utils
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     void             LoadShaders(VkDevice a_device, const std::unordered_map<VkShaderStageFlagBits, std::string> &shader_paths);
-    void             SetDefaultState(uint32_t a_width, uint32_t a_height);
+    void             SetDefaultState(uint32_t a_width, uint32_t a_height, uint32_t rt_count = 1);
     VkPipelineLayout MakeLayout(VkDevice a_device, std::vector<VkDescriptorSetLayout> a_dslayouts, uint32_t a_pcRangeSize);
     VkPipeline       MakePipeline(VkDevice a_device, VkPipelineVertexInputStateCreateInfo a_vertexLayout, VkRenderPass a_renderPass,
                                   std::vector<VkDynamicState> a_dynamicStates = {},
