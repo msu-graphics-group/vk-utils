@@ -128,9 +128,9 @@ void cmesh::SaveMeshToVSGF(const char* a_fileName, const SimpleMesh& a_mesh)
 
   Header header = {};
   header.fileSizeInBytes = sizeof(header) + a_mesh.SizeInBytes();
-  header.verticesNum     = a_mesh.VerticesNum();
-  header.indicesNum      = a_mesh.IndicesNum();
-  header.materialsNum    = a_mesh.matIndices.size();
+  header.verticesNum     = (uint32_t)a_mesh.VerticesNum();
+  header.indicesNum      = (uint32_t)a_mesh.IndicesNum();
+  header.materialsNum    = (uint32_t)a_mesh.matIndices.size();
   header.flags           = 0;
 
   if(!a_mesh.vNorm4f.empty())

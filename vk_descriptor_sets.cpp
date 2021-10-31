@@ -23,7 +23,7 @@ namespace vk_utils
 
     VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = {};
     descriptorSetLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    descriptorSetLayoutCreateInfo.bindingCount = bindings.size();
+    descriptorSetLayoutCreateInfo.bindingCount = (uint32_t)bindings.size();
     descriptorSetLayoutCreateInfo.pBindings = bindings.data();
     VK_CHECK_RESULT(vkCreateDescriptorSetLayout(a_device, &descriptorSetLayoutCreateInfo, nullptr, &layout));
 
@@ -47,7 +47,7 @@ namespace vk_utils
     VkDescriptorPoolCreateInfo descriptorPoolCreateInfo = {};
     descriptorPoolCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
     descriptorPoolCreateInfo.maxSets = a_maxSets;
-    descriptorPoolCreateInfo.poolSizeCount = poolSizes.size();
+    descriptorPoolCreateInfo.poolSizeCount = (uint32_t)poolSizes.size();
     descriptorPoolCreateInfo.pPoolSizes = poolSizes.data();
 
     VK_CHECK_RESULT(vkCreateDescriptorPool(a_device, &descriptorPoolCreateInfo, nullptr, &pool));
@@ -68,7 +68,7 @@ namespace vk_utils
     VK_CHECK_RESULT(vkAllocateDescriptorSets(a_device, &descriptorSetAllocateInfo, &set));
 
     std::vector<VkWriteDescriptorSet> writeSets(bufInfos.size());
-    for (size_t i = 0; i < bufInfos.size(); ++i)
+    for (uint32_t i = 0; i < bufInfos.size(); ++i)
     {
       VkWriteDescriptorSet writeDescriptorSet = {};
       writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -81,7 +81,7 @@ namespace vk_utils
       writeSets[i] = writeDescriptorSet;
     }
 
-    vkUpdateDescriptorSets(a_device, writeSets.size(), writeSets.data(), 0, nullptr);
+    vkUpdateDescriptorSets(a_device, (uint32_t)writeSets.size(), writeSets.data(), 0, nullptr);
 
     return set;
   }
@@ -202,14 +202,14 @@ namespace vk_utils
       switch (handle.type)
       {
       case VK_DESCRIPTOR_TYPE_SAMPLER:
-        count = handle.imageSampler.size();
+        count = (uint32_t)handle.imageSampler.size();
         totalImageInfos += handle.imageSampler.size();
         break;
       case VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER:
       case VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE:
       case VK_DESCRIPTOR_TYPE_STORAGE_IMAGE:
       case VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT:
-        count = handle.imageView.size();
+        count = (uint32_t)handle.imageView.size();
         totalImageInfos += handle.imageView.size();
         break;
       case VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER: //TODO: test and fix
@@ -347,7 +347,7 @@ namespace vk_utils
       writeSets.push_back(writeDescriptorSet);
     }
 
-    vkUpdateDescriptorSets(m_device, writeSets.size(), writeSets.data(), 0, nullptr);
+    vkUpdateDescriptorSets(m_device, (uint32_t)writeSets.size(), writeSets.data(), 0, nullptr);
     if(hashingMode == HASHING_MODE::LAYOUTS_AND_SETS)
     {
         m_setDict[set_key] = set;

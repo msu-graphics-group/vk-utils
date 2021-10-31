@@ -47,8 +47,9 @@ namespace vk_utils {
 
   void setLogToFile(const std::string &path)
   {
-    FILE* log_fd = fopen( path.c_str(), "w" );
-    if(!log_fd)
+    FILE* log_fd;
+    const errno_t fopenRes = fopen_s(&log_fd, path.c_str(), "w")ж
+    if(fopenRes != 0 || log_fd == nullptr)
     {
       std::perror("[setLogToFile] File opening failed, logging to stderr");
     }
@@ -221,11 +222,11 @@ namespace vk_utils {
     createInfo.flags = VK_DEBUG_REPORT_INFORMATION_BIT_EXT | VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT | VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT;
     createInfo.pfnCallback = a_callback;
 
-    auto vkCreateDebugReportCallbackEXT = (PFN_vkCreateDebugReportCallbackEXT)vkGetInstanceProcAddr(a_instance, "vkCreateDebugReportCallbackEXT");
-    if (vkCreateDebugReportCallbackEXT == nullptr)
+    auto local_vkCreateDebugReportCallbackEXT = (PFN_vkCreateDebugReportCallbackEXT)vkGetInstanceProcAddr(a_instance, "vkCreateDebugReportCallbackEXT");
+    if (local_vkCreateDebugReportCallbackEXT == nullptr)
       RUN_TIME_ERROR("Could not load vkCreateDebugReportCallbackEXT");
 
-    VK_CHECK_RESULT(vkCreateDebugReportCallbackEXT(a_instance, &createInfo, nullptr, a_debugReportCallback));
+    VK_CHECK_RESULT(local_vkCreateDebugReportCallbackEXT(a_instance, &createInfo, nullptr, a_debugReportCallback));
   }
 
   VkPhysicalDevice findPhysicalDevice(VkInstance a_instance, bool a_printInfo, unsigned a_preferredDeviceId, std::vector<const char *> a_deviceExt)
@@ -385,7 +386,7 @@ namespace vk_utils {
     VkDeviceCreateInfo deviceCreateInfo = {};
     deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
     deviceCreateInfo.pQueueCreateInfos = queueCreateInfos.data();
-    deviceCreateInfo.queueCreateInfoCount = queueCreateInfos.size();
+    deviceCreateInfo.queueCreateInfoCount = (uint32_t)queueCreateInfos.size();
     deviceCreateInfo.pEnabledFeatures = &a_deviceFeatures;
     deviceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(a_extensions.size());
     deviceCreateInfo.ppEnabledExtensionNames = a_extensions.data();
@@ -473,7 +474,7 @@ namespace vk_utils {
   {
     VkSubmitInfo submitInfo = {};
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-    submitInfo.commandBufferCount = a_cmdBuffers.size();
+    submitInfo.commandBufferCount = (uint32_t)a_cmdBuffers.size();
     submitInfo.pCommandBuffers = a_cmdBuffers.data();
 
     VkFence fence;
@@ -491,8 +492,9 @@ namespace vk_utils {
 
   std::vector<uint32_t> readSPVFile(const char *filename)
   {
-    FILE *fp = fopen(filename, "rb");
-    if (fp == nullptr)
+    FILE *fp;
+    const errno_t fopenRes = fopen_s(&fp, filename, "rb");
+    if (fopenRes != 0 || fp == nullptr)
     {
       std::string errorMsg = std::string("[vk_utils::readSPVFile]: can't open file ") + std::string(filename);
       RUN_TIME_ERROR(errorMsg.c_str());
@@ -645,7 +647,7 @@ namespace vk_utils {
     renderPassInfo.pAttachments = &attachments[0];
     renderPassInfo.subpassCount = 1;
     renderPassInfo.pSubpasses = &subpass;
-    renderPassInfo.dependencyCount = dependencies.size();
+    renderPassInfo.dependencyCount = (uint32_t)dependencies.size();
     renderPassInfo.pDependencies = dependencies.data();
 
     VkRenderPass res;

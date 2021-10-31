@@ -64,8 +64,8 @@ namespace vk_utils
 
   protected:
 
-    FSQuad(const FSQuad& a_rhs) { }
-    FSQuad& operator=(const FSQuad& a_rhs) { return *this; }
+    FSQuad(const FSQuad& a_rhs) { (void)a_rhs; }
+    FSQuad& operator=(const FSQuad& a_rhs) { (void)a_rhs; return *this; }
 
     VkDevice         m_device = {};
     VkPipeline       m_pipeline;

@@ -18,14 +18,28 @@ namespace vk_utils
     virtual ~ICopyEngine(){}
 
     virtual void UpdateBuffer(VkBuffer a_dst, size_t a_dstOffset, const void* a_src, size_t a_size) = 0;     // mandatory if ICopyEngine devivative object used for meshes
-    virtual void ReadBuffer  (VkBuffer a_src, size_t a_srcOffset,       void* a_dst, size_t a_size) {};      // optional
-    virtual void UpdateImage (VkImage a_image, const void* a_src, int a_width, int a_height, int a_bpp, VkImageLayout a_finalLayout) {};  // mandatory if ICopyEngine devivative object used for textures
+    virtual void ReadBuffer  (VkBuffer a_src, size_t a_srcOffset,       void* a_dst, size_t a_size)
+    {
+      (void)a_src;
+      (void)a_srcOffset;
+      (void)a_dst;
+      (void)a_size;
+    };      // optional
+    virtual void UpdateImage (VkImage a_image, const void* a_src, int a_width, int a_height, int a_bpp, VkImageLayout a_finalLayout)
+    {
+      (void)a_image;
+      (void)a_src;
+      (void)a_width;
+      (void)a_height;
+      (void)a_bpp;
+      (void)a_finalLayout;
+    };  // mandatory if ICopyEngine devivative object used for textures
 
     virtual VkQueue         TransferQueue() const { return VK_NULL_HANDLE; }
     virtual VkCommandBuffer CmdBuffer()     const { return VK_NULL_HANDLE; }
   protected:
-    ICopyEngine(const ICopyEngine& rhs) {}
-    ICopyEngine& operator=(const ICopyEngine& rhs) { return *this; }    
+    ICopyEngine(const ICopyEngine& rhs) { (void)rhs; }
+    ICopyEngine& operator=(const ICopyEngine& rhs) { (void)rhs; return *this; }    
   };
 
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -61,7 +75,7 @@ namespace vk_utils
     VkDevice         dev = VK_NULL_HANDLE;
 
     SimpleCopyHelper(const SimpleCopyHelper& rhs) = delete;
-    SimpleCopyHelper& operator=(const SimpleCopyHelper& rhs) { return *this; }
+    SimpleCopyHelper& operator=(const SimpleCopyHelper& rhs) { (void)rhs; return *this; }
   };
 
   struct PingPongCopyHelper : SimpleCopyHelper

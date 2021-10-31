@@ -93,7 +93,7 @@ VkPipelineLayout vk_utils::GraphicsPipelineMaker::MakeLayout(VkDevice a_device, 
   if(!a_dslayouts.empty())
   {
     pipelineLayoutInfo.pSetLayouts            = a_dslayouts.data();
-    pipelineLayoutInfo.setLayoutCount         = a_dslayouts.size();
+    pipelineLayoutInfo.setLayoutCount         = (uint32_t)a_dslayouts.size();
   }
   else
   {
@@ -149,7 +149,7 @@ void vk_utils::GraphicsPipelineMaker::SetDefaultState(uint32_t a_width, uint32_t
   colorBlending.sType             = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
   colorBlending.logicOpEnable     = VK_FALSE;
   colorBlending.logicOp           = VK_LOGIC_OP_CLEAR;
-  colorBlending.attachmentCount   = colorBlendAttachments.size();
+  colorBlending.attachmentCount   = (uint32_t)colorBlendAttachments.size();
   colorBlending.pAttachments      = colorBlendAttachments.data();
   colorBlending.blendConstants[0] = 0.0f;
   colorBlending.blendConstants[1] = 0.0f;
@@ -176,7 +176,7 @@ VkPipeline vk_utils::GraphicsPipelineMaker::MakePipeline(VkDevice a_device, VkPi
 
   VkPipelineDynamicStateCreateInfo dynamicState = {};
   dynamicState.sType             = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
-  dynamicState.dynamicStateCount = a_dynamicStates.size();
+  dynamicState.dynamicStateCount = (uint32_t)a_dynamicStates.size();
   dynamicState.pDynamicStates    = a_dynamicStates.data();
 
   pipelineInfo = {};
@@ -218,6 +218,7 @@ VkPipeline vk_utils::GraphicsPipelineMaker::MakePipeline(VkDevice a_device, VkPi
 void vk_utils::ComputePipelineMaker::LoadShader(VkDevice a_device, const std::string& a_shaderPath,
                                                 const VkSpecializationInfo *a_specInfo, const char* a_mainName)
 {
+  (void)a_specInfo;
   m_mainName = a_mainName;
 
   shaderStageInfo = {};
@@ -252,7 +253,7 @@ VkPipelineLayout vk_utils::ComputePipelineMaker::MakeLayout(VkDevice a_device, s
   if (!a_dslayouts.empty())
   {
     pipelineLayoutInfo.pSetLayouts    = a_dslayouts.data();
-    pipelineLayoutInfo.setLayoutCount = a_dslayouts.size();
+    pipelineLayoutInfo.setLayoutCount = (uint32_t)a_dslayouts.size();
   }
   else
   {

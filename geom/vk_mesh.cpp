@@ -1,6 +1,6 @@
 #include "vk_mesh.h"
 
-void vk_utils::AddInstanceMatrixAttributeToVertexLayout(uint32_t a_binding, VkDeviceSize a_stride,
+void vk_utils::AddInstanceMatrixAttributeToVertexLayout(uint32_t a_binding, uint32_t a_stride,
   VkPipelineVertexInputStateCreateInfo &a_vertexLayout)
 {
   static std::vector<VkVertexInputBindingDescription>   tmpVertexInputBindings;
@@ -12,11 +12,11 @@ void vk_utils::AddInstanceMatrixAttributeToVertexLayout(uint32_t a_binding, VkDe
   tmpVertexInputBindings.resize(oldBindDescrCount);
   tmpVertexInputAttribDescr.resize(oldAttrDescrCount);
 
-  for(int i = 0; i < oldBindDescrCount; ++i)
+  for(uint32_t i = 0; i < oldBindDescrCount; ++i)
   {
     tmpVertexInputBindings[i] = a_vertexLayout.pVertexBindingDescriptions[i];
   }
-  for(int i = 0; i < oldAttrDescrCount; ++i)
+  for(uint32_t i = 0; i < oldAttrDescrCount; ++i)
   {
     tmpVertexInputAttribDescr[i] = a_vertexLayout.pVertexAttributeDescriptions[i];
   }
@@ -52,9 +52,9 @@ void vk_utils::AddInstanceMatrixAttributeToVertexLayout(uint32_t a_binding, VkDe
   perInstanceBinding.inputRate = VK_VERTEX_INPUT_RATE_INSTANCE;
   tmpVertexInputBindings.push_back(perInstanceBinding);
 
-  a_vertexLayout.vertexBindingDescriptionCount   = tmpVertexInputBindings.size();
+  a_vertexLayout.vertexBindingDescriptionCount   = (uint32_t)tmpVertexInputBindings.size();
   a_vertexLayout.pVertexBindingDescriptions      = tmpVertexInputBindings.data();
-  a_vertexLayout.vertexAttributeDescriptionCount = tmpVertexInputAttribDescr.size();
+  a_vertexLayout.vertexAttributeDescriptionCount = (uint32_t)tmpVertexInputAttribDescr.size();
   a_vertexLayout.pVertexAttributeDescriptions    = tmpVertexInputAttribDescr.data();
 }
 
