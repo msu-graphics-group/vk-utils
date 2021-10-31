@@ -47,9 +47,8 @@ namespace vk_utils {
 
   void setLogToFile(const std::string &path)
   {
-    FILE* log_fd;
-    const errno_t fopenRes = fopen_s(&log_fd, path.c_str(), "w")ж
-    if(fopenRes != 0 || log_fd == nullptr)
+    FILE* log_fd = fopen( path.c_str(), "w" );
+    if(!log_fd)
     {
       std::perror("[setLogToFile] File opening failed, logging to stderr");
     }
@@ -492,9 +491,8 @@ namespace vk_utils {
 
   std::vector<uint32_t> readSPVFile(const char *filename)
   {
-    FILE *fp;
-    const errno_t fopenRes = fopen_s(&fp, filename, "rb");
-    if (fopenRes != 0 || fp == nullptr)
+    FILE *fp = fopen(filename, "rb");
+    if (fp == nullptr)
     {
       std::string errorMsg = std::string("[vk_utils::readSPVFile]: can't open file ") + std::string(filename);
       RUN_TIME_ERROR(errorMsg.c_str());
