@@ -50,6 +50,12 @@ namespace vk_utils
       vkDestroyImage(a_device, a_pImgMem->image, nullptr);
       a_pImgMem->image = VK_NULL_HANDLE;
     }
+
+    if(a_pImgMem->mem != VK_NULL_HANDLE)
+    {
+      vkFreeMemory(a_device, a_pImgMem->mem, nullptr);
+      a_pImgMem->mem = VK_NULL_HANDLE;
+    }
   }
 
   VkDeviceMemory allocateImgsBindCreateView(VkDevice a_device, VkPhysicalDevice a_physDevice, std::vector<VulkanImageMem> &a_images)
