@@ -68,8 +68,9 @@ namespace vk_utils
     return static_cast<uint32_t>(floor(log2(std::max(w, h))) + 1);
   }
 
-  void recordMipChainGenerationCmdBuf(VkDevice a_device, VkCommandBuffer a_cmdBuf, const VulkanImageMem& imageMem,
-                                      uint32_t a_width, uint32_t a_height, uint32_t a_mipLevels, VkImageLayout a_targetLayout);
+  void generateMipChainCmd(VkCommandBuffer a_cmdBuf, const VulkanImageMem& imageMem,
+    uint32_t a_width, uint32_t a_height, uint32_t a_mipLevels,
+    VkImageLayout a_targetLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
   // *** layout transitions and image barriers ***
   // taken from https://github.com/SaschaWillems/Vulkan

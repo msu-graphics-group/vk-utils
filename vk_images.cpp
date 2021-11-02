@@ -506,82 +506,82 @@ namespace vk_utils
     return result;
   }
 
-  void recordMipChainGenerationCmdBuf(VkDevice a_device, VkCommandBuffer a_cmdBuf, const VulkanImageMem& imageMem,
-                                      uint32_t a_width, uint32_t a_height, uint32_t a_mipLevels, VkImageLayout a_targetLayout)
+  void generateMipChainCmd(VkCommandBuffer a_cmdBuf, const VulkanImageMem& imageMem,
+                           uint32_t a_width, uint32_t a_height, uint32_t a_mipLevels, VkImageLayout a_targetLayout)
   {
-    (void)a_device;
     VkCommandBufferBeginInfo beginInfo = {};
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
     vkBeginCommandBuffer(a_cmdBuf, &beginInfo);
-    // Copy down mips from n-1 to n
-    for (uint32_t i = 1; i < a_mipLevels; i++) //TODO: rewrite with staging buffer and possibly move this to copy helper
+
+    auto mip_w = int32_t(a_width);
+    auto mip_h = int32_t(a_height);
+    for (uint32_t i = 1; i < a_mipLevels; i++)
     {
-      VkImageBlit imageBlit{};
-
-      // Source
-      imageBlit.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-      imageBlit.srcSubresource.layerCount = 1;
-      imageBlit.srcSubresource.mipLevel = i - 1;
-      imageBlit.srcOffsets[1].x = int32_t(a_width >> (i - 1));
-      imageBlit.srcOffsets[1].y = int32_t(a_height >> (i - 1));
-      imageBlit.srcOffsets[1].z = 1;
-
-      // Destination
-      imageBlit.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-      imageBlit.dstSubresource.layerCount = 1;
-      imageBlit.dstSubresource.mipLevel = i;
-      imageBlit.dstOffsets[1].x = int32_t(a_width >> i);
-      imageBlit.dstOffsets[1].y = int32_t(a_height >> i);
-      imageBlit.dstOffsets[1].z = 1;
-
       VkImageSubresourceRange mipSubRange = {};
       mipSubRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
       mipSubRange.baseMipLevel = i;
       mipSubRange.levelCount = 1;
       mipSubRange.layerCount = 1;
 
-      // Transition current mip level to transfer dest
+      // Transition mip level to be generated to transfer dst
       vk_utils::setImageLayout(
-          a_cmdBuf,
-          imageMem.image,
-          VK_IMAGE_LAYOUT_UNDEFINED,
-          VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-          mipSubRange,
-          VK_PIPELINE_STAGE_TRANSFER_BIT,
-          VK_PIPELINE_STAGE_TRANSFER_BIT);
+        a_cmdBuf,
+        imageMem.image,
+        VK_IMAGE_LAYOUT_UNDEFINED,
+        VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+        mipSubRange,
+        VK_PIPELINE_STAGE_TRANSFER_BIT,
+        VK_PIPELINE_STAGE_TRANSFER_BIT);
 
-      // Blit from previous level
+      VkImageBlit imageBlit{};
+
+      imageBlit.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+      imageBlit.srcSubresource.layerCount = 1;
+      imageBlit.srcSubresource.mipLevel = i - 1;
+      imageBlit.srcOffsets[1].x = mip_w;
+      imageBlit.srcOffsets[1].y = mip_h;
+      imageBlit.srcOffsets[1].z = 1;
+
+      imageBlit.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+      imageBlit.dstSubresource.layerCount = 1;
+      imageBlit.dstSubresource.mipLevel = i;
+      imageBlit.dstOffsets[1].x = mip_w > 1 ? mip_w / 2 : 1;
+      imageBlit.dstOffsets[1].y = mip_h > 1 ? mip_h / 2 : 1;
+      imageBlit.dstOffsets[1].z = 1;
+
+      // Blit from upper (i - 1) level to lower (i) level
       vkCmdBlitImage(
           a_cmdBuf,
-          imageMem.image,
-          VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-          imageMem.image,
-          VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-          1,
-          &imageBlit,
+          imageMem.image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+          imageMem.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+          1, &imageBlit,
           VK_FILTER_LINEAR);
 
-      // Transition current mip level to transfer source for read in next iteration
+      // Transition generated mip level to transfer source for read in next iteration
       vk_utils::setImageLayout(
           a_cmdBuf,
           imageMem.image,
-          VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-          VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+        VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+        VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
           mipSubRange,
           VK_PIPELINE_STAGE_TRANSFER_BIT,
-          VK_PIPELINE_STAGE_TRANSFER_BIT);
+        VK_PIPELINE_STAGE_TRANSFER_BIT);
+
+      if(mip_w > 1) mip_w /= 2;
+      if(mip_h > 1) mip_h /= 2;
     }
 
-    // After the loop, all mip layers are in TRANSFER_SRC layout, so transition all to SHADER_READ
+    // Transition all mip level to a_targetLayout
     VkImageSubresourceRange subresourceRange = {};
+    subresourceRange.baseMipLevel = 0;
     subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
     subresourceRange.levelCount = a_mipLevels;
     subresourceRange.layerCount = 1;
     vk_utils::setImageLayout(
         a_cmdBuf,
         imageMem.image,
-        VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+      VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
         a_targetLayout,
         subresourceRange);
 
