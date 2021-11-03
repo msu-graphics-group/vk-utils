@@ -506,6 +506,8 @@ namespace vk_utils
     return result;
   }
 
+  //@TODO: Software mip chain generation with good interpolation filters (can use stb_image_resize.h)
+
   void generateMipChainCmd(VkCommandBuffer a_cmdBuf, const VulkanImageMem& imageMem,
                            uint32_t a_width, uint32_t a_height, uint32_t a_mipLevels, VkImageLayout a_targetLayout)
   {

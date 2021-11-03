@@ -67,7 +67,7 @@ namespace vk_utils {
 
   void logWarning(const std::string& msg)
   {
-    fprintf(log, "Warning : %s", msg.c_str());
+    fprintf(log, "Warning : %s\n", msg.c_str());
   }
 
   bool checkDeviceExtensionSupport(VkPhysicalDevice device, std::vector<const char *> &requestedExtensions)
