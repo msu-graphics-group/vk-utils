@@ -20,16 +20,16 @@ namespace vk_utils
 {
   struct VulkanImageMem
   {
-    VkFormat format;
-    VkImageAspectFlags aspectMask;
-    VkImage image;
-    VkImageView view;
+    VkFormat format = VK_FORMAT_UNDEFINED;
+    VkImageAspectFlags aspectMask = VK_IMAGE_ASPECT_FLAG_BITS_MAX_ENUM;
+    VkImage image = VK_NULL_HANDLE;
+    VkImageView view = VK_NULL_HANDLE;
 
-    VkDeviceMemory mem;
-    VkDeviceSize mem_offset;
-    VkMemoryRequirements memReq;
+    VkDeviceMemory mem = VK_NULL_HANDLE;
+    VkDeviceSize mem_offset = 0;
+    VkMemoryRequirements memReq = {};
 
-    uint32_t mipLvls;
+    uint32_t mipLvls = 0;
   };
 
   VkBool32 getSupportedDepthFormat(VkPhysicalDevice physicalDevice, const std::vector<VkFormat> &depthFormats, VkFormat *depthFormat);
