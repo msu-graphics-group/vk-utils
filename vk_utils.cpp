@@ -584,7 +584,7 @@ namespace vk_utils {
     return commandBuffers;
   }
 
-  VkRenderPass createDefaultRenderPass(VkDevice a_device, VkFormat a_imageFormat)
+  VkRenderPass createDefaultRenderPass(VkDevice a_device, VkFormat a_imageFormat, VkImageLayout a_colorFinalLayout)
   {
     VkAttachmentDescription colorAttachment = {};
     colorAttachment.format = a_imageFormat;
@@ -594,7 +594,7 @@ namespace vk_utils {
     colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
     colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
     colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+    colorAttachment.finalLayout = a_colorFinalLayout;
 
     VkAttachmentReference colorAttachmentRef = {};
     colorAttachmentRef.attachment = 0;
