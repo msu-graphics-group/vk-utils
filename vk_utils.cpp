@@ -40,8 +40,8 @@ namespace vk_utils {
       STR(ERROR_VALIDATION_FAILED_EXT);
       STR(ERROR_INVALID_SHADER_NV);
 #undef STR
-      default:
-        return "UNKNOWN_ERROR";
+    default:
+      return "UNKNOWN_ERROR";
     }
   };
 
@@ -194,7 +194,7 @@ namespace vk_utils {
       VkValidationFeatureEnableEXT enabledValidationFeatures[1] = { VK_VALIDATION_FEATURE_ENABLE_DEBUG_PRINTF_EXT };
       validationFeatures.pEnabledValidationFeatures = enabledValidationFeatures;
 
-//      validationFeatures.pNext = createInfo.pNext;
+      //      validationFeatures.pNext = createInfo.pNext;
       createInfo.pNext = &validationFeatures;
     }
     else
@@ -321,8 +321,8 @@ namespace vk_utils {
 
 
   VkDevice createLogicalDevice(VkPhysicalDevice physicalDevice, const std::vector<const char *> &a_enabledLayers,
-                               std::vector<const char *> a_extensions, VkPhysicalDeviceFeatures a_deviceFeatures,
-                               QueueFID_T &a_queueIDXs, VkQueueFlags requestedQueueTypes, void* pNextFeatures)
+    std::vector<const char *> a_extensions, VkPhysicalDeviceFeatures a_deviceFeatures,
+    QueueFID_T &a_queueIDXs, VkQueueFlags requestedQueueTypes, void* pNextFeatures)
   {
     std::vector<VkDeviceQueueCreateInfo> queueCreateInfos{};
     const float defaultQueuePriority {0.0f};
@@ -389,6 +389,7 @@ namespace vk_utils {
     deviceCreateInfo.pEnabledFeatures = &a_deviceFeatures;
     deviceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(a_extensions.size());
     deviceCreateInfo.ppEnabledExtensionNames = a_extensions.data();
+    deviceCreateInfo.pNext = nullptr;
 
     // deprecated and ignored since Vulkan 1.2
     // https://www.khronos.org/registry/vulkan/specs/1.2-extensions/html/vkspec.html#extendingvulkan-layers-devicelayerdeprecation
@@ -431,15 +432,15 @@ namespace vk_utils {
   {
     std::vector<std::string> res;
     std::vector<std::pair<VkSubgroupFeatureFlagBits, std::string>> flagBits = {
-        {VK_SUBGROUP_FEATURE_BASIC_BIT, "VK_SUBGROUP_FEATURE_BASIC_BIT"},
-        {VK_SUBGROUP_FEATURE_VOTE_BIT, "VK_SUBGROUP_FEATURE_VOTE_BIT"},
-        {VK_SUBGROUP_FEATURE_ARITHMETIC_BIT, "VK_SUBGROUP_FEATURE_ARITHMETIC_BIT"},
-        {VK_SUBGROUP_FEATURE_BALLOT_BIT, "VK_SUBGROUP_FEATURE_BALLOT_BIT"},
-        {VK_SUBGROUP_FEATURE_SHUFFLE_BIT, "VK_SUBGROUP_FEATURE_SHUFFLE_BIT"},
-        {VK_SUBGROUP_FEATURE_SHUFFLE_RELATIVE_BIT, "VK_SUBGROUP_FEATURE_SHUFFLE_RELATIVE_BIT"},
-        {VK_SUBGROUP_FEATURE_CLUSTERED_BIT, "VK_SUBGROUP_FEATURE_CLUSTERED_BIT"},
-        {VK_SUBGROUP_FEATURE_QUAD_BIT, "VK_SUBGROUP_FEATURE_QUAD_BIT"},
-        {VK_SUBGROUP_FEATURE_PARTITIONED_BIT_NV, "VK_SUBGROUP_FEATURE_PARTITIONED_BIT_NV"},
+      {VK_SUBGROUP_FEATURE_BASIC_BIT, "VK_SUBGROUP_FEATURE_BASIC_BIT"},
+      {VK_SUBGROUP_FEATURE_VOTE_BIT, "VK_SUBGROUP_FEATURE_VOTE_BIT"},
+      {VK_SUBGROUP_FEATURE_ARITHMETIC_BIT, "VK_SUBGROUP_FEATURE_ARITHMETIC_BIT"},
+      {VK_SUBGROUP_FEATURE_BALLOT_BIT, "VK_SUBGROUP_FEATURE_BALLOT_BIT"},
+      {VK_SUBGROUP_FEATURE_SHUFFLE_BIT, "VK_SUBGROUP_FEATURE_SHUFFLE_BIT"},
+      {VK_SUBGROUP_FEATURE_SHUFFLE_RELATIVE_BIT, "VK_SUBGROUP_FEATURE_SHUFFLE_RELATIVE_BIT"},
+      {VK_SUBGROUP_FEATURE_CLUSTERED_BIT, "VK_SUBGROUP_FEATURE_CLUSTERED_BIT"},
+      {VK_SUBGROUP_FEATURE_QUAD_BIT, "VK_SUBGROUP_FEATURE_QUAD_BIT"},
+      {VK_SUBGROUP_FEATURE_PARTITIONED_BIT_NV, "VK_SUBGROUP_FEATURE_PARTITIONED_BIT_NV"},
     };
     for(const auto& f : flagBits)
     {
@@ -529,7 +530,7 @@ namespace vk_utils {
   }
 
   VkPipelineShaderStageCreateInfo loadShader(VkDevice a_device, const std::string& fileName, VkShaderStageFlagBits stage,
-                                             std::vector<VkShaderModule> &modules)
+    std::vector<VkShaderModule> &modules)
   {
     VkPipelineShaderStageCreateInfo shaderStage = {};
     shaderStage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -619,23 +620,28 @@ namespace vk_utils {
     subpass.colorAttachmentCount = 1;
     subpass.pColorAttachments = &colorAttachmentRef;
     subpass.pDepthStencilAttachment = &depthAttachmentRef;
+    subpass.inputAttachmentCount = 0;
+    subpass.pInputAttachments = nullptr;
+    subpass.preserveAttachmentCount = 0;
+    subpass.pPreserveAttachments = nullptr;
+    subpass.pResolveAttachments = nullptr;
 
     std::array<VkSubpassDependency, 2> dependencies{};
 
     dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
     dependencies[0].dstSubpass = 0;
-    dependencies[0].srcStageMask = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+    dependencies[0].srcStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
     dependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-    dependencies[0].srcAccessMask = 0;
+    dependencies[0].srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
     dependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
     dependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
 
     dependencies[1].srcSubpass = 0;
     dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
-    dependencies[1].srcStageMask = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+    dependencies[1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
     dependencies[1].dstStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
-    dependencies[1].srcAccessMask = 0;
-    dependencies[1].dstAccessMask = 0;
+    dependencies[1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+    dependencies[1].dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
     dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
 
     VkAttachmentDescription attachments[2] = { colorAttachment, depthAttachment };
