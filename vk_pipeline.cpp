@@ -170,7 +170,8 @@ void vk_utils::GraphicsPipelineMaker::SetDefaultState(uint32_t a_width, uint32_t
 VkPipeline vk_utils::GraphicsPipelineMaker::MakePipeline(VkDevice a_device, VkPipelineVertexInputStateCreateInfo a_vertexLayout,
                                                          VkRenderPass a_renderPass,
                                                          std::vector<VkDynamicState> a_dynamicStates,
-                                                         VkPipelineInputAssemblyStateCreateInfo a_inputAssembly)
+                                                         VkPipelineInputAssemblyStateCreateInfo a_inputAssembly,
+                                                         uint32_t subpass)
 {
   inputAssembly = a_inputAssembly;
 
@@ -192,7 +193,7 @@ VkPipeline vk_utils::GraphicsPipelineMaker::MakePipeline(VkDevice a_device, VkPi
   pipelineInfo.pColorBlendState    = &colorBlending;
   pipelineInfo.layout              = m_pipelineLayout;
   pipelineInfo.renderPass          = a_renderPass;
-  pipelineInfo.subpass             = 0;
+  pipelineInfo.subpass             = subpass;
   pipelineInfo.pDynamicState       = &dynamicState;
   pipelineInfo.basePipelineHandle  = VK_NULL_HANDLE;
   pipelineInfo.pDepthStencilState  = &depthStencilTest;

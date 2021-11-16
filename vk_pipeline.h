@@ -41,7 +41,8 @@ namespace vk_utils
     VkPipelineLayout MakeLayout(VkDevice a_device, std::vector<VkDescriptorSetLayout> a_dslayouts, uint32_t a_pcRangeSize);
     VkPipeline       MakePipeline(VkDevice a_device, VkPipelineVertexInputStateCreateInfo a_vertexLayout, VkRenderPass a_renderPass,
                                   std::vector<VkDynamicState> a_dynamicStates = {},
-                                  VkPipelineInputAssemblyStateCreateInfo a_inputAssembly = IA_TList());
+                                  VkPipelineInputAssemblyStateCreateInfo a_inputAssembly = IA_TList(),
+                                  uint32_t subpass = 0);
   private:
     uint32_t         m_stagesNum = 0;
     VkPipeline       m_pipeline  = VK_NULL_HANDLE;
