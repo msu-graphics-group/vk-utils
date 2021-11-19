@@ -40,8 +40,8 @@ namespace vk_utils {
       STR(ERROR_VALIDATION_FAILED_EXT);
       STR(ERROR_INVALID_SHADER_NV);
 #undef STR
-    default:
-      return "UNKNOWN_ERROR";
+      default:
+        return "UNKNOWN_ERROR";
     }
   };
 
@@ -180,6 +180,9 @@ namespace vk_utils {
     createInfo.pApplicationInfo = &applicationInfo;
 
     std::vector<const char *> layer_names;
+    VkValidationFeaturesEXT validationFeatures = {};
+    VkValidationFeatureEnableEXT enabledValidationFeatures[1] = { VK_VALIDATION_FEATURE_ENABLE_DEBUG_PRINTF_EXT };
+
     if (a_enableValidationLayers && !supportedLayers.empty())
     {
       for (const auto &layer : supportedLayers)
@@ -188,13 +191,10 @@ namespace vk_utils {
       createInfo.enabledLayerCount = uint32_t(layer_names.size());
       createInfo.ppEnabledLayerNames = layer_names.data();
 
-      VkValidationFeaturesEXT validationFeatures = {};
       validationFeatures.sType = VK_STRUCTURE_TYPE_VALIDATION_FEATURES_EXT;
       validationFeatures.enabledValidationFeatureCount = 1;
-      VkValidationFeatureEnableEXT enabledValidationFeatures[1] = { VK_VALIDATION_FEATURE_ENABLE_DEBUG_PRINTF_EXT };
       validationFeatures.pEnabledValidationFeatures = enabledValidationFeatures;
-
-      //      validationFeatures.pNext = createInfo.pNext;
+      //validationFeatures.pNext = createInfo.pNext;
       createInfo.pNext = &validationFeatures;
     }
     else
@@ -207,7 +207,7 @@ namespace vk_utils {
     createInfo.enabledExtensionCount = uint32_t(enabledExtensions.size());
     createInfo.ppEnabledExtensionNames = enabledExtensions.data();
 
-    VkInstance instance;
+    VkInstance instance = VK_NULL_HANDLE;
     VK_CHECK_RESULT(vkCreateInstance(&createInfo, nullptr, &instance));
 
     return instance;
@@ -321,8 +321,8 @@ namespace vk_utils {
 
 
   VkDevice createLogicalDevice(VkPhysicalDevice physicalDevice, const std::vector<const char *> &a_enabledLayers,
-    std::vector<const char *> a_extensions, VkPhysicalDeviceFeatures a_deviceFeatures,
-    QueueFID_T &a_queueIDXs, VkQueueFlags requestedQueueTypes, void* pNextFeatures)
+                               std::vector<const char *> a_extensions, VkPhysicalDeviceFeatures a_deviceFeatures,
+                               QueueFID_T &a_queueIDXs, VkQueueFlags requestedQueueTypes, void* pNextFeatures)
   {
     std::vector<VkDeviceQueueCreateInfo> queueCreateInfos{};
     const float defaultQueuePriority {0.0f};
@@ -432,15 +432,15 @@ namespace vk_utils {
   {
     std::vector<std::string> res;
     std::vector<std::pair<VkSubgroupFeatureFlagBits, std::string>> flagBits = {
-      {VK_SUBGROUP_FEATURE_BASIC_BIT, "VK_SUBGROUP_FEATURE_BASIC_BIT"},
-      {VK_SUBGROUP_FEATURE_VOTE_BIT, "VK_SUBGROUP_FEATURE_VOTE_BIT"},
-      {VK_SUBGROUP_FEATURE_ARITHMETIC_BIT, "VK_SUBGROUP_FEATURE_ARITHMETIC_BIT"},
-      {VK_SUBGROUP_FEATURE_BALLOT_BIT, "VK_SUBGROUP_FEATURE_BALLOT_BIT"},
-      {VK_SUBGROUP_FEATURE_SHUFFLE_BIT, "VK_SUBGROUP_FEATURE_SHUFFLE_BIT"},
-      {VK_SUBGROUP_FEATURE_SHUFFLE_RELATIVE_BIT, "VK_SUBGROUP_FEATURE_SHUFFLE_RELATIVE_BIT"},
-      {VK_SUBGROUP_FEATURE_CLUSTERED_BIT, "VK_SUBGROUP_FEATURE_CLUSTERED_BIT"},
-      {VK_SUBGROUP_FEATURE_QUAD_BIT, "VK_SUBGROUP_FEATURE_QUAD_BIT"},
-      {VK_SUBGROUP_FEATURE_PARTITIONED_BIT_NV, "VK_SUBGROUP_FEATURE_PARTITIONED_BIT_NV"},
+        {VK_SUBGROUP_FEATURE_BASIC_BIT, "VK_SUBGROUP_FEATURE_BASIC_BIT"},
+        {VK_SUBGROUP_FEATURE_VOTE_BIT, "VK_SUBGROUP_FEATURE_VOTE_BIT"},
+        {VK_SUBGROUP_FEATURE_ARITHMETIC_BIT, "VK_SUBGROUP_FEATURE_ARITHMETIC_BIT"},
+        {VK_SUBGROUP_FEATURE_BALLOT_BIT, "VK_SUBGROUP_FEATURE_BALLOT_BIT"},
+        {VK_SUBGROUP_FEATURE_SHUFFLE_BIT, "VK_SUBGROUP_FEATURE_SHUFFLE_BIT"},
+        {VK_SUBGROUP_FEATURE_SHUFFLE_RELATIVE_BIT, "VK_SUBGROUP_FEATURE_SHUFFLE_RELATIVE_BIT"},
+        {VK_SUBGROUP_FEATURE_CLUSTERED_BIT, "VK_SUBGROUP_FEATURE_CLUSTERED_BIT"},
+        {VK_SUBGROUP_FEATURE_QUAD_BIT, "VK_SUBGROUP_FEATURE_QUAD_BIT"},
+        {VK_SUBGROUP_FEATURE_PARTITIONED_BIT_NV, "VK_SUBGROUP_FEATURE_PARTITIONED_BIT_NV"},
     };
     for(const auto& f : flagBits)
     {
@@ -530,7 +530,7 @@ namespace vk_utils {
   }
 
   VkPipelineShaderStageCreateInfo loadShader(VkDevice a_device, const std::string& fileName, VkShaderStageFlagBits stage,
-    std::vector<VkShaderModule> &modules)
+                                             std::vector<VkShaderModule> &modules)
   {
     VkPipelineShaderStageCreateInfo shaderStage = {};
     shaderStage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -727,4 +727,3 @@ namespace vk_utils {
   }
 
 }
-
