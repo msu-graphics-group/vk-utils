@@ -148,10 +148,11 @@ namespace vk_rt_utils
   VkAccelerationStructureBuildSizesInfoKHR AccelStructureBuilder::GetSizeInfo(const VkAccelerationStructureBuildGeometryInfoKHR& a_buildInfo, std::vector<VkAccelerationStructureBuildRangeInfoKHR>& a_ranges)
   {
     std::vector<uint32_t> maxPrimCount(a_ranges.size());
-    for(auto i = 0; i < a_ranges.size(); ++i)
+    for(size_t i = 0; i < a_ranges.size(); ++i)
       maxPrimCount[i] = a_ranges[i].primitiveCount;
 
-    VkAccelerationStructureBuildSizesInfoKHR sizeInfo{VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_SIZES_INFO_KHR};
+    VkAccelerationStructureBuildSizesInfoKHR sizeInfo = {};
+    sizeInfo.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_SIZES_INFO_KHR;
     vkGetAccelerationStructureBuildSizesKHR(m_device, VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR, &a_buildInfo, maxPrimCount.data(), &sizeInfo);
 
     return sizeInfo;
@@ -190,7 +191,8 @@ namespace vk_rt_utils
     std::vector<VkCommandBuffer> buildCmdBufs = vk_utils::createCommandBuffers(m_device, m_cmdPool, nBlas);
     for(uint32_t idx = 0; idx < nBlas; idx++)
     {
-      VkCommandBufferBeginInfo cmdBufInfo{ VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
+      VkCommandBufferBeginInfo cmdBufInfo = {};
+      cmdBufInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO ;
       VK_CHECK_RESULT(vkBeginCommandBuffer(buildCmdBufs[idx], &cmdBufInfo));
       auto& blas   = m_blas[idx];
       buildInfos[idx].dstAccelerationStructure  = blas.handle;
@@ -199,7 +201,8 @@ namespace vk_rt_utils
       const VkAccelerationStructureBuildRangeInfoKHR* pBuildOffset = m_blasInputData[idx].buildRange.data();
       vkCmdBuildAccelerationStructuresKHR(buildCmdBufs[idx], 1, &buildInfos[idx], &pBuildOffset);
 
-      VkMemoryBarrier barrier{VK_STRUCTURE_TYPE_MEMORY_BARRIER};
+      VkMemoryBarrier barrier = {};
+      barrier.sType = VK_STRUCTURE_TYPE_MEMORY_BARRIER;
       barrier.srcAccessMask = VK_ACCESS_ACCELERATION_STRUCTURE_WRITE_BIT_KHR;
       barrier.dstAccessMask = VK_ACCESS_ACCELERATION_STRUCTURE_READ_BIT_KHR;
       vkCmdPipelineBarrier(buildCmdBufs[idx], VK_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_KHR, VK_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_KHR,
@@ -224,16 +227,18 @@ namespace vk_rt_utils
 
   void AccelStructureBuilder::BuildTLAS(uint32_t a_instNum, VkBuffer a_instBuffer, VkDeviceSize a_bufOffset, VkBuildAccelerationStructureFlagsKHR a_flags, bool a_update)
   {
-    VkAccelerationStructureGeometryInstancesDataKHR instancesVk{VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_INSTANCES_DATA_KHR};
+    VkAccelerationStructureGeometryInstancesDataKHR instancesVk = {};
+    instancesVk.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_INSTANCES_DATA_KHR;
     instancesVk.arrayOfPointers = VK_FALSE;
     instancesVk.data.deviceAddress = vk_rt_utils::getBufferDeviceAddress(m_device, a_instBuffer); // + a_bufOffset ??
 
-    VkAccelerationStructureGeometryKHR topASGeometry{VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR};
+    VkAccelerationStructureGeometryKHR topASGeometry = {};
+    topASGeometry.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR;
     topASGeometry.geometryType = VK_GEOMETRY_TYPE_INSTANCES_KHR;
     topASGeometry.geometry.instances = instancesVk;
 
-    VkAccelerationStructureBuildGeometryInfoKHR buildInfo{
-      VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR};
+    VkAccelerationStructureBuildGeometryInfoKHR buildInfo = {};
+    buildInfo.sType         = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR;
     buildInfo.flags         = a_flags;
     buildInfo.geometryCount = 1;
     buildInfo.pGeometries   = &topASGeometry;
@@ -241,7 +246,8 @@ namespace vk_rt_utils
     buildInfo.type = VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR;
     buildInfo.srcAccelerationStructure = VK_NULL_HANDLE;
 
-    VkAccelerationStructureBuildSizesInfoKHR sizeInfo{VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_SIZES_INFO_KHR};
+    VkAccelerationStructureBuildSizesInfoKHR sizeInfo = {};
+    sizeInfo.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_SIZES_INFO_KHR;
     vkGetAccelerationStructureBuildSizesKHR(m_device, VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR, &buildInfo, &a_instNum, &sizeInfo);
 
     if(!a_update)
@@ -256,7 +262,7 @@ namespace vk_rt_utils
     buildInfo.dstAccelerationStructure  = m_tlas.handle;
     buildInfo.scratchData.deviceAddress = m_scratchBuf.deviceAddress;
 
-    VkAccelerationStructureBuildRangeInfoKHR accelerationStructureBuildRangeInfo{};
+    VkAccelerationStructureBuildRangeInfoKHR accelerationStructureBuildRangeInfo = {};
     accelerationStructureBuildRangeInfo.primitiveCount  = a_instNum;
     accelerationStructureBuildRangeInfo.primitiveOffset = 0;
     accelerationStructureBuildRangeInfo.firstVertex     = 0;
@@ -264,7 +270,8 @@ namespace vk_rt_utils
     std::vector<VkAccelerationStructureBuildRangeInfoKHR*> accelerationBuildStructureRangeInfos = { &accelerationStructureBuildRangeInfo };
 
     VkCommandBuffer commandBuffer = vk_utils::createCommandBuffer(m_device, m_cmdPool);
-    VkCommandBufferBeginInfo cmdBufInfo{ VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
+    VkCommandBufferBeginInfo cmdBufInfo = {};
+    cmdBufInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     VK_CHECK_RESULT(vkBeginCommandBuffer(commandBuffer, &cmdBufInfo));
     vkCmdBuildAccelerationStructuresKHR(commandBuffer, 1, &buildInfo, accelerationBuildStructureRangeInfos.data());
     vkEndCommandBuffer(commandBuffer);
@@ -286,7 +293,8 @@ namespace vk_rt_utils
   {
     assert(size_t(idx) < m_blas.size());
 
-    VkAccelerationStructureBuildGeometryInfoKHR buildInfo{VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR};
+    VkAccelerationStructureBuildGeometryInfoKHR buildInfo= {};
+    buildInfo.sType                    = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR;
     buildInfo.flags                    = a_flags;
     buildInfo.geometryCount            = (uint32_t)a_input.geom.size();
     buildInfo.pGeometries              = a_input.geom.data();
@@ -302,7 +310,8 @@ namespace vk_rt_utils
     const VkAccelerationStructureBuildRangeInfoKHR* pBuildOffset = a_input.buildRange.data();
 
     VkCommandBuffer commandBuffer = vk_utils::createCommandBuffer(m_device, m_cmdPool);
-    VkCommandBufferBeginInfo cmdBufInfo{ VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
+    VkCommandBufferBeginInfo cmdBufInfo = {};
+    cmdBufInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     VK_CHECK_RESULT(vkBeginCommandBuffer(commandBuffer, &cmdBufInfo));
 
     vkCmdBuildAccelerationStructuresKHR(commandBuffer, 1, &buildInfo, &pBuildOffset);
@@ -368,7 +377,8 @@ namespace vk_rt_utils
 
   VkPipelineLayout RTPipelineMaker::MakeLayout(VkDevice a_device, VkDescriptorSetLayout a_dslayout)
   {
-    VkPipelineLayoutCreateInfo layoutCreateInfo{VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO};
+    VkPipelineLayoutCreateInfo layoutCreateInfo = {};
+    layoutCreateInfo.sType          = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     layoutCreateInfo.pSetLayouts    = &a_dslayout;
     layoutCreateInfo.setLayoutCount = 1;
     VK_CHECK_RESULT(vkCreatePipelineLayout(a_device, &layoutCreateInfo, nullptr, &m_pipelineLayout));
@@ -378,7 +388,8 @@ namespace vk_rt_utils
 
   VkPipelineLayout RTPipelineMaker::MakeLayout(VkDevice a_device, std::vector<VkDescriptorSetLayout> a_dslayouts)
   {
-    VkPipelineLayoutCreateInfo layoutCreateInfo{VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO};
+    VkPipelineLayoutCreateInfo layoutCreateInfo = {};
+    layoutCreateInfo.sType          = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     layoutCreateInfo.pSetLayouts    = a_dslayouts.data();
     layoutCreateInfo.setLayoutCount = a_dslayouts.size();
     VK_CHECK_RESULT(vkCreatePipelineLayout(a_device, &layoutCreateInfo, nullptr, &m_pipelineLayout));
@@ -428,7 +439,8 @@ namespace vk_rt_utils
 
   VkPipeline RTPipelineMaker::MakePipeline(VkDevice a_device, uint32_t a_maxDepth)
   {
-    VkRayTracingPipelineCreateInfoKHR createInfo {VK_STRUCTURE_TYPE_RAY_TRACING_PIPELINE_CREATE_INFO_KHR};
+    VkRayTracingPipelineCreateInfoKHR createInfo = {};
+    createInfo.sType      = VK_STRUCTURE_TYPE_RAY_TRACING_PIPELINE_CREATE_INFO_KHR;
     createInfo.stageCount = static_cast<uint32_t>(shaderStages.size());
     createInfo.pStages    = shaderStages.data();
     createInfo.groupCount = static_cast<uint32_t>(shaderGroups.size());
