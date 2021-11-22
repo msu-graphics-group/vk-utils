@@ -65,12 +65,13 @@ namespace vk_rt_utils
     AccelStructureBuilderV2(VkDevice a_device, VkPhysicalDevice a_physDevice, uint32_t a_queueIdx, VkQueue a_queue = VK_NULL_HANDLE);
     ~AccelStructureBuilderV2();
 
+    // if (a_buildAsAdd == true) start building BLAS immediately after call to AddBLAS
     void Init(uint32_t maxVertexCountPerMesh, uint32_t maxPrimitiveCountPerMesh, uint32_t maxTotalPrimitiveCount,
-        size_t singleVertexSize, VkBuildAccelerationStructureFlagsKHR a_flags = VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR);
+        size_t singleVertexSize, bool a_buildAsAdd = false,
+        VkBuildAccelerationStructureFlagsKHR a_flags = VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR);
 
     uint32_t AddBLAS(const MeshInfo &a_meshInfo, size_t a_vertexDataStride,
       VkDeviceOrHostAddressConstKHR a_vertexBufAddress, VkDeviceOrHostAddressConstKHR a_indexBufAddress,
-      bool a_queueBuild = false,
       VkBuildAccelerationStructureFlagsKHR a_flags = VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR);
 
     void BuildAllBLAS();
@@ -90,6 +91,7 @@ namespace vk_rt_utils
     void Destroy();
 
   private:
+    bool m_queueBuild = false;
     VkAccelerationStructureBuildSizesInfoKHR GetSizeInfo(const VkAccelerationStructureBuildGeometryInfoKHR& a_buildInfo,
       std::vector<VkAccelerationStructureBuildRangeInfoKHR>& a_ranges);
 

@@ -451,8 +451,9 @@ namespace vk_rt_utils
   }
 
   void AccelStructureBuilderV2::Init(uint32_t maxVertexCountPerMesh, uint32_t maxPrimitiveCountPerMesh, uint32_t maxTotalPrimitiveCount,
-    size_t singleVertexSize, VkBuildAccelerationStructureFlagsKHR a_flags)
+    size_t singleVertexSize, bool a_buildAsAdd, VkBuildAccelerationStructureFlagsKHR a_flags)
   {
+    m_queueBuild = a_buildAsAdd;
     VkAccelerationStructureGeometryKHR accelerationStructureGeometry {};
     accelerationStructureGeometry.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR;
     accelerationStructureGeometry.flags = VK_GEOMETRY_OPAQUE_BIT_KHR;
@@ -500,7 +501,7 @@ namespace vk_rt_utils
 
   uint32_t AccelStructureBuilderV2::AddBLAS(const MeshInfo &a_meshInfo, size_t a_vertexDataStride,
     VkDeviceOrHostAddressConstKHR a_vertexBufAddress, VkDeviceOrHostAddressConstKHR a_indexBufAddress,
-    bool a_queueBuild, VkBuildAccelerationStructureFlagsKHR a_flags)
+    VkBuildAccelerationStructureFlagsKHR a_flags)
   {
     VkAccelerationStructureGeometryKHR accelerationStructureGeometry {};
     accelerationStructureGeometry.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR;
@@ -529,7 +530,7 @@ namespace vk_rt_utils
 
     uint32_t idx = m_blasInputs.size() - 1;
 
-    if(a_queueBuild)
+    if(m_queueBuild)
     {
       BuildOneBLAS(idx);
     }
@@ -650,18 +651,24 @@ namespace vk_rt_utils
     submitInfo.commandBufferCount = 1;
     submitInfo.pCommandBuffers    = &buildCmdBuf;
 
+//    std::cout << "Submitting BLAS#" << idx << " for building...\n";
     VK_CHECK_RESULT(vkQueueSubmit(m_queue, 1, &submitInfo, m_buildFences.back()));
   }
 
+  // @TODO
   void AccelStructureBuilderV2::UpdateBLAS(uint32_t idx, const MeshInfo &a_meshInfo,
     VkDeviceOrHostAddressConstKHR a_vertexBufAddress, VkDeviceOrHostAddressConstKHR a_indexBufAddress,
     VkBuildAccelerationStructureFlagsKHR a_flags)
   {
-
   }
 
   void AccelStructureBuilderV2::BuildAllBLAS()
   {
+    if(!m_queueBuild)
+    {
+      for(size_t i = 0; i < m_blasInputs.size(); ++i)
+        BuildOneBLAS(i);
+    }
     VK_CHECK_RESULT(vkWaitForFences(m_device, m_buildFences.size(), m_buildFences.data(), VK_TRUE, vk_utils::DEFAULT_TIMEOUT));
   }
 
