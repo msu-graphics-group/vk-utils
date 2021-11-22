@@ -309,10 +309,6 @@ void vk_utils::PingPongCopyHelper::UpdateBuffer(VkBuffer a_dst, size_t a_dstOffs
 
   VkMemoryRequirements memInfo = {};
   vkGetBufferMemoryRequirements(dev, a_dst, &memInfo);
-  if(a_dstOffset > memInfo.size)
-  {
-    int a = 0;
-  }
 
   if (a_size <= SMALL_BUFF)
   {
