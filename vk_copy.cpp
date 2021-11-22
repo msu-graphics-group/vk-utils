@@ -307,6 +307,13 @@ void vk_utils::PingPongCopyHelper::UpdateBuffer(VkBuffer a_dst, size_t a_dstOffs
   assert(a_dstOffset % 4 == 0);
   assert(a_size      % 4 == 0);
 
+  VkMemoryRequirements memInfo = {};
+  vkGetBufferMemoryRequirements(dev, a_dst, &memInfo);
+  if(a_dstOffset > memInfo.size)
+  {
+    int a = 0;
+  }
+
   if (a_size <= SMALL_BUFF)
   {
     VkCommandBufferBeginInfo beginInfo = {};
