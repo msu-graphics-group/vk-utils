@@ -63,6 +63,33 @@ private:
   VkVertexInputAttributeDescription m_inputAttributes[2] {};
 };
 
+struct Mesh4F : IMeshData
+{
+  void Append(const cmesh::SimpleMesh &meshData) override;
+
+  float*    VertexData() override { return (float*)vertices.data();}
+  uint32_t* IndexData()  override { return indices.data();}
+
+  size_t VertexDataSize() override { return vertices.size() * SingleVertexSize(); };
+  size_t IndexDataSize() override { return indices.size() * SingleIndexSize(); };
+
+  size_t SingleVertexSize() override { return sizeof(vertex); }
+  size_t SingleIndexSize()  override { return sizeof(uint32_t); };
+
+  VkPipelineVertexInputStateCreateInfo VertexInputLayout() override;
+
+private:
+  struct vertex {
+    float pos[4];      // (pos_x, pos_y, pos_z, 1.0f)
+  };
+
+  std::vector<vertex> vertices;
+  std::vector<uint32_t> indices;
+
+  VkVertexInputBindingDescription   m_inputBinding {};
+  VkVertexInputAttributeDescription m_inputAttributes {};
+};
+
 static inline unsigned int EncodeNormal(const float n[3])
 {
   const int x = (int)(n[0]*32767.0f);

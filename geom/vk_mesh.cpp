@@ -90,7 +90,8 @@ void Mesh8F::Append(const cmesh::SimpleMesh &meshData)
   vertices.reserve(vertices.size() + meshData.VerticesNum());
   auto old_size = indices.size();
   indices.resize(indices.size() + meshData.IndicesNum());
-  std::copy(meshData.indices.begin(), meshData.indices.end(), indices.begin() + old_size);
+
+  memcpy(indices.data() + old_size, meshData.indices.data(), meshData.indices.size() * sizeof(meshData.indices[0]));
 
   for(size_t i = 0; i < meshData.VerticesNum(); ++i)
   {
@@ -107,6 +108,51 @@ void Mesh8F::Append(const cmesh::SimpleMesh &meshData)
     v.texCoordTang[1] = meshData.vTexCoord2f[i * 2 + 1];
     v.texCoordTang[2] = as_float(EncodeNormal(tangent));
     v.texCoordTang[3] = 0.0f;
+    vertices.push_back(v);
+  }
+}
+
+// ************************************************************************
+// Mesh4F
+
+VkPipelineVertexInputStateCreateInfo Mesh4F::VertexInputLayout()
+{
+  m_inputBinding.binding   = 0;
+  m_inputBinding.stride    = sizeof(vertex);
+  m_inputBinding.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+  m_inputAttributes.binding  = 0;
+  m_inputAttributes.location = 0;
+  m_inputAttributes.format   = VK_FORMAT_R32G32B32A32_SFLOAT;
+  m_inputAttributes.offset   = 0;
+
+  VkPipelineVertexInputStateCreateInfo vertexInputInfo = {};
+  vertexInputInfo.sType                           = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+  vertexInputInfo.vertexBindingDescriptionCount   = 1;
+  vertexInputInfo.vertexAttributeDescriptionCount = 1;
+  vertexInputInfo.pVertexBindingDescriptions      = &m_inputBinding;
+  vertexInputInfo.pVertexAttributeDescriptions    = &m_inputAttributes;
+
+  return vertexInputInfo;
+}
+
+
+void Mesh4F::Append(const cmesh::SimpleMesh &meshData)
+{
+  vertices.reserve(vertices.size() + meshData.VerticesNum());
+  auto old_size = indices.size();
+  indices.resize(indices.size() + meshData.IndicesNum());
+
+  memcpy(indices.data() + old_size, meshData.indices.data(), meshData.indices.size() * sizeof(meshData.indices[0]));
+
+  for(size_t i = 0; i < meshData.VerticesNum(); ++i)
+  {
+    vertex v = {};
+    v.pos[0] = meshData.vPos4f[i * 4 + 0];
+    v.pos[1] = meshData.vPos4f[i * 4 + 1];
+    v.pos[2] = meshData.vPos4f[i * 4 + 2];
+    v.pos[3] = 1.0f;
+
     vertices.push_back(v);
   }
 }
