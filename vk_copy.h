@@ -17,14 +17,14 @@ namespace vk_utils
     ICopyEngine(){}
     virtual ~ICopyEngine(){}
 
-    virtual void UpdateBuffer(VkBuffer a_dst, size_t a_dstOffset, const void* a_src, size_t a_size) = 0;     // mandatory if ICopyEngine devivative object used for meshes
+    virtual void UpdateBuffer(VkBuffer a_dst, size_t a_dstOffset, const void* a_src, size_t a_size) = 0;
     virtual void ReadBuffer  (VkBuffer a_src, size_t a_srcOffset,       void* a_dst, size_t a_size)
     {
       (void)a_src;
       (void)a_srcOffset;
       (void)a_dst;
       (void)a_size;
-    };      // optional
+    };
     virtual void UpdateImage (VkImage a_image, const void* a_src, int a_width, int a_height, int a_bpp, VkImageLayout a_finalLayout)
     {
       (void)a_image;
@@ -33,7 +33,16 @@ namespace vk_utils
       (void)a_height;
       (void)a_bpp;
       (void)a_finalLayout;
-    };  // mandatory if ICopyEngine devivative object used for textures
+    };
+    virtual void ReadImage (VkImage a_image, void* a_dst, int a_width, int a_height, int a_bpp, VkImageLayout a_finalLayout)
+    {
+      (void)a_image;
+      (void)a_dst;
+      (void)a_width;
+      (void)a_height;
+      (void)a_bpp;
+      (void)a_finalLayout;
+    };
 
     virtual VkQueue         TransferQueue() const { return VK_NULL_HANDLE; }
     virtual VkCommandBuffer CmdBuffer()     const { return VK_NULL_HANDLE; }
@@ -56,7 +65,7 @@ namespace vk_utils
     void UpdateBuffer(VkBuffer a_dst, size_t a_dstOffset, const void* a_src, size_t a_size) override;
     void ReadBuffer  (VkBuffer a_src, size_t a_srcOffset, void* a_dst, size_t a_size) override;
     void UpdateImage (VkImage a_image, const void* a_src, int a_width, int a_height, int a_bpp, VkImageLayout a_finalLayout) override;
-    //void ReadImage (VkImage a_image, const void* a_src, int a_width, int a_height, int a_bpp) override; // TODO: implement this in future
+    void ReadImage   (VkImage a_image, void* a_dst, int a_width, int a_height, int a_bpp, VkImageLayout a_finalLayout) override;
 
     VkQueue  TransferQueue() const override { return queue; }
     VkCommandBuffer CmdBuffer() const override { return cmdBuff; }
