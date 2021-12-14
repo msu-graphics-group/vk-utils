@@ -36,9 +36,9 @@ namespace vk_utils
 
     virtual void Unmap(uint32_t a_memBlockId) = 0;
 
-    virtual VkDevice GetDevice() const;
+    virtual VkDevice GetDevice() const = 0;
 
-    virtual VkPhysicalDevice GetPhysicalDevice() const;
+    virtual VkPhysicalDevice GetPhysicalDevice() const = 0;
 
     virtual ~IMemoryAlloc() = default;
   };
