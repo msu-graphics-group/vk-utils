@@ -1,5 +1,7 @@
 #define VMA_IMPLEMENTATION
-#define VMA_STATIC_VULKAN_FUNCTIONS 0
+#define VK_NO_PROTOTYPES
+#define VMA_STATIC_VULKAN_FUNCTIONS  0
+#define VMA_DYNAMIC_VULKAN_FUNCTIONS 0
 #include "external/vk_mem_alloc.h"
 
 #include "vk_alloc_vma.h"
@@ -48,13 +50,13 @@ namespace vk_utils
     functions.vkCreateImage                       = vkCreateImage;
     functions.vkDestroyImage                      = vkDestroyImage;
     functions.vkCmdCopyBuffer                     = vkCmdCopyBuffer;
-    if(a_vkAPIVersion >= 1001000)
+    if(a_vkAPIVersion >= VK_API_VERSION_1_1)
     {
-      functions.vkGetBufferMemoryRequirements2KHR       = vkGetBufferMemoryRequirements2KHR;
-      functions.vkGetImageMemoryRequirements2KHR        = vkGetImageMemoryRequirements2KHR;
-      functions.vkBindBufferMemory2KHR                  = vkBindBufferMemory2KHR;
-      functions.vkBindImageMemory2KHR                   = vkBindImageMemory2KHR;
-      functions.vkGetPhysicalDeviceMemoryProperties2KHR = vkGetPhysicalDeviceMemoryProperties2KHR;
+      functions.vkGetBufferMemoryRequirements2KHR       = vkGetBufferMemoryRequirements2;
+      functions.vkGetImageMemoryRequirements2KHR        = vkGetImageMemoryRequirements2;
+      functions.vkBindBufferMemory2KHR                  = vkBindBufferMemory2;
+      functions.vkBindImageMemory2KHR                   = vkBindImageMemory2;
+      functions.vkGetPhysicalDeviceMemoryProperties2KHR = vkGetPhysicalDeviceMemoryProperties2;
     }
 
     VmaAllocatorCreateInfo allocatorInfo = {};
@@ -85,6 +87,7 @@ namespace vk_utils
     {
       vmaAllocCreateInfo.flags |= VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
     }
+
 
     VmaAllocationInfo vmaAllocInfo;
     VmaAllocation     alloc = nullptr;

@@ -28,7 +28,7 @@ namespace vk_utils
     if(a_allocInfo.dedicated_buffer || a_allocInfo.dedicated_image)
     {
       dedicatedInfo.pNext = memAllocInfo.pNext;
-      memAllocInfo.pNext  = &dedicatedInfo.pNext;
+      memAllocInfo.pNext  = &dedicatedInfo;
 
       dedicatedInfo.buffer = a_allocInfo.dedicated_buffer;
       dedicatedInfo.image = a_allocInfo.dedicated_image;
@@ -39,7 +39,7 @@ namespace vk_utils
     if(a_allocInfo.allocateFlags)
     {
       flagsInfo.pNext    = memAllocInfo.pNext;
-      memAllocInfo.pNext = &flagsInfo.pNext;
+      memAllocInfo.pNext = &flagsInfo;
 
       flagsInfo.flags = a_allocInfo.allocateFlags;
     }

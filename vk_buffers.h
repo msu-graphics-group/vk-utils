@@ -2,6 +2,7 @@
 #define VK_UTILS_VK_BUFFERS_H
 
 #include "vk_include.h"
+#include "vk_alloc.h"
 
 #include <string>
 #include <vector>
@@ -16,6 +17,9 @@ namespace vk_utils
 
   VkDeviceMemory allocateAndBindWithPadding(VkDevice a_dev, VkPhysicalDevice a_physDev, const std::vector<VkBuffer> &a_buffers,
                                             VkMemoryAllocateFlags flags = {});
+
+  uint32_t allocateAndBindWithPadding(std::shared_ptr<IMemoryAlloc> a_pAlloc, const std::vector<VkBuffer> &a_buffers, VkMemoryAllocateFlags flags = {});
+
   std::vector<size_t> calculateMemOffsets(const std::vector<VkMemoryRequirements> &a_memReqs);
 }
 

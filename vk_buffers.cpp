@@ -169,5 +169,53 @@ namespace vk_utils
     return mem_offsets;
   }
 
+  uint32_t allocateAndBindWithPadding(std::shared_ptr<IMemoryAlloc> a_pAlloc, const std::vector<VkBuffer> &a_buffers, VkMemoryAllocateFlags flags)
+  {
+    if(a_buffers.empty())
+    {
+      logWarning("[allocateAndBindWithPadding]: buffers vector is empty");
+      return -1;
+    }
+
+    std::vector<VkMemoryRequirements> memInfos(a_buffers.size());
+    for(size_t i = 0; i < memInfos.size(); ++i)
+    {
+      if(a_buffers[i] != VK_NULL_HANDLE)
+        vkGetBufferMemoryRequirements(a_pAlloc->GetDevice(), a_buffers[i], &memInfos[i]);
+      else
+      {
+        memInfos[i] = memInfos[0];
+        memInfos[i].size = 0;
+      }
+    }
+    for(size_t i=1;i<memInfos.size();i++)
+    {
+      if(memInfos[i].memoryTypeBits != memInfos[0].memoryTypeBits)
+      {
+        logWarning("[allocateAndBindWithPadding]: input buffers have different memReq.memoryTypeBits");
+        return -1;
+      }
+    }
+
+    auto offsets  = assignMemOffsetsWithPadding(memInfos);
+    auto memTotal = offsets[offsets.size() - 1];
+
+    MemAllocInfo allocInfo = {};
+    allocInfo.allocateFlags = flags;
+    allocInfo.memProps = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+    allocInfo.memReq = memInfos[0];
+    allocInfo.memReq.size = memTotal;
+    allocInfo.memReq.alignment = memInfos.back().alignment;
+
+    uint32_t allocId = a_pAlloc->Allocate(allocInfo);
+
+    for (size_t i = 0; i < memInfos.size(); i++)
+    {
+      if(a_buffers[i] != VK_NULL_HANDLE)
+        vkBindBufferMemory(a_pAlloc->GetDevice(), a_buffers[i], a_pAlloc->GetMemoryBlock(allocId).memory, offsets[i]);
+    }
+
+    return allocId;
+  }
 }
 

@@ -45,7 +45,7 @@ namespace vk_utils
 
 
   std::shared_ptr<IMemoryAlloc> CreateMemoryAlloc_VMA(VkInstance a_instance, VkDevice a_device, VkPhysicalDevice a_physicalDevice,
-    VkFlags a_flags, uint32_t a_vkAPIVersion);
+    VkFlags a_flags = 0, uint32_t a_vkAPIVersion = VK_API_VERSION_1_1);
   std::shared_ptr<IMemoryAlloc> CreateMemoryAlloc_Simple(VkDevice a_device, VkPhysicalDevice a_physicalDevice);
 }
 
