@@ -12,6 +12,7 @@ namespace vk_utils
 
   struct MemoryAlloc_VMA : IMemoryAlloc
   {
+    MemoryAlloc_VMA(VkDevice a_device, VkPhysicalDevice a_physicalDevice, VmaAllocator a_allocator);
     MemoryAlloc_VMA(VkInstance a_instance, VkDevice a_device, VkPhysicalDevice a_physicalDevice,
       VkFlags a_flags = 0, uint32_t a_vkAPIVersion = VK_API_VERSION_1_1);
 
@@ -29,7 +30,7 @@ namespace vk_utils
     VkDevice m_device = VK_NULL_HANDLE;
     VkPhysicalDevice m_physicalDevice = VK_NULL_HANDLE;
 
-    VmaAllocator m_vma{0};
+    VmaAllocator m_vma = VK_NULL_HANDLE;
 
     std::vector<VmaAllocation> m_allocations;
   };

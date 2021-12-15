@@ -207,6 +207,9 @@ namespace vk_utils
     allocInfo.memReq.size = memTotal;
     allocInfo.memReq.alignment = memInfos.back().alignment;
 
+//    If you already have a buffer or an image created, you want to allocate memory for it and then you will bind it yourself,
+//    you can use function vmaAllocateMemoryForBuffer(), vmaAllocateMemoryForImage(). For binding you should use functions: vmaBindBufferMemory(),
+//    vmaBindImageMemory() or their extended versions: vmaBindBufferMemory2(), vmaBindImageMemory2().
     uint32_t allocId = a_pAlloc->Allocate(allocInfo);
 
     for (size_t i = 0; i < memInfos.size(); i++)

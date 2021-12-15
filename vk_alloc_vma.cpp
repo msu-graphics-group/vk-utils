@@ -15,6 +15,11 @@ namespace vk_utils
     return std::make_shared<MemoryAlloc_VMA>(a_instance, a_device, a_physicalDevice, a_flags, a_vkAPIVersion);
   }
 
+  std::shared_ptr<IMemoryAlloc> CreateMemoryAlloc_VMA(VkDevice a_device, VkPhysicalDevice a_physicalDevice, VmaAllocator a_allocator)
+  {
+    return std::make_shared<MemoryAlloc_VMA>(a_device, a_physicalDevice, a_allocator);
+  }
+
   static inline VmaMemoryUsage getVMAMemoryUsage(VkMemoryPropertyFlags flags)
   {
     if((flags & VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)       == VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)
@@ -71,6 +76,12 @@ namespace vk_utils
     vmaCreateAllocator(&allocatorInfo, &allocator);
 
     return allocator;
+  }
+
+  MemoryAlloc_VMA::MemoryAlloc_VMA(VkDevice a_device, VkPhysicalDevice a_physicalDevice, VmaAllocator a_allocator)
+    : m_device(a_device), m_physicalDevice(a_physicalDevice), m_vma(a_allocator)
+  {
+
   }
 
   MemoryAlloc_VMA::MemoryAlloc_VMA(VkInstance a_instance, VkDevice a_device, VkPhysicalDevice a_physicalDevice,
