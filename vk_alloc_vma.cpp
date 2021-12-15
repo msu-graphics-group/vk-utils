@@ -88,12 +88,10 @@ namespace vk_utils
       vmaAllocCreateInfo.flags |= VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
     }
 
-
     VmaAllocationInfo vmaAllocInfo;
     VmaAllocation     alloc = nullptr;
 
-    VkResult result = vmaAllocateMemory(m_vma, &a_allocInfo.memReq, &vmaAllocCreateInfo,
-      &alloc, &vmaAllocInfo);
+    VkResult result = vmaAllocateMemory(m_vma, &a_allocInfo.memReq, &vmaAllocCreateInfo, &alloc, &vmaAllocInfo);
 
     VK_CHECK_RESULT(result);
 
@@ -126,7 +124,7 @@ namespace vk_utils
     VmaAllocationInfo allocInfo;
     vmaGetAllocationInfo(m_vma, m_allocations[a_memBlockId], &allocInfo);
 
-    MemoryBlock memInfo;
+    MemoryBlock memInfo = {};
     memInfo.memory = allocInfo.deviceMemory;
     memInfo.offset = allocInfo.offset;
     memInfo.size   = allocInfo.size;

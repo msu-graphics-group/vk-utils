@@ -212,7 +212,7 @@ namespace vk_utils
     for (size_t i = 0; i < memInfos.size(); i++)
     {
       if(a_buffers[i] != VK_NULL_HANDLE)
-        vkBindBufferMemory(a_pAlloc->GetDevice(), a_buffers[i], a_pAlloc->GetMemoryBlock(allocId).memory, offsets[i]);
+        vkBindBufferMemory(a_pAlloc->GetDevice(), a_buffers[i], a_pAlloc->GetMemoryBlock(allocId).memory, a_pAlloc->GetMemoryBlock(allocId).offset + offsets[i]);
     }
 
     return allocId;
