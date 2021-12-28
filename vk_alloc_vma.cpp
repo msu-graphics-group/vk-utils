@@ -6,6 +6,7 @@
 
 #include "vk_alloc_vma.h"
 #include "vk_utils.h"
+#include "vk_images.h"
 
 namespace vk_utils
 {
@@ -165,4 +166,205 @@ namespace vk_utils
 
     vmaUnmapMemory(m_vma, m_allocations[a_memBlockId]);
   }
+  
+  //*********************************************************************************
+  
+  ResourceManager_VMA::ResourceManager_VMA(VkDevice a_device, VkPhysicalDevice a_physicalDevice, VmaAllocator a_allocator, ICopyEngine *a_pCopy) :
+    m_device(a_device), m_physicalDevice(a_physicalDevice), m_vma(a_allocator), m_pCopy(a_pCopy)
+  {
+    
+  }
+
+  ResourceManager_VMA::~ResourceManager_VMA()
+  {
+    for(auto& [buf, _] : m_bufAllocs)
+    {
+      VkBuffer tmp = buf;
+      DestroyBuffer(tmp);
+    }
+    m_bufAllocs.clear();
+
+    for(auto& [img, _] : m_imgAllocs)
+    {
+      VkImage tmp = img;
+      DestroyImage(tmp);
+    }
+    m_imgAllocs.clear();
+  }
+
+  VkBuffer ResourceManager_VMA::CreateBuffer(VkDeviceSize a_size, VkBufferUsageFlags a_usage, VkMemoryPropertyFlags a_memProps,
+    VkMemoryAllocateFlags)
+  {
+    VkBuffer buffer;
+
+    VkBufferCreateInfo bufferInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
+    bufferInfo.size  = a_size;
+    bufferInfo.usage = a_usage;
+
+    VmaAllocationCreateInfo allocInfo = {};
+//    allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+    allocInfo.requiredFlags = a_memProps;
+
+    VmaAllocation allocation;
+    vmaCreateBuffer(m_vma, &bufferInfo, &allocInfo, &buffer,
+      &allocation, nullptr);
+
+    m_bufAllocs[buffer] = allocation;
+
+    return buffer;
+  }
+
+  VkBuffer ResourceManager_VMA::CreateBuffer(const void* a_data, VkDeviceSize a_size, VkBufferUsageFlags a_usage,
+    VkMemoryPropertyFlags a_memProps, VkMemoryAllocateFlags flags)
+  {
+    auto buf = CreateBuffer(a_size, a_usage, a_memProps, flags);
+
+    m_pCopy->UpdateBuffer(buf, 0, a_data, a_size);
+
+    return buf;
+  }
+
+  std::vector<VkBuffer> ResourceManager_VMA::CreateBuffers(const std::vector<void*> &a_dataPointers, const std::vector<VkDeviceSize> &a_sizes,
+    const std::vector<VkBufferUsageFlags> &a_usages, VkMemoryPropertyFlags a_memProps, VkMemoryAllocateFlags flags)
+  {
+    std::vector<VkBuffer> buffers(a_dataPointers.size());
+    for(size_t i = 0; i < buffers.size(); ++i)
+    {
+      VkBufferCreateInfo bufferInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
+      bufferInfo.size  = a_sizes[i];
+      bufferInfo.usage = a_usages[i];
+
+      VmaAllocationCreateInfo allocInfo = {};
+      //    allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+      allocInfo.requiredFlags = a_memProps;
+
+      VmaAllocation allocation;
+      vmaCreateBuffer(m_vma, &bufferInfo, &allocInfo, &buffers[i],
+        &allocation, nullptr);
+
+      m_bufAllocs[buffers[i]] = allocation;
+    }
+
+    for (size_t i = 0; i < buffers.size(); i++)
+    {
+      m_pCopy->UpdateBuffer(buffers[i], 0, a_dataPointers[i], a_sizes[i]);
+    }
+
+    return buffers;
+  }
+
+  VkImage ResourceManager_VMA::CreateImage(const VkImageCreateInfo& a_createInfo)
+  {
+    VmaAllocationCreateInfo allocCreateInfo = {};
+    allocCreateInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+//    allocCreateInfo.flags = VMA_ALLOCATION_CREATE_USER_DATA_COPY_STRING_BIT;
+//    allocCreateInfo.pUserData = imageName.c_str();
+
+    VkImage image;
+    VmaAllocation allocation;
+    vmaCreateImage(m_vma, &a_createInfo, &allocCreateInfo, &image, &allocation, nullptr);
+
+    m_imgAllocs[image] = allocation;
+
+    return image;
+  }
+
+  VkImage ResourceManager_VMA::CreateImage(uint32_t a_width, uint32_t a_height, VkFormat a_format, VkImageUsageFlags a_usage,
+    uint32_t a_mipLvls)
+  {
+    VkImageCreateInfo imageCreateInfo{};
+    imageCreateInfo.sType         = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+    imageCreateInfo.imageType     = VK_IMAGE_TYPE_2D;
+    imageCreateInfo.usage         = a_usage;
+    imageCreateInfo.format        = a_format;
+    imageCreateInfo.extent.width  = a_width;
+    imageCreateInfo.extent.height = a_height;
+    imageCreateInfo.extent.depth  = 1;
+    imageCreateInfo.mipLevels     = a_mipLvls;
+    imageCreateInfo.arrayLayers   = 1;
+    imageCreateInfo.samples       = VK_SAMPLE_COUNT_1_BIT;
+    imageCreateInfo.tiling        = VK_IMAGE_TILING_OPTIMAL;
+
+    auto img = CreateImage(imageCreateInfo);
+
+    return img;
+  }
+
+  VkImage ResourceManager_VMA::CreateImage(const void* a_data, uint32_t a_width, uint32_t a_height, VkFormat a_format,
+    VkImageUsageFlags a_usage, VkImageLayout a_layout, uint32_t a_mipLvls)
+  {
+    auto img = CreateImage(a_width, a_height, a_format, a_usage, a_mipLvls);
+
+    m_pCopy->UpdateImage(img, a_data, a_width, a_height, vk_utils::bppFromVkFormat(a_format), a_layout);
+
+    return VK_NULL_HANDLE;
+  }
+
+  VulkanTexture ResourceManager_VMA::CreateTexture(const VkImageCreateInfo& a_createInfo, const VkImageViewCreateInfo& a_imgViewCreateInfo)
+  {
+    VulkanTexture res{};
+    res.image = CreateImage(a_createInfo);
+
+    VK_CHECK_RESULT(vkCreateImageView(m_device, &a_imgViewCreateInfo, nullptr, &res.descriptor.imageView));
+
+    return res;
+  }
+
+  VulkanTexture ResourceManager_VMA::CreateTexture(const VkImageCreateInfo& a_createInfo, const VkImageViewCreateInfo& a_imgViewCreateInfo,
+    const VkSamplerCreateInfo& a_samplerCreateInfo)
+  {
+    VulkanTexture res{};
+    res.image = CreateImage(a_createInfo);
+
+    VK_CHECK_RESULT(vkCreateImageView(m_device, &a_imgViewCreateInfo, nullptr, &res.descriptor.imageView));
+
+    //@TODO: sampler pool
+    VK_CHECK_RESULT(vkCreateSampler(m_device, &a_samplerCreateInfo, nullptr, &res.descriptor.sampler));
+
+    return res;
+  }
+
+  void ResourceManager_VMA::DestroyBuffer(VkBuffer &a_buffer)
+  {
+    if(!m_bufAllocs.count(a_buffer))
+    {
+      logWarning("[ResourceManager_VMA::DestroyBuffer] trying to destroy unknown buffer");
+      return;
+    }
+
+    vmaDestroyBuffer(m_vma, a_buffer, m_bufAllocs[a_buffer]);
+    a_buffer = VK_NULL_HANDLE;
+  }
+
+  void ResourceManager_VMA::DestroyImage(VkImage &a_image)
+  {
+    if(!m_imgAllocs.count(a_image))
+    {
+      logWarning("[ResourceManager_VMA::DestroyImage] trying to destroy unknown image");
+      return;
+    }
+
+    vmaDestroyImage(m_vma, a_image, m_imgAllocs[a_image]);
+    a_image = VK_NULL_HANDLE;
+  }
+
+  void ResourceManager_VMA::DestroyTexture(VulkanTexture &a_texture)
+  {
+    DestroyImage(a_texture.image);
+
+    if(a_texture.descriptor.imageView != VK_NULL_HANDLE)
+    {
+      vkDestroyImageView(m_device, a_texture.descriptor.imageView, nullptr);
+      a_texture.descriptor.imageView = VK_NULL_HANDLE;
+    }
+
+    //@TODO: sampler pool
+    if(a_texture.descriptor.sampler != VK_NULL_HANDLE)
+    {
+      vkDestroySampler(m_device, a_texture.descriptor.sampler, nullptr);
+      a_texture.descriptor.sampler = VK_NULL_HANDLE;
+    }
+
+  }
+
 }

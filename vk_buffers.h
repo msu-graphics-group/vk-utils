@@ -20,6 +20,7 @@ namespace vk_utils
 
   uint32_t allocateAndBindWithPadding(std::shared_ptr<IMemoryAlloc> a_pAlloc, const std::vector<VkBuffer> &a_buffers, VkMemoryAllocateFlags flags = {});
 
+  std::vector<size_t> assignMemOffsetsWithPadding(const std::vector<VkMemoryRequirements> &a_memInfos);
   std::vector<size_t> calculateMemOffsets(const std::vector<VkMemoryRequirements> &a_memReqs);
 }
 

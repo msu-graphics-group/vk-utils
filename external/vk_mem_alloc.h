@@ -18522,7 +18522,7 @@ VMA_CALL_PRE VkResult VMA_CALL_POST vmaCreateBufferWithAlignment(
     return res;
 }
 
-VMA_CALL_PRE void VMA_CALL_POST vmaDestroyBuffer(
+VMA_CALL_PRE void VMA_CALL_POST DestroyBuffer(
     VmaAllocator allocator,
     VkBuffer buffer,
     VmaAllocation allocation)

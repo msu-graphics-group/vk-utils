@@ -589,4 +589,84 @@ namespace vk_utils
 
     vkEndCommandBuffer(a_cmdBuf);
   }
+
+  // bytes per pixel from commonly supported image formats
+  uint8_t bppFromVkFormat(VkFormat a_format)
+  {
+    switch(a_format)
+    {
+      case VK_FORMAT_R8_SINT:
+      case VK_FORMAT_R8_SNORM:
+      case VK_FORMAT_R8_UINT:
+      case VK_FORMAT_R8_UNORM:
+      case VK_FORMAT_R8_SRGB:
+        return 1;
+
+      case VK_FORMAT_R8G8_SINT:
+      case VK_FORMAT_R8G8_SNORM:
+      case VK_FORMAT_R8G8_UINT:
+      case VK_FORMAT_R8G8_UNORM:
+      case VK_FORMAT_R16_SFLOAT:
+      case VK_FORMAT_R16_SINT:
+      case VK_FORMAT_R16_UINT:
+      case VK_FORMAT_D16_UNORM:
+      case VK_FORMAT_R16_SNORM:
+      case VK_FORMAT_R16_UNORM:
+      case VK_FORMAT_A1R5G5B5_UNORM_PACK16:
+      case VK_FORMAT_R5G6B5_UNORM_PACK16:
+      case VK_FORMAT_B4G4R4A4_UNORM_PACK16:
+      case VK_FORMAT_R4G4B4A4_UNORM_PACK16:
+      case VK_FORMAT_R5G5B5A1_UNORM_PACK16:
+      case VK_FORMAT_B5G5R5A1_UNORM_PACK16:
+        return 2;
+
+      case VK_FORMAT_B8G8R8A8_SRGB:
+      case VK_FORMAT_B8G8R8A8_UNORM:
+      case VK_FORMAT_R8G8B8A8_SINT:
+      case VK_FORMAT_R8G8B8A8_SNORM:
+      case VK_FORMAT_R8G8B8A8_SRGB:
+      case VK_FORMAT_R8G8B8A8_UINT:
+      case VK_FORMAT_R8G8B8A8_UNORM:
+      case VK_FORMAT_D32_SFLOAT:
+      case VK_FORMAT_R16G16_SFLOAT:
+      case VK_FORMAT_R16G16_SINT:
+      case VK_FORMAT_R16G16_UINT:
+      case VK_FORMAT_R32_SFLOAT:
+      case VK_FORMAT_R32_SINT:
+      case VK_FORMAT_R32_UINT:
+      case VK_FORMAT_R16G16_SNORM:
+      case VK_FORMAT_R16G16_UNORM:
+      case VK_FORMAT_A2B10G10R10_UINT_PACK32:
+      case VK_FORMAT_A2B10G10R10_UNORM_PACK32:
+      case VK_FORMAT_A8B8G8R8_SINT_PACK32:
+      case VK_FORMAT_A8B8G8R8_SNORM_PACK32:
+      case VK_FORMAT_A8B8G8R8_SRGB_PACK32:
+      case VK_FORMAT_A8B8G8R8_UINT_PACK32:
+      case VK_FORMAT_A8B8G8R8_UNORM_PACK32:
+      case VK_FORMAT_B10G11R11_UFLOAT_PACK32:
+      case VK_FORMAT_E5B9G9R9_UFLOAT_PACK32:
+      case VK_FORMAT_A2R10G10B10_UINT_PACK32:
+      case VK_FORMAT_A2R10G10B10_UNORM_PACK32:
+        return 4;
+
+      case VK_FORMAT_R16G16B16A16_SFLOAT:
+      case VK_FORMAT_R16G16B16A16_SINT:
+      case VK_FORMAT_R16G16B16A16_UINT:
+      case VK_FORMAT_R32G32_SFLOAT:
+      case VK_FORMAT_R32G32_SINT:
+      case VK_FORMAT_R32G32_UINT:
+      case VK_FORMAT_R16G16B16A16_SNORM:
+      case VK_FORMAT_R16G16B16A16_UNORM:
+        return 8;
+
+      case VK_FORMAT_R32G32B32A32_SFLOAT:
+      case VK_FORMAT_R32G32B32A32_SINT:
+      case VK_FORMAT_R32G32B32A32_UINT:
+        return 16;
+
+      default:
+        vk_utils::logWarning("[bppFromVkFormat]: unknown format");
+        return -1;
+    }
+  }
 }

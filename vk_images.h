@@ -37,6 +37,8 @@ namespace vk_utils
   bool isStencilFormat(VkFormat a_format);
   bool isDepthOrStencil(VkFormat a_format);
 
+  uint8_t bppFromVkFormat(VkFormat a_format);
+
   VulkanImageMem createImg(VkDevice a_device, uint32_t a_width, uint32_t a_height, VkFormat a_format, VkImageUsageFlags a_usage,
     VkImageAspectFlags a_aspectFlags = VK_IMAGE_ASPECT_COLOR_BIT, uint32_t a_mipLvls = 1);
   VulkanImageMem createDepthTexture(VkDevice a_device, VkPhysicalDevice a_physDevice,
