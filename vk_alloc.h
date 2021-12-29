@@ -27,6 +27,8 @@ namespace vk_utils
   {
     virtual uint32_t Allocate(const MemAllocInfo& a_allocInfo) = 0;
 
+    virtual std::pair<uint32_t, uint32_t> Allocate(const MemAllocInfo& a_allocInfo, const std::vector<VkBuffer> &a_buffers, const std::vector<VkImage> &a_textures) = 0;
+
     virtual void Free(uint32_t a_memBlockId) = 0;
 
     virtual void FreeAllMemory() = 0;

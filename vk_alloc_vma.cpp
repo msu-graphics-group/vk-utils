@@ -7,6 +7,7 @@
 #include "vk_alloc_vma.h"
 #include "vk_utils.h"
 #include "vk_images.h"
+#include "vk_buffers.h"
 
 namespace vk_utils
 {
@@ -105,6 +106,71 @@ namespace vk_utils
 
     VkResult result = vmaAllocateMemory(m_vma, &a_allocInfo.memReq, &vmaAllocCreateInfo, &alloc, &vmaAllocInfo);
 
+    VK_CHECK_RESULT(result);
+
+    m_allocations.push_back(alloc);
+
+    return m_allocations.size() - 1;
+  }
+
+  std::pair<uint32_t, uint32_t> MemoryAlloc_VMA::Allocate(const MemAllocInfo& a_allocInfo, const std::vector<VkBuffer> &a_buffers, const std::vector<VkImage> &a_textures)
+  {
+    std::vector<VkMemoryRequirements> bufMemReqs(a_buffers.size());
+    for(size_t i = 0; i < a_buffers.size(); ++i)
+    {
+      if(a_buffers[i] != VK_NULL_HANDLE)
+        vkGetBufferMemoryRequirements(m_device, a_buffers[i], &bufMemReqs[i]);
+      else
+      {
+        bufMemReqs[i] = bufMemReqs[0];
+        bufMemReqs[i].size = 0;
+      }
+    }
+    for(size_t i = 1; i < bufMemReqs.size(); ++i)
+    {
+      if(bufMemReqs[i].memoryTypeBits != bufMemReqs[0].memoryTypeBits)
+      {
+        logWarning("[MemoryAlloc_VMA::Allocate]: input buffers have different memReq.memoryTypeBits");
+//        return VK_NULL_HANDLE;
+      }
+    }
+
+    std::vector<VkMemoryRequirements> imgMemReqs(a_textures.size());
+    for(size_t i = 0; i < a_textures.size(); ++i)
+    {
+      if(a_textures[i] != VK_NULL_HANDLE)
+        vkGetImageMemoryRequirements(m_device, a_textures[i], &imgMemReqs[i]);
+      else
+      {
+        imgMemReqs[i] = imgMemReqs[0];
+        imgMemReqs[i].size = 0;
+      }
+    }
+    for(size_t i = 1; i < imgMemReqs.size(); ++i)
+    {
+      if(imgMemReqs[i].memoryTypeBits != imgMemReqs[0].memoryTypeBits)
+      {
+        logWarning("[MemoryAlloc_VMA::Allocate]: input images have different memReq.memoryTypeBits");
+        //        return VK_NULL_HANDLE;
+      }
+    }
+
+    auto bufOffsets  = assignMemOffsetsWithPadding(bufMemReqs);
+    auto bufMemTotal = bufOffsets[bufOffsets.size() - 1];
+
+    auto imgOffsets  = assignMemOffsetsWithPadding(imgMemReqs);
+    auto imgMemTotal = imgOffsets[imgOffsets.size() - 1];
+
+    VmaAllocationCreateInfo vmaAllocCreateInfo = {};
+    vmaAllocCreateInfo.usage = getVMAMemoryUsage(a_allocInfo.memProps);
+    if(a_allocInfo.dedicated_image || a_allocInfo.dedicated_buffer)
+    {
+      vmaAllocCreateInfo.flags |= VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
+    }
+
+    VmaAllocationInfo vmaAllocInfo;
+    VmaAllocation     alloc = nullptr;
+    VkResult result = vmaAllocateMemory(m_vma, &a_allocInfo.memReq, &vmaAllocCreateInfo, &alloc, &vmaAllocInfo);
     VK_CHECK_RESULT(result);
 
     m_allocations.push_back(alloc);

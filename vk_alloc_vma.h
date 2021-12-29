@@ -17,7 +17,10 @@ namespace vk_utils
     MemoryAlloc_VMA(VkInstance a_instance, VkDevice a_device, VkPhysicalDevice a_physicalDevice,
       VkFlags a_flags = 0, uint32_t a_vkAPIVersion = VK_API_VERSION_1_1);
 
+
     uint32_t Allocate(const MemAllocInfo& a_allocInfo) override;
+    std::pair<uint32_t, uint32_t> Allocate(const MemAllocInfo& a_allocInfo, const std::vector<VkBuffer> &a_buffers, const std::vector<VkImage> &a_textures) override;
+
     void Free(uint32_t a_memBlockId) override;
     void FreeAllMemory() override;
     MemoryBlock GetMemoryBlock(uint32_t a_memBlockId) const override;
