@@ -145,7 +145,7 @@ namespace vk_utils
     return res;
   }
 
-  std::vector<size_t> calculateMemOffsets(const std::vector<VkMemoryRequirements> &a_memReqs)
+  std::vector<size_t> calculateMemOffsets(const std::vector<VkMemoryRequirements> &a_memReqs, size_t a_buffImageGranularity)
   {
     assert(!a_memReqs.empty());
 
@@ -154,14 +154,14 @@ namespace vk_utils
     for (size_t i = 0; i < a_memReqs.size() - 1; i++)
     {
       mem_offsets.push_back(currOffset);
-      currOffset += getPaddedSize(a_memReqs[i].size, a_memReqs[i + 1].alignment);
+      currOffset += getPaddedSize(a_memReqs[i].size, std::max<size_t>(a_memReqs[i + 1].alignment, a_buffImageGranularity) );
     }
 
     // put mem offset for last element of 'a_memInfos'
     //
     size_t last = a_memReqs.size() - 1;
     mem_offsets.push_back(currOffset);
-    currOffset += getPaddedSize(a_memReqs[last].size, a_memReqs[last].alignment);
+    currOffset += getPaddedSize(a_memReqs[last].size, std::max<size_t>(a_memReqs[last].alignment, a_buffImageGranularity));
 
     // put total mem amount in last vector element
     //

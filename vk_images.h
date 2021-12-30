@@ -108,6 +108,8 @@ namespace vk_utils
       VkPipelineStageFlags dstStageMask,
       VkImageSubresourceRange subresourceRange);
   // ****************
+
+  VkDeviceMemory allocateAndBindWithPadding(VkDevice a_dev, VkPhysicalDevice a_physDev, const std::vector<VkBuffer> &a_buffers, std::vector<VulkanImageMem>& a_images, VkMemoryAllocateFlags flags = {});
 }
 
 
