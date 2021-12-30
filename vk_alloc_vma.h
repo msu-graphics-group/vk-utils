@@ -25,7 +25,7 @@ namespace vk_utils
     void Free(uint32_t a_memBlockId) override;
     void FreeAllMemory() override;
     MemoryBlock GetMemoryBlock(uint32_t a_memBlockId) const override;
-    void* Map(uint32_t a_memBlockId, VkDeviceSize a_offset = 0, VkDeviceSize a_size = VK_WHOLE_SIZE) override;
+    void* Map(uint32_t a_memBlockId, VkDeviceSize a_offset, VkDeviceSize a_size) override;
     void Unmap(uint32_t a_memBlockId) override;
 
     VkDevice GetDevice() const override { return m_device; }

@@ -10,9 +10,9 @@ namespace vk_utils
 {
   struct MemoryBlock
   {
-    VkDeviceMemory memory;
-    VkDeviceSize   offset;
-    VkDeviceSize   size;
+    VkDeviceMemory memory = VK_NULL_HANDLE;
+    VkDeviceSize   offset = 0u;
+    VkDeviceSize   size   = 0u;
   };
 
   struct MemAllocInfo
@@ -36,7 +36,7 @@ namespace vk_utils
 
     virtual MemoryBlock GetMemoryBlock(uint32_t a_memBlockId) const = 0;
 
-    virtual void* Map(uint32_t a_memBlockId, VkDeviceSize a_offset = 0, VkDeviceSize a_size = VK_WHOLE_SIZE) = 0;
+    virtual void* Map(uint32_t a_memBlockId, VkDeviceSize a_offset, VkDeviceSize a_size) = 0;
 
     virtual void Unmap(uint32_t a_memBlockId) = 0;
 
@@ -51,6 +51,7 @@ namespace vk_utils
   std::shared_ptr<IMemoryAlloc> CreateMemoryAlloc_VMA(VkInstance a_instance, VkDevice a_device, VkPhysicalDevice a_physicalDevice,
     VkFlags a_flags = 0, uint32_t a_vkAPIVersion = VK_API_VERSION_1_1);
   std::shared_ptr<IMemoryAlloc> CreateMemoryAlloc_Simple(VkDevice a_device, VkPhysicalDevice a_physicalDevice);
+  std::shared_ptr<IMemoryAlloc> CreateMemoryAlloc_Special(VkDevice a_device, VkPhysicalDevice a_physicalDevice);
 
   struct VulkanTexture
   {
