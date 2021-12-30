@@ -113,8 +113,9 @@ namespace vk_utils
     return m_allocations.size() - 1;
   }
 
-  std::pair<uint32_t, uint32_t> MemoryAlloc_VMA::Allocate(const MemAllocInfo& a_allocInfo, const std::vector<VkBuffer> &a_buffers, const std::vector<VkImage> &a_textures)
+  uint32_t MemoryAlloc_VMA::Allocate(const MemAllocInfo& a_allocInfoBuffers, const std::vector<VkBuffer> &a_buffers)
   {
+    MemAllocInfo allocInfo = a_allocInfoBuffers;
     std::vector<VkMemoryRequirements> bufMemReqs(a_buffers.size());
     for(size_t i = 0; i < a_buffers.size(); ++i)
     {
@@ -131,15 +132,36 @@ namespace vk_utils
       if(bufMemReqs[i].memoryTypeBits != bufMemReqs[0].memoryTypeBits)
       {
         logWarning("[MemoryAlloc_VMA::Allocate]: input buffers have different memReq.memoryTypeBits");
-//        return VK_NULL_HANDLE;
+        return -1;
       }
     }
 
-    std::vector<VkMemoryRequirements> imgMemReqs(a_textures.size());
-    for(size_t i = 0; i < a_textures.size(); ++i)
+    auto bufOffsets  = assignMemOffsetsWithPadding(bufMemReqs);
+    auto bufMemTotal = bufOffsets[bufOffsets.size() - 1];
+
+    allocInfo.memReq      = bufMemReqs[0];
+    allocInfo.memReq.size = bufMemTotal;
+
+    //    vmaAllocateMemoryForBuffer(m_vma, a_buffers[i], vmaAllocCreateInfo, alloc, vmaAllocInfo);
+    auto allocId = Allocate(allocInfo);
+
+    for(size_t i = 0; i < bufMemReqs.size(); i++)
     {
-      if(a_textures[i] != VK_NULL_HANDLE)
-        vkGetImageMemoryRequirements(m_device, a_textures[i], &imgMemReqs[i]);
+      if(a_buffers[i] != VK_NULL_HANDLE)// unnecessary check ?
+        vmaBindBufferMemory2(m_vma, m_allocations[allocId], bufOffsets[i], a_buffers[i], nullptr);
+    }
+
+    return allocId;
+  }
+
+  uint32_t MemoryAlloc_VMA::Allocate(const MemAllocInfo& a_allocInfoImages, const std::vector<VkImage> &a_images)
+  {
+    MemAllocInfo allocInfo = a_allocInfoImages;
+    std::vector<VkMemoryRequirements> imgMemReqs(a_images.size());
+    for(size_t i = 0; i < a_images.size(); ++i)
+    {
+      if(a_images[i] != VK_NULL_HANDLE)
+        vkGetImageMemoryRequirements(m_device, a_images[i], &imgMemReqs[i]);
       else
       {
         imgMemReqs[i] = imgMemReqs[0];
@@ -151,31 +173,25 @@ namespace vk_utils
       if(imgMemReqs[i].memoryTypeBits != imgMemReqs[0].memoryTypeBits)
       {
         logWarning("[MemoryAlloc_VMA::Allocate]: input images have different memReq.memoryTypeBits");
-        //        return VK_NULL_HANDLE;
+        return -1;
       }
     }
-
-    auto bufOffsets  = assignMemOffsetsWithPadding(bufMemReqs);
-    auto bufMemTotal = bufOffsets[bufOffsets.size() - 1];
 
     auto imgOffsets  = assignMemOffsetsWithPadding(imgMemReqs);
     auto imgMemTotal = imgOffsets[imgOffsets.size() - 1];
 
-    VmaAllocationCreateInfo vmaAllocCreateInfo = {};
-    vmaAllocCreateInfo.usage = getVMAMemoryUsage(a_allocInfo.memProps);
-    if(a_allocInfo.dedicated_image || a_allocInfo.dedicated_buffer)
+    allocInfo.memReq      = imgMemReqs[0];
+    allocInfo.memReq.size = imgMemTotal;
+
+    auto allocId = Allocate(allocInfo);
+
+    for(size_t i = 0; i < imgMemReqs.size(); i++)
     {
-      vmaAllocCreateInfo.flags |= VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
+      if(a_images[i] != VK_NULL_HANDLE)// unnecessary check ?
+        vmaBindImageMemory2(m_vma, m_allocations[allocId], imgOffsets[i], a_images[i], nullptr);
     }
 
-    VmaAllocationInfo vmaAllocInfo;
-    VmaAllocation     alloc = nullptr;
-    VkResult result = vmaAllocateMemory(m_vma, &a_allocInfo.memReq, &vmaAllocCreateInfo, &alloc, &vmaAllocInfo);
-    VK_CHECK_RESULT(result);
-
-    m_allocations.push_back(alloc);
-
-    return m_allocations.size() - 1;
+    return allocId;
   }
 
   void MemoryAlloc_VMA::Free(uint32_t a_memBlockId)

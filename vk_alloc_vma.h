@@ -19,7 +19,8 @@ namespace vk_utils
 
 
     uint32_t Allocate(const MemAllocInfo& a_allocInfo) override;
-    std::pair<uint32_t, uint32_t> Allocate(const MemAllocInfo& a_allocInfo, const std::vector<VkBuffer> &a_buffers, const std::vector<VkImage> &a_textures) override;
+    uint32_t Allocate(const MemAllocInfo& a_allocInfoBuffers, const std::vector<VkBuffer> &a_buffers) override;
+    uint32_t Allocate(const MemAllocInfo& a_allocInfoImages, const std::vector<VkImage> &a_images) override;
 
     void Free(uint32_t a_memBlockId) override;
     void FreeAllMemory() override;

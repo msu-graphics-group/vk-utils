@@ -13,6 +13,9 @@ namespace vk_utils
     MemoryAlloc_Simple(VkDevice a_device, VkPhysicalDevice a_physicalDevice);
 
     uint32_t Allocate(const MemAllocInfo& a_allocInfo) override;
+    uint32_t Allocate(const MemAllocInfo& a_allocInfoBuffers, const std::vector<VkBuffer> &a_buffers) override;
+    uint32_t Allocate(const MemAllocInfo& a_allocInfoImages, const std::vector<VkImage> &a_images) override;
+
     void Free(uint32_t a_memBlockId) override;
     void FreeAllMemory() override;
     MemoryBlock GetMemoryBlock(uint32_t a_memBlockId) const override;
