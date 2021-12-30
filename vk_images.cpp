@@ -9,6 +9,27 @@
 namespace vk_utils
 {
 
+  VkImage createVkImage(VkDevice a_device, uint32_t a_width, uint32_t a_height, VkFormat a_format, VkImageUsageFlags a_usage, uint32_t a_mipLvls)
+  {
+    VkImageCreateInfo imageInfo{};
+    imageInfo.sType         = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+    imageInfo.imageType     = VK_IMAGE_TYPE_2D;
+    imageInfo.format        = a_format;
+    imageInfo.extent.width  = a_width;
+    imageInfo.extent.height = a_height;
+    imageInfo.extent.depth  = 1;
+    imageInfo.mipLevels     = a_mipLvls;
+    imageInfo.arrayLayers   = 1;
+    imageInfo.samples       = VK_SAMPLE_COUNT_1_BIT;
+    imageInfo.tiling        = VK_IMAGE_TILING_OPTIMAL;
+    imageInfo.usage         = a_usage;
+
+    VkImage image;
+    VK_CHECK_RESULT(vkCreateImage(a_device, &imageInfo, nullptr, &image));
+
+    return image;
+  }
+
   VulkanImageMem createImg(VkDevice a_device, uint32_t a_width, uint32_t a_height, VkFormat a_format, VkImageUsageFlags a_usage,
     VkImageAspectFlags a_aspectFlags, uint32_t a_mipLvls)
   {
@@ -131,6 +152,26 @@ namespace vk_utils
 
     VK_CHECK_RESULT(vkCreateImageView(a_device, &imageView, nullptr, &a_pImgMem->view));
     return a_pImgMem->view;
+  }
+
+  VkImageView createVkImageView(VkDevice a_device, VkImage a_image, VkFormat a_format, uint32_t a_mipLvls, VkImageAspectFlags a_aspect)
+  {
+    VkImageViewCreateInfo info{};
+    info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+    info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+    info.format = a_format;
+    info.subresourceRange = {};
+    info.subresourceRange.aspectMask = a_aspect;
+    info.subresourceRange.baseMipLevel = 0;
+    info.subresourceRange.levelCount = a_mipLvls;
+    info.subresourceRange.baseArrayLayer = 0;
+    info.subresourceRange.layerCount = 1;
+    info.image = a_image;
+
+    VkImageView view;
+    VK_CHECK_RESULT(vkCreateImageView(a_device, &info, nullptr, &view));
+
+    return view;
   }
 
   VulkanImageMem allocateColorTextureFromDataLDR(VkDevice a_device, VkPhysicalDevice a_physDevice, const unsigned char *pixels,
@@ -508,7 +549,7 @@ namespace vk_utils
 
   //@TODO: Software mip chain generation with good interpolation filters (can use stb_image_resize.h)
 
-  void generateMipChainCmd(VkCommandBuffer a_cmdBuf, const VulkanImageMem& imageMem,
+  void generateMipChainCmd(VkCommandBuffer a_cmdBuf, VkImage a_image,
                            uint32_t a_width, uint32_t a_height, uint32_t a_mipLevels, VkImageLayout a_targetLayout)
   {
     VkCommandBufferBeginInfo beginInfo = {};
@@ -529,7 +570,7 @@ namespace vk_utils
       // Transition mip level to be generated to transfer dst
       vk_utils::setImageLayout(
         a_cmdBuf,
-        imageMem.image,
+        a_image,
         VK_IMAGE_LAYOUT_UNDEFINED,
         VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
         mipSubRange,
@@ -555,15 +596,15 @@ namespace vk_utils
       // Blit from upper (i - 1) level to lower (i) level
       vkCmdBlitImage(
           a_cmdBuf,
-          imageMem.image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-          imageMem.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+          a_image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+          a_image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
           1, &imageBlit,
           VK_FILTER_LINEAR);
 
       // Transition generated mip level to transfer source for read in next iteration
       vk_utils::setImageLayout(
           a_cmdBuf,
-          imageMem.image,
+          a_image,
         VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
         VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
           mipSubRange,
@@ -582,7 +623,7 @@ namespace vk_utils
     subresourceRange.layerCount = 1;
     vk_utils::setImageLayout(
         a_cmdBuf,
-        imageMem.image,
+       a_image,
       VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
         a_targetLayout,
         subresourceRange);

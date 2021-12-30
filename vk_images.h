@@ -39,6 +39,9 @@ namespace vk_utils
 
   uint8_t bppFromVkFormat(VkFormat a_format);
 
+  VkImage createVkImage(VkDevice a_device, uint32_t a_width, uint32_t a_height, VkFormat a_format, VkImageUsageFlags a_usage, uint32_t a_mipLvls = 1);
+  VkImageView createVkImageView(VkDevice a_device, VkImage a_image, VkFormat a_format, uint32_t a_mipLvls = 1, VkImageAspectFlags a_aspect = VK_IMAGE_ASPECT_COLOR_BIT);
+
   VulkanImageMem createImg(VkDevice a_device, uint32_t a_width, uint32_t a_height, VkFormat a_format, VkImageUsageFlags a_usage,
     VkImageAspectFlags a_aspectFlags = VK_IMAGE_ASPECT_COLOR_BIT, uint32_t a_mipLvls = 1);
   VulkanImageMem createDepthTexture(VkDevice a_device, VkPhysicalDevice a_physDevice,
@@ -70,7 +73,7 @@ namespace vk_utils
     return static_cast<uint32_t>(floor(log2(std::max(w, h))) + 1);
   }
 
-  void generateMipChainCmd(VkCommandBuffer a_cmdBuf, const VulkanImageMem& imageMem,
+  void generateMipChainCmd(VkCommandBuffer a_cmdBuf, VkImage a_image,
     uint32_t a_width, uint32_t a_height, uint32_t a_mipLevels,
     VkImageLayout a_targetLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 

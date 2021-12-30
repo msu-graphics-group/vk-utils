@@ -158,16 +158,14 @@ namespace vk_utils
       if(a_images[i] != VK_NULL_HANDLE)
       {
         VkBindImageMemoryInfo info {};
-        info.sType        = VK_STRUCTURE_TYPE_BIND_BUFFER_MEMORY_INFO;
+        info.sType        = VK_STRUCTURE_TYPE_BIND_IMAGE_MEMORY_INFO;
         info.image        = a_images[i];
         info.memory       = GetMemoryBlock(allocId).memory;
         info.memoryOffset = GetMemoryBlock(allocId).offset + imgOffsets[i];
         bindInfos.emplace_back(info);
       }
     }
-
     vkBindImageMemory2(m_device, bindInfos.size(), bindInfos.data());
-
 #else
     for(size_t i = 0; i < imgMemReqs.size(); i++)
     {
