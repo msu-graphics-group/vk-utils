@@ -169,7 +169,16 @@ vk_utils::VulkanContext vk_utils::globalContextInit(const std::vector<const char
     vkGetDeviceQueue(g_ctx.device, queueComputeFID, 0, &g_ctx.transferQueue);
   }
 
-  g_ctx.pCopyHelper = std::make_shared<vk_utils::SimpleCopyHelper>(g_ctx.physicalDevice, g_ctx.device, g_ctx.transferQueue, queueComputeFID, 64*1024*1024); // TODO, select PinPong Helper by default!
+  g_ctx.pCopyHelper       = std::make_shared<vk_utils::SimpleCopyHelper>(g_ctx.physicalDevice, g_ctx.device, g_ctx.transferQueue, queueComputeFID, 64*1024*1024); // TODO, select PinPong Helper by default!
+  
+  g_ctx.pAllocatorSpecial = vk_utils::CreateMemoryAlloc_Special(g_ctx.device, g_ctx.physicalDevice);
+  {
+    vk_utils::MemAllocInfo tempMemoryAllocInfo;
+    tempMemoryAllocInfo.memProps = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT; // TODO, selecty depending on device and sample/application (???)    
+    VkBuffer tempBuffer = vk_utils::createBuffer(g_ctx.device, size_t(2048*2048)*sizeof(int), VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT); // reserve 16 MB for temp buffers
+    g_ctx.pAllocatorSpecial->Allocate(tempMemoryAllocInfo, {tempBuffer});
+    vkDestroyBuffer(g_ctx.device, tempBuffer, nullptr);
+  }
   return g_ctx;
 }
 
@@ -177,6 +186,17 @@ void vk_utils::globalContextDestroy()
 {
   if(g_ctx.device == VK_NULL_HANDLE)
     return;
+ 
+  if(g_ctx.pAllocatorSpecial != nullptr)
+    g_ctx.pAllocatorSpecial->FreeAllMemory();
+
+  if(g_ctx.pAllocatorCommon != nullptr)
+    g_ctx.pAllocatorCommon->FreeAllMemory();
+  
+  g_ctx.pAllocatorSpecial = nullptr;
+  g_ctx.pAllocatorCommon  = nullptr;
+  g_ctx.pCopyHelper       = nullptr;
+
   vkDestroyCommandPool(g_ctx.device, g_ctx.commandPool, nullptr);
   vkDestroyDevice(g_ctx.device, nullptr);
   vkDestroyInstance(g_ctx.instance, nullptr);

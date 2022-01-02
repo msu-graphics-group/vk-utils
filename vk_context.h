@@ -3,6 +3,7 @@
 
 #include "vk_include.h"
 #include "vk_copy.h"
+#include "vk_alloc.h"
 
 #include <vector>
 #include <memory>
@@ -22,7 +23,10 @@ namespace vk_utils
     VkCommandPool    commandPool    = VK_NULL_HANDLE; 
     VkQueue          computeQueue   = VK_NULL_HANDLE;
     VkQueue          transferQueue  = VK_NULL_HANDLE;
-    std::shared_ptr<ICopyEngine> pCopyHelper = nullptr;
+    
+    std::shared_ptr<ICopyEngine>  pCopyHelper       = nullptr;
+    std::shared_ptr<IMemoryAlloc> pAllocatorCommon  = nullptr;
+    std::shared_ptr<IMemoryAlloc> pAllocatorSpecial = nullptr;
   };
 
   bool          globalContextIsInitialized(const std::vector<const char*>& requiredExtensions = std::vector<const char*>());
