@@ -93,6 +93,8 @@ vk_utils::VulkanContext vk_utils::globalContextInit(const std::vector<const char
 
   const bool supportRayQuery = (supportedExtensions.find("VK_KHR_acceleration_structure") != supportedExtensions.end()) && 
                                (supportedExtensions.find("VK_KHR_ray_query")              != supportedExtensions.end());
+
+  const bool supportBindless = (supportedExtensions.find("VK_EXT_descriptor_indexing") != supportedExtensions.end());
   
   VkPhysicalDeviceVariablePointersFeatures varPointersQuestion = {};
   varPointersQuestion.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VARIABLE_POINTERS_FEATURES;
@@ -116,12 +118,18 @@ vk_utils::VulkanContext vk_utils::globalContextInit(const std::vector<const char
   varPointers.variablePointers              = varPointersQuestion.variablePointers;
   varPointers.variablePointersStorageBuffer = varPointersQuestion.variablePointersStorageBuffer;
 
+  VkPhysicalDeviceDescriptorIndexingFeatures indexingFeatures{};
+  indexingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
+  indexingFeatures.pNext = &varPointers;
+  indexingFeatures.shaderSampledImageArrayNonUniformIndexing = supportBindless ? VK_TRUE : VK_FALSE;
+  indexingFeatures.runtimeDescriptorArray                    = supportBindless ? VK_TRUE : VK_FALSE;
+
   // query features for shaderInt8
   //
   VkPhysicalDeviceShaderFloat16Int8Features features = {};
   features.sType      = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_FLOAT16_INT8_FEATURES;
   features.shaderInt8 = deviceFeaturesQuestion.features.shaderInt16;
-  features.pNext      = &varPointers;
+  features.pNext      = &indexingFeatures;
 
   std::vector<const char*> validationLayers, deviceExtensions;
   VkPhysicalDeviceFeatures enabledDeviceFeatures = {};
@@ -152,7 +160,8 @@ vk_utils::VulkanContext vk_utils::globalContextInit(const std::vector<const char
     deviceExtensions.push_back("VK_KHR_shader_float16_int8");
   if(supportedExtensions.find("VK_KHR_variable_pointers") != supportedExtensions.end())  
     deviceExtensions.push_back("VK_KHR_variable_pointers");
-
+  if(supportedExtensions.find("VK_EXT_descriptor_indexing") != supportedExtensions.end())
+    deviceExtensions.push_back("VK_EXT_descriptor_indexing");
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
