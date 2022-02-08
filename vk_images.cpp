@@ -9,7 +9,7 @@
 namespace vk_utils
 {
 
-  VkImage createVkImage(VkDevice a_device, uint32_t a_width, uint32_t a_height, VkFormat a_format, VkImageUsageFlags a_usage, uint32_t a_mipLvls)
+  VkImageCreateInfo defaultImageCreateInfo(uint32_t a_width, uint32_t a_height, VkFormat a_format, VkImageUsageFlags a_usage, uint32_t a_mipLvls)
   {
     VkImageCreateInfo imageInfo{};
     imageInfo.sType         = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -23,6 +23,33 @@ namespace vk_utils
     imageInfo.samples       = VK_SAMPLE_COUNT_1_BIT;
     imageInfo.tiling        = VK_IMAGE_TILING_OPTIMAL;
     imageInfo.usage         = a_usage;
+    imageInfo.sharingMode   = VK_SHARING_MODE_EXCLUSIVE;
+    imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+
+    return imageInfo;
+  }
+
+  VkImageViewCreateInfo defaultImageViewCreateInfo(VkImage a_image, VkFormat a_format, uint32_t a_mipLvls, VkImageAspectFlags a_aspect)
+  {
+    VkImageViewCreateInfo info{};
+    info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+    info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+    info.format = a_format;
+    info.subresourceRange = {};
+    info.subresourceRange.aspectMask = a_aspect;
+    info.subresourceRange.baseMipLevel = 0;
+    info.subresourceRange.levelCount = a_mipLvls;
+    info.subresourceRange.baseArrayLayer = 0;
+    info.subresourceRange.layerCount = 1;
+    info.image = a_image;
+
+    return info;
+  }
+
+
+  VkImage createVkImage(VkDevice a_device, uint32_t a_width, uint32_t a_height, VkFormat a_format, VkImageUsageFlags a_usage, uint32_t a_mipLvls)
+  {
+    VkImageCreateInfo imageInfo = defaultImageCreateInfo(a_width, a_height, a_format, a_usage, a_mipLvls);
 
     VkImage image;
     VK_CHECK_RESULT(vkCreateImage(a_device, &imageInfo, nullptr, &image));
@@ -34,25 +61,13 @@ namespace vk_utils
     VkImageAspectFlags a_aspectFlags, uint32_t a_mipLvls)
   {
     VulkanImageMem result = {};
-
-    result.format = a_format;
+    result.format     = a_format;
     result.aspectMask = a_aspectFlags;
-    result.mipLvls = a_mipLvls;
+    result.mipLvls    = a_mipLvls;
 
-    VkImageCreateInfo image{};
-    image.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-    image.imageType = VK_IMAGE_TYPE_2D;
-    image.format = result.format;
-    image.extent.width = a_width;
-    image.extent.height = a_height;
-    image.extent.depth = 1;
-    image.mipLevels = result.mipLvls;
-    image.arrayLayers = 1;
-    image.samples = VK_SAMPLE_COUNT_1_BIT;
-    image.tiling = VK_IMAGE_TILING_OPTIMAL;
-    image.usage = a_usage;
-    
-    VK_CHECK_RESULT(vkCreateImage(a_device, &image, nullptr, &result.image));
+    VkImageCreateInfo imageInfo = defaultImageCreateInfo(a_width, a_height, result.format, a_usage, result.mipLvls);
+
+    VK_CHECK_RESULT(vkCreateImage(a_device, &imageInfo, nullptr, &result.image));
     vkGetImageMemoryRequirements(a_device, result.image, &result.memReq);
     
     return result;
@@ -135,20 +150,12 @@ namespace vk_utils
     if(a_pViewCreateInfo != nullptr)
     {
       imageView = *a_pViewCreateInfo;
+      imageView.image = a_pImgMem->image;
     }
     else
     {
-      imageView.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-      imageView.viewType = VK_IMAGE_VIEW_TYPE_2D;
-      imageView.format = a_pImgMem->format;
-      imageView.subresourceRange = {};
-      imageView.subresourceRange.aspectMask = a_pImgMem->aspectMask;
-      imageView.subresourceRange.baseMipLevel = 0;
-      imageView.subresourceRange.levelCount = a_pImgMem->mipLvls;
-      imageView.subresourceRange.baseArrayLayer = 0;
-      imageView.subresourceRange.layerCount = 1;
+      imageView = defaultImageViewCreateInfo(a_pImgMem->image, a_pImgMem->format, a_pImgMem->mipLvls, a_pImgMem->aspectMask);
     }
-    imageView.image = a_pImgMem->image;
 
     VK_CHECK_RESULT(vkCreateImageView(a_device, &imageView, nullptr, &a_pImgMem->view));
     return a_pImgMem->view;
@@ -156,17 +163,7 @@ namespace vk_utils
 
   VkImageView createVkImageView(VkDevice a_device, VkImage a_image, VkFormat a_format, uint32_t a_mipLvls, VkImageAspectFlags a_aspect)
   {
-    VkImageViewCreateInfo info{};
-    info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-    info.viewType = VK_IMAGE_VIEW_TYPE_2D;
-    info.format = a_format;
-    info.subresourceRange = {};
-    info.subresourceRange.aspectMask = a_aspect;
-    info.subresourceRange.baseMipLevel = 0;
-    info.subresourceRange.levelCount = a_mipLvls;
-    info.subresourceRange.baseArrayLayer = 0;
-    info.subresourceRange.layerCount = 1;
-    info.image = a_image;
+    VkImageViewCreateInfo info = defaultImageViewCreateInfo(a_image, a_format, a_mipLvls, a_aspect);
 
     VkImageView view;
     VK_CHECK_RESULT(vkCreateImageView(a_device, &info, nullptr, &view));
@@ -184,20 +181,9 @@ namespace vk_utils
     result.format     = a_format;
     result.mipLvls    = a_mipLevels;
 
-    VkImageCreateInfo image{};
-    image.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-    image.imageType = VK_IMAGE_TYPE_2D;
-    image.format = result.format;
-    image.extent.width = w;
-    image.extent.height = h;
-    image.extent.depth = 1;
-    image.mipLevels = result.mipLvls;
-    image.arrayLayers = 1;
-    image.samples = VK_SAMPLE_COUNT_1_BIT;
-    image.tiling = VK_IMAGE_TILING_OPTIMAL;
-    image.usage = a_usageFlags | VK_IMAGE_USAGE_SAMPLED_BIT;
+    VkImageCreateInfo imageInfo = defaultImageCreateInfo(w, h, result.format, a_usageFlags | VK_IMAGE_USAGE_SAMPLED_BIT, result.mipLvls);
 
-    VK_CHECK_RESULT(vkCreateImage(a_device, &image, nullptr, &result.image));
+    VK_CHECK_RESULT(vkCreateImage(a_device, &imageInfo, nullptr, &result.image));
     vkGetImageMemoryRequirements(a_device, result.image, &result.memReq);
 
     VkMemoryAllocateInfo memAlloc{};
@@ -229,18 +215,7 @@ namespace vk_utils
     else
     {
       a_pImgMem->mipLvls = 1;
-
-      image.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-      image.imageType = VK_IMAGE_TYPE_2D;
-      image.format = a_format;
-      image.extent.width = a_width;
-      image.extent.height = a_height;
-      image.extent.depth = 1;
-      image.mipLevels = a_pImgMem->mipLvls;
-      image.arrayLayers = 1;
-      image.samples = VK_SAMPLE_COUNT_1_BIT;
-      image.tiling = VK_IMAGE_TILING_OPTIMAL;
-      image.usage = a_usage | VK_IMAGE_USAGE_SAMPLED_BIT;
+      image= defaultImageCreateInfo(a_width, a_height, a_format, a_usage | VK_IMAGE_USAGE_SAMPLED_BIT, a_pImgMem->mipLvls);
     }
 
     VK_CHECK_RESULT(vkCreateImage(a_device, &image, nullptr, &a_pImgMem->image));
@@ -311,32 +286,8 @@ namespace vk_utils
     VulkanImageMem result = {};
     result.format = a_format;
 
-    VkImageCreateInfo imgCreateInfo = {};
-    imgCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-    imgCreateInfo.pNext = nullptr;
-    imgCreateInfo.flags = 0;
-    imgCreateInfo.imageType = VK_IMAGE_TYPE_2D;
-    imgCreateInfo.format = a_format;
-    imgCreateInfo.extent = VkExtent3D{ a_width, a_height, 1u };
-    imgCreateInfo.mipLevels = 1;
-    imgCreateInfo.samples = VK_SAMPLE_COUNT_1_BIT;
-    imgCreateInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
-    imgCreateInfo.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
-    imgCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-    imgCreateInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    imgCreateInfo.arrayLayers = 1;
-
-    VkImageViewCreateInfo imageViewInfo = {};
-    imageViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-    imageViewInfo.flags = 0;
-    imageViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-    imageViewInfo.format = VK_FORMAT_D32_SFLOAT;
-    imageViewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
-    imageViewInfo.subresourceRange.baseMipLevel = 0;
-    imageViewInfo.subresourceRange.baseArrayLayer = 0;
-    imageViewInfo.subresourceRange.layerCount = 1;
-    imageViewInfo.subresourceRange.levelCount = 1;
-    imageViewInfo.image = VK_NULL_HANDLE;
+    VkImageCreateInfo imgCreateInfo = defaultImageCreateInfo(a_width, a_height, a_format, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, 1);
+    VkImageViewCreateInfo imageViewInfo = defaultImageViewCreateInfo(VK_NULL_HANDLE, VK_FORMAT_D32_SFLOAT, 1, VK_IMAGE_ASPECT_DEPTH_BIT);
 
     createImgAllocAndBind(a_device, a_physDevice, a_width, a_height, a_format, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
                           &result, 
@@ -561,11 +512,11 @@ namespace vk_utils
     auto mip_h = int32_t(a_height);
     for (uint32_t i = 1; i < a_mipLevels; i++)
     {
-      VkImageSubresourceRange mipSubRange = {};
-      mipSubRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-      mipSubRange.baseMipLevel = i;
-      mipSubRange.levelCount = 1;
-      mipSubRange.layerCount = 1;
+      VkImageSubresourceRange currSubRange = {};
+      currSubRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+      currSubRange.baseMipLevel = i;
+      currSubRange.levelCount = 1;
+      currSubRange.layerCount = 1;
 
       // Transition mip level to be generated to transfer dst
       vk_utils::setImageLayout(
@@ -573,12 +524,11 @@ namespace vk_utils
         a_image,
         VK_IMAGE_LAYOUT_UNDEFINED,
         VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-        mipSubRange,
+        currSubRange,
         VK_PIPELINE_STAGE_TRANSFER_BIT,
         VK_PIPELINE_STAGE_TRANSFER_BIT);
 
       VkImageBlit imageBlit{};
-
       imageBlit.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
       imageBlit.srcSubresource.layerCount = 1;
       imageBlit.srcSubresource.mipLevel = i - 1;
@@ -601,13 +551,13 @@ namespace vk_utils
           1, &imageBlit,
           VK_FILTER_LINEAR);
 
-      // Transition generated mip level to transfer source for read in next iteration
+//       Transition generated mip level to transfer source for read in next iteration
       vk_utils::setImageLayout(
           a_cmdBuf,
           a_image,
         VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
         VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-          mipSubRange,
+        currSubRange,
           VK_PIPELINE_STAGE_TRANSFER_BIT,
         VK_PIPELINE_STAGE_TRANSFER_BIT);
 
@@ -615,7 +565,6 @@ namespace vk_utils
       if(mip_h > 1) mip_h /= 2;
     }
 
-    // Transition all mip level to a_targetLayout
     VkImageSubresourceRange subresourceRange = {};
     subresourceRange.baseMipLevel = 0;
     subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -623,8 +572,8 @@ namespace vk_utils
     subresourceRange.layerCount = 1;
     vk_utils::setImageLayout(
         a_cmdBuf,
-       a_image,
-      VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+        a_image,
+        VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
         a_targetLayout,
         subresourceRange);
 

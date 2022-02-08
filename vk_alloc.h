@@ -60,7 +60,40 @@ namespace vk_utils
     VkDescriptorImageInfo descriptor{VK_NULL_HANDLE, VK_NULL_HANDLE, VK_IMAGE_LAYOUT_UNDEFINED};
   };
 
-  struct ResourceManager
+  struct IResourceManager
+  {
+    virtual VkBuffer CreateBuffer(VkDeviceSize a_size, VkBufferUsageFlags a_usage,
+      VkMemoryPropertyFlags a_memProps, VkMemoryAllocateFlags flags) = 0;
+    virtual VkBuffer CreateBuffer(const void* a_data, VkDeviceSize a_size, VkBufferUsageFlags a_usage,
+      VkMemoryPropertyFlags a_memProps, VkMemoryAllocateFlags flags) = 0;
+    virtual std::vector<VkBuffer> CreateBuffers(const std::vector<VkDeviceSize> &a_sizes, const std::vector<VkBufferUsageFlags> &a_usages,
+      VkMemoryPropertyFlags a_memProps, VkMemoryAllocateFlags flags) = 0;
+    virtual std::vector<VkBuffer> CreateBuffers(const std::vector<void*> &a_data, const std::vector<VkDeviceSize> &a_sizes,
+      const std::vector<VkBufferUsageFlags> &a_usages, VkMemoryPropertyFlags a_memProps, VkMemoryAllocateFlags flags)  = 0;
+
+    virtual VkImage CreateImage(const VkImageCreateInfo& a_createInfo) = 0;
+    virtual VkImage CreateImage(uint32_t a_width, uint32_t a_height, VkFormat a_format, VkImageUsageFlags a_usage, uint32_t a_mipLvls) = 0;
+    virtual VkImage CreateImage(const void* a_data, uint32_t a_width, uint32_t a_height, VkFormat a_format, VkImageUsageFlags a_usage,
+      VkImageLayout a_finalLayout, uint32_t a_mipLvls) = 0;
+
+    virtual std::vector<VkImage> CreateImages(const std::vector<VkImageCreateInfo>& a_createInfos) = 0;
+
+    virtual VulkanTexture CreateTexture(const VkImageCreateInfo& a_createInfo, VkImageViewCreateInfo& a_imgViewCreateInfo) = 0;
+    virtual VulkanTexture CreateTexture(const VkImageCreateInfo& a_createInfo, VkImageViewCreateInfo& a_imgViewCreateInfo,
+      const VkSamplerCreateInfo& a_samplerCreateInfo) = 0;
+
+    virtual std::vector<VulkanTexture> CreateTextures(const std::vector<VkImageCreateInfo>& a_createInfos,
+      std::vector<VkImageViewCreateInfo>& a_imgViewCreateInfos) = 0;
+
+    virtual void DestroyBuffer(VkBuffer &a_buffer) = 0;
+    virtual void DestroyImage(VkImage &a_image) = 0;
+    virtual void DestroyTexture(VulkanTexture &a_texture) = 0;
+
+    // create accel struct ?
+    // map, unmap
+  };
+
+  struct ResourceManager : IResourceManager
   {
     ResourceManager(VkDevice a_device, VkPhysicalDevice a_physicalDevice, IMemoryAlloc* a_pAlloc, ICopyEngine* a_pCopy);
 
@@ -72,22 +105,34 @@ namespace vk_utils
     IMemoryAlloc* GetAllocator() { return m_pAlloc.get(); }
     ICopyEngine*  GetCopyEngine() {return m_pCopy.get(); }
 
-    VkBuffer CreateBuffer(VkDeviceSize a_size, VkBufferUsageFlags a_usage, VkMemoryPropertyFlags a_memProps = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, VkMemoryAllocateFlags flags = {});
-    VkBuffer CreateBuffer(const void* a_data, VkDeviceSize a_size, VkBufferUsageFlags a_usage, VkMemoryPropertyFlags a_memProps = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, VkMemoryAllocateFlags flags = {});
-    std::vector<VkBuffer> CreateBuffers(const std::vector<void*> &a_data, const std::vector<VkDeviceSize> &a_sizes, const std::vector<VkBufferUsageFlags> &a_usages,
-      VkMemoryPropertyFlags a_memProps = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, VkMemoryAllocateFlags flags = {});
+    VkBuffer CreateBuffer(VkDeviceSize a_size, VkBufferUsageFlags a_usage,  VkMemoryPropertyFlags a_memProps, VkMemoryAllocateFlags flags) override;
+    VkBuffer CreateBuffer(const void* a_data, VkDeviceSize a_size, VkBufferUsageFlags a_usage,
+      VkMemoryPropertyFlags a_memProps, VkMemoryAllocateFlags flags) override;
+    std::vector<VkBuffer> CreateBuffers(const std::vector<VkDeviceSize> &a_sizes, const std::vector<VkBufferUsageFlags> &a_usages,
+      VkMemoryPropertyFlags a_memProps, VkMemoryAllocateFlags flags) override;
+    std::vector<VkBuffer> CreateBuffers(const std::vector<void*> &a_data, const std::vector<VkDeviceSize> &a_sizes,
+      const std::vector<VkBufferUsageFlags> &a_usages, VkMemoryPropertyFlags a_memProps, VkMemoryAllocateFlags flags) override;
 
-    VkImage CreateImage(const VkImageCreateInfo& a_createInfo);
-    VkImage CreateImage(uint32_t a_width, uint32_t a_height, VkFormat a_format, VkImageUsageFlags a_usage, uint32_t a_mipLvls = 1);
-    VkImage CreateImage(const void* a_data, uint32_t a_width, uint32_t a_height, VkFormat a_format, VkImageUsageFlags a_usage, uint32_t a_mipLvls = 1);
+    VkImage CreateImage(const VkImageCreateInfo& a_createInfo) override;
+    VkImage CreateImage(uint32_t a_width, uint32_t a_height, VkFormat a_format, VkImageUsageFlags a_usage, uint32_t a_mipLvls) override;
+    VkImage CreateImage(const void* a_data, uint32_t a_width, uint32_t a_height, VkFormat a_format, VkImageUsageFlags a_usage,
+      VkImageLayout a_finalLayout, uint32_t a_mipLvls) override;
 
-    VulkanTexture CreateTexture(const VkImageCreateInfo& a_createInfo, const VkImageViewCreateInfo& a_imgViewCreateInfo);
-    VulkanTexture CreateTexture(const VkImageCreateInfo& a_createInfo, const VkImageViewCreateInfo& a_imgViewCreateInfo,
-      const VkSamplerCreateInfo& a_samplerCreateInfo);
+    std::vector<VkImage> CreateImages(const std::vector<VkImageCreateInfo>& a_createInfos) override;
 
-    // create accel struct ...
+    VulkanTexture CreateTexture(const VkImageCreateInfo& a_createInfo, VkImageViewCreateInfo& a_imgViewCreateInfo) override;
+    VulkanTexture CreateTexture(const VkImageCreateInfo& a_createInfo, VkImageViewCreateInfo& a_imgViewCreateInfo,
+      const VkSamplerCreateInfo& a_samplerCreateInfo) override;
+
+    std::vector<VulkanTexture> CreateTextures(const std::vector<VkImageCreateInfo>& a_createInfos,
+      std::vector<VkImageViewCreateInfo>& a_imgViewCreateInfos) override;
+
+    void DestroyBuffer(VkBuffer &a_buffer) override;
+    void DestroyImage(VkImage &a_image) override;
+    void DestroyTexture(VulkanTexture &a_texture) override;
+
+    // create accel struct ?
     // map, unmap
-    // destroy
 
   private:
     VkDevice         m_device         = VK_NULL_HANDLE;

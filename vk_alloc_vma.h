@@ -42,7 +42,7 @@ namespace vk_utils
     std::vector<VmaAllocation> m_allocations;
   };
 
-  struct ResourceManager_VMA
+  struct ResourceManager_VMA : IResourceManager
   {
     ResourceManager_VMA(VkDevice a_device, VkPhysicalDevice a_physicalDevice, VmaAllocator a_allocator, ICopyEngine* a_pCopy);
 
@@ -53,26 +53,33 @@ namespace vk_utils
 
     ICopyEngine*  GetCopyEngine() {return m_pCopy.get(); }
 
-    VkBuffer CreateBuffer(VkDeviceSize a_size, VkBufferUsageFlags a_usage, VkMemoryPropertyFlags a_memProps = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, VkMemoryAllocateFlags flags = {});
-    VkBuffer CreateBuffer(const void* a_data, VkDeviceSize a_size, VkBufferUsageFlags a_usage, VkMemoryPropertyFlags a_memProps = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, VkMemoryAllocateFlags flags = {});
+    VkBuffer CreateBuffer(VkDeviceSize a_size, VkBufferUsageFlags a_usage, VkMemoryPropertyFlags a_memProps, VkMemoryAllocateFlags flags) override;
+    VkBuffer CreateBuffer(const void* a_data, VkDeviceSize a_size, VkBufferUsageFlags a_usage, VkMemoryPropertyFlags a_memProps, VkMemoryAllocateFlags flags) override;
+    std::vector<VkBuffer> CreateBuffers(const std::vector<VkDeviceSize> &a_sizes, const std::vector<VkBufferUsageFlags> &a_usages,
+      VkMemoryPropertyFlags a_memProps, VkMemoryAllocateFlags flags) override;
     std::vector<VkBuffer> CreateBuffers(const std::vector<void*> &a_data, const std::vector<VkDeviceSize> &a_sizes, const std::vector<VkBufferUsageFlags> &a_usages,
-      VkMemoryPropertyFlags a_memProps = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, VkMemoryAllocateFlags flags = {});
+      VkMemoryPropertyFlags a_memProps, VkMemoryAllocateFlags flags) override;
 
-    VkImage CreateImage(const VkImageCreateInfo& a_createInfo);
-    VkImage CreateImage(uint32_t a_width, uint32_t a_height, VkFormat a_format, VkImageUsageFlags a_usage, uint32_t a_mipLvls = 1);
+    VkImage CreateImage(const VkImageCreateInfo& a_createInfo) override;
+    VkImage CreateImage(uint32_t a_width, uint32_t a_height, VkFormat a_format, VkImageUsageFlags a_usage, uint32_t a_mipLvls) override;
     VkImage CreateImage(const void* a_data, uint32_t a_width, uint32_t a_height, VkFormat a_format, VkImageUsageFlags a_usage,
-      VkImageLayout a_finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, uint32_t a_mipLvls = 1);
+      VkImageLayout a_finalLayout, uint32_t a_mipLvls) override;
 
-    VulkanTexture CreateTexture(const VkImageCreateInfo& a_createInfo, const VkImageViewCreateInfo& a_imgViewCreateInfo);
-    VulkanTexture CreateTexture(const VkImageCreateInfo& a_createInfo, const VkImageViewCreateInfo& a_imgViewCreateInfo,
-      const VkSamplerCreateInfo& a_samplerCreateInfo);
+    std::vector<VkImage> CreateImages(const std::vector<VkImageCreateInfo>& a_createInfos) override;
 
-    // create accel struct ...
+    VulkanTexture CreateTexture(const VkImageCreateInfo& a_createInfo, VkImageViewCreateInfo& a_imgViewCreateInfo) override;
+    VulkanTexture CreateTexture(const VkImageCreateInfo& a_createInfo, VkImageViewCreateInfo& a_imgViewCreateInfo,
+      const VkSamplerCreateInfo& a_samplerCreateInfo) override;
+
+    std::vector<VulkanTexture> CreateTextures(const std::vector<VkImageCreateInfo>& a_createInfos,
+      std::vector<VkImageViewCreateInfo>& a_imgViewCreateInfos) override;
+
+    // create accel struct ?
     // map, unmap
 
-    void DestroyBuffer(VkBuffer &a_buffer);
-    void DestroyImage(VkImage &a_image);
-    void DestroyTexture(VulkanTexture &a_texture);
+    void DestroyBuffer(VkBuffer &a_buffer) override;
+    void DestroyImage(VkImage &a_image) override;
+    void DestroyTexture(VulkanTexture &a_texture) override;
 
   private:
     VkDevice         m_device         = VK_NULL_HANDLE;

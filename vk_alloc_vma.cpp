@@ -309,7 +309,20 @@ namespace vk_utils
   std::vector<VkBuffer> ResourceManager_VMA::CreateBuffers(const std::vector<void*> &a_dataPointers, const std::vector<VkDeviceSize> &a_sizes,
     const std::vector<VkBufferUsageFlags> &a_usages, VkMemoryPropertyFlags a_memProps, VkMemoryAllocateFlags flags)
   {
-    std::vector<VkBuffer> buffers(a_dataPointers.size());
+    std::vector<VkBuffer> buffers = CreateBuffers(a_sizes, a_usages, a_memProps, flags);
+
+    for (size_t i = 0; i < buffers.size(); i++)
+    {
+      m_pCopy->UpdateBuffer(buffers[i], 0, a_dataPointers[i], a_sizes[i]);
+    }
+
+    return buffers;
+  }
+
+  std::vector<VkBuffer> ResourceManager_VMA::CreateBuffers(const std::vector<VkDeviceSize> &a_sizes, const std::vector<VkBufferUsageFlags> &a_usages,
+    VkMemoryPropertyFlags a_memProps, VkMemoryAllocateFlags flags)
+  {
+    std::vector<VkBuffer> buffers(a_usages.size());
     for(size_t i = 0; i < buffers.size(); ++i)
     {
       VkBufferCreateInfo bufferInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
@@ -317,7 +330,6 @@ namespace vk_utils
       bufferInfo.usage = a_usages[i];
 
       VmaAllocationCreateInfo allocInfo = {};
-      //    allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
       allocInfo.requiredFlags = a_memProps;
 
       VmaAllocation allocation;
@@ -325,11 +337,6 @@ namespace vk_utils
         &allocation, nullptr);
 
       m_bufAllocs[buffers[i]] = allocation;
-    }
-
-    for (size_t i = 0; i < buffers.size(); i++)
-    {
-      m_pCopy->UpdateBuffer(buffers[i], 0, a_dataPointers[i], a_sizes[i]);
     }
 
     return buffers;
@@ -382,26 +389,51 @@ namespace vk_utils
     return VK_NULL_HANDLE;
   }
 
-  VulkanTexture ResourceManager_VMA::CreateTexture(const VkImageCreateInfo& a_createInfo, const VkImageViewCreateInfo& a_imgViewCreateInfo)
+  std::vector<VkImage> ResourceManager_VMA::CreateImages(const std::vector<VkImageCreateInfo>& a_createInfos)
+  {
+    std::vector<VkImage> res(a_createInfos.size());
+    for(size_t i = 0; i < a_createInfos.size(); ++i) // no need to manually create single alloc in vma (?)
+    {
+      res[i] = CreateImage(a_createInfos[i]);
+    }
+
+    return res;
+  }
+
+  VulkanTexture ResourceManager_VMA::CreateTexture(const VkImageCreateInfo& a_createInfo, VkImageViewCreateInfo& a_imgViewCreateInfo)
   {
     VulkanTexture res{};
     res.image = CreateImage(a_createInfo);
 
+    a_imgViewCreateInfo.image = res.image;
     VK_CHECK_RESULT(vkCreateImageView(m_device, &a_imgViewCreateInfo, nullptr, &res.descriptor.imageView));
 
     return res;
   }
 
-  VulkanTexture ResourceManager_VMA::CreateTexture(const VkImageCreateInfo& a_createInfo, const VkImageViewCreateInfo& a_imgViewCreateInfo,
+  VulkanTexture ResourceManager_VMA::CreateTexture(const VkImageCreateInfo& a_createInfo, VkImageViewCreateInfo& a_imgViewCreateInfo,
     const VkSamplerCreateInfo& a_samplerCreateInfo)
   {
     VulkanTexture res{};
     res.image = CreateImage(a_createInfo);
 
+    a_imgViewCreateInfo.image = res.image;
     VK_CHECK_RESULT(vkCreateImageView(m_device, &a_imgViewCreateInfo, nullptr, &res.descriptor.imageView));
 
     //@TODO: sampler pool
     VK_CHECK_RESULT(vkCreateSampler(m_device, &a_samplerCreateInfo, nullptr, &res.descriptor.sampler));
+
+    return res;
+  }
+
+  std::vector<VulkanTexture> ResourceManager_VMA::CreateTextures(const std::vector<VkImageCreateInfo>& a_createInfos,
+    std::vector<VkImageViewCreateInfo>& a_imgViewCreateInfos)
+  {
+    std::vector<VulkanTexture> res(a_createInfos.size());
+    for(size_t i = 0; i < a_createInfos.size(); ++i)
+    {
+      res[i] = CreateTexture(a_createInfos[i], a_imgViewCreateInfos[i]);
+    }
 
     return res;
   }
