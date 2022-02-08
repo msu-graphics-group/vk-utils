@@ -17,6 +17,7 @@ namespace vk_utils
                                                          VK_COLOR_COMPONENT_B_BIT |
                                                          VK_COLOR_COMPONENT_A_BIT; // 0xF
 
+
   struct QueueFID_T
   {
     uint32_t graphics;

@@ -469,11 +469,9 @@ namespace vk_utils
         1, &imageMemoryBarrier);
   }
 
-  VkSampler createSampler(VkDevice a_device, VkFilter a_filterMode, VkSamplerAddressMode a_addressMode,
-                          VkBorderColor a_border_color, uint32_t a_mipLevels)
+  VkSamplerCreateInfo defaultSamplerCreateInfo(VkFilter a_filterMode, VkSamplerAddressMode a_addressMode, VkBorderColor a_border_color,
+    uint32_t a_mipLevels)
   {
-    VkSampler result;
-
     VkSamplerCreateInfo samplerCreateInfo = {};
     samplerCreateInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
     samplerCreateInfo.maxAnisotropy = 1.0f;
@@ -490,11 +488,18 @@ namespace vk_utils
     samplerCreateInfo.borderColor = a_border_color;
     samplerCreateInfo.maxAnisotropy = 1.0;
     samplerCreateInfo.anisotropyEnable = VK_FALSE;
-
     samplerCreateInfo.maxLod = (float)a_mipLevels;
 
-    VK_CHECK_RESULT(vkCreateSampler(a_device, &samplerCreateInfo, nullptr, &result));
+    return samplerCreateInfo;
+  }
 
+  VkSampler createSampler(VkDevice a_device, VkFilter a_filterMode, VkSamplerAddressMode a_addressMode,
+                          VkBorderColor a_border_color, uint32_t a_mipLevels)
+  {
+    VkSampler result;
+    VkSamplerCreateInfo samplerCreateInfo = defaultSamplerCreateInfo(a_filterMode, a_addressMode, a_border_color, a_mipLevels);
+
+    VK_CHECK_RESULT(vkCreateSampler(a_device, &samplerCreateInfo, nullptr, &result));
     return result;
   }
 

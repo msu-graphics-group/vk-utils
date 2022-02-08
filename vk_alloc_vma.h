@@ -49,7 +49,9 @@ namespace vk_utils
     ResourceManager_VMA(ResourceManager_VMA const&) = delete;
     ResourceManager_VMA& operator=(ResourceManager_VMA const&) = delete;
 
-    virtual ~ResourceManager_VMA();
+    virtual ~ResourceManager_VMA() { Cleanup(); };
+
+    void Cleanup();
 
     ICopyEngine*  GetCopyEngine() {return m_pCopy.get(); }
 
@@ -72,7 +74,12 @@ namespace vk_utils
       const VkSamplerCreateInfo& a_samplerCreateInfo) override;
 
     std::vector<VulkanTexture> CreateTextures(const std::vector<VkImageCreateInfo>& a_createInfos,
-      std::vector<VkImageViewCreateInfo>& a_imgViewCreateInfos) override;
+                                              std::vector<VkImageViewCreateInfo>& a_imgViewCreateInfos) override;
+    std::vector<VulkanTexture> CreateTextures(const std::vector<VkImageCreateInfo>& a_createInfos,
+                                              std::vector<VkImageViewCreateInfo>& a_imgViewCreateInfos,
+                                              const std::vector<VkSamplerCreateInfo>& a_samplerCreateInfos) override;
+
+    VkSampler CreateSampler(const VkSamplerCreateInfo& a_samplerCreateInfo) override;
 
     // create accel struct ?
     // map, unmap
@@ -80,6 +87,7 @@ namespace vk_utils
     void DestroyBuffer(VkBuffer &a_buffer) override;
     void DestroyImage(VkImage &a_image) override;
     void DestroyTexture(VulkanTexture &a_texture) override;
+    void DestroySampler(VkSampler &a_sampler) override;
 
   private:
     VkDevice         m_device         = VK_NULL_HANDLE;
@@ -87,6 +95,7 @@ namespace vk_utils
 
     VmaAllocator m_vma = VK_NULL_HANDLE;
     std::shared_ptr<ICopyEngine>  m_pCopy;
+    vk_utils::SamplerPool m_samplerPool;
 
     std::unordered_map<VkBuffer, VmaAllocation> m_bufAllocs;
     std::unordered_map<VkImage,  VmaAllocation> m_imgAllocs;

@@ -3,6 +3,7 @@
 
 #include "vk_include.h"
 #include "vk_copy.h"
+#include "external/samplers_vk.h"
 #include <memory>
 #include <unordered_map>
 
@@ -83,11 +84,17 @@ namespace vk_utils
       const VkSamplerCreateInfo& a_samplerCreateInfo) = 0;
 
     virtual std::vector<VulkanTexture> CreateTextures(const std::vector<VkImageCreateInfo>& a_createInfos,
-      std::vector<VkImageViewCreateInfo>& a_imgViewCreateInfos) = 0;
+                                                      std::vector<VkImageViewCreateInfo>& a_imgViewCreateInfos) = 0;
+    virtual std::vector<VulkanTexture> CreateTextures(const std::vector<VkImageCreateInfo>& a_createInfos,
+                                                      std::vector<VkImageViewCreateInfo>& a_imgViewCreateInfos,
+                                                      const std::vector<VkSamplerCreateInfo>& a_samplerCreateInfos) = 0;
+
+    virtual VkSampler CreateSampler(const VkSamplerCreateInfo& a_samplerCreateInfo) = 0;
 
     virtual void DestroyBuffer(VkBuffer &a_buffer) = 0;
     virtual void DestroyImage(VkImage &a_image) = 0;
     virtual void DestroyTexture(VulkanTexture &a_texture) = 0;
+    virtual void DestroySampler(VkSampler &a_sampler) = 0;
 
     // create accel struct ?
     // map, unmap
@@ -100,7 +107,9 @@ namespace vk_utils
     ResourceManager(ResourceManager const&) = delete;
     ResourceManager& operator=(ResourceManager const&) = delete;
 
-    virtual ~ResourceManager();
+    virtual ~ResourceManager() { Cleanup(); };
+
+    void Cleanup();
 
     IMemoryAlloc* GetAllocator() { return m_pAlloc.get(); }
     ICopyEngine*  GetCopyEngine() {return m_pCopy.get(); }
@@ -125,11 +134,17 @@ namespace vk_utils
       const VkSamplerCreateInfo& a_samplerCreateInfo) override;
 
     std::vector<VulkanTexture> CreateTextures(const std::vector<VkImageCreateInfo>& a_createInfos,
-      std::vector<VkImageViewCreateInfo>& a_imgViewCreateInfos) override;
+                                              std::vector<VkImageViewCreateInfo>& a_imgViewCreateInfos) override;
+    std::vector<VulkanTexture> CreateTextures(const std::vector<VkImageCreateInfo>& a_createInfos,
+                                              std::vector<VkImageViewCreateInfo>& a_imgViewCreateInfos,
+                                              const std::vector<VkSamplerCreateInfo>& a_samplerCreateInfos) override;
+
+    VkSampler CreateSampler(const VkSamplerCreateInfo& a_samplerCreateInfo) override;
 
     void DestroyBuffer(VkBuffer &a_buffer) override;
     void DestroyImage(VkImage &a_image) override;
     void DestroyTexture(VulkanTexture &a_texture) override;
+    void DestroySampler(VkSampler &a_sampler) override;
 
     // create accel struct ?
     // map, unmap
@@ -140,6 +155,7 @@ namespace vk_utils
 
     std::shared_ptr<IMemoryAlloc> m_pAlloc;
     std::shared_ptr<ICopyEngine>  m_pCopy;
+    vk_utils::SamplerPool m_samplerPool;
 
     std::unordered_map<VkBuffer, uint32_t> m_bufAllocs;
     std::unordered_map<VkImage,  uint32_t> m_imgAllocs;

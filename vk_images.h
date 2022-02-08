@@ -40,6 +40,10 @@ namespace vk_utils
   uint8_t bppFromVkFormat(VkFormat a_format);
   VkImageCreateInfo defaultImageCreateInfo(uint32_t a_width, uint32_t a_height, VkFormat a_format, VkImageUsageFlags a_usage, uint32_t a_mipLvls);
   VkImageViewCreateInfo defaultImageViewCreateInfo(VkImage a_image, VkFormat a_format, uint32_t a_mipLvls, VkImageAspectFlags a_aspect);
+  VkSamplerCreateInfo defaultSamplerCreateInfo(VkFilter a_filterMode = VK_FILTER_LINEAR,
+                                               VkSamplerAddressMode a_addressMode = VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT,
+                                               VkBorderColor a_border_color = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE,
+                                               uint32_t a_mipLevels = 1);
   VkImage createVkImage(VkDevice a_device, uint32_t a_width, uint32_t a_height, VkFormat a_format, VkImageUsageFlags a_usage, uint32_t a_mipLvls = 1);
   VkImageView createVkImageView(VkDevice a_device, VkImage a_image, VkFormat a_format, uint32_t a_mipLvls = 1, VkImageAspectFlags a_aspect = VK_IMAGE_ASPECT_COLOR_BIT);
 

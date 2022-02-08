@@ -185,10 +185,11 @@ namespace vk_utils
 
   void MemoryAlloc_Simple::Free(uint32_t a_memBlockId)
   {
-    if(a_memBlockId >= m_allocations.size())
+    if(a_memBlockId >= m_allocations.size() || m_allocations[a_memBlockId].memory == VK_NULL_HANDLE)
       return;
 
     vkFreeMemory(m_device, m_allocations[a_memBlockId].memory, nullptr);
+    m_allocations[a_memBlockId].memory = VK_NULL_HANDLE;
   }
 
   void MemoryAlloc_Simple::FreeAllMemory()

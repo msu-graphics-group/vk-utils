@@ -9,10 +9,10 @@ namespace vk_utils
   ResourceManager::ResourceManager(VkDevice a_device, VkPhysicalDevice a_physicalDevice, IMemoryAlloc *a_pAlloc, ICopyEngine *a_pCopy) :
     m_device(a_device), m_physicalDevice(a_physicalDevice), m_pAlloc(a_pAlloc), m_pCopy(a_pCopy)
   {
-
+    m_samplerPool.init(m_device);
   }
 
-  ResourceManager::~ResourceManager()
+  void ResourceManager::Cleanup()
   {
     for(auto& [buf, _] : m_bufAllocs)
     {
@@ -27,6 +27,8 @@ namespace vk_utils
       DestroyImage(tmp);
     }
     m_imgAllocs.clear();
+
+    m_samplerPool.deinit();
   }
 
   VkBuffer ResourceManager::CreateBuffer(VkDeviceSize a_size, VkBufferUsageFlags a_usage, VkMemoryPropertyFlags a_memProps,
@@ -42,6 +44,8 @@ namespace vk_utils
 
       uint32_t allocId = m_pAlloc->Allocate(allocInfo);
       vkBindBufferMemory(m_device, buf, m_pAlloc->GetMemoryBlock(allocId).memory, m_pAlloc->GetMemoryBlock(allocId).offset);
+
+      m_bufAllocs[buf] = allocId;
 
       return buf;
   }
@@ -182,14 +186,13 @@ namespace vk_utils
     a_imgViewCreateInfo.image = res.image;
     VK_CHECK_RESULT(vkCreateImageView(m_device, &a_imgViewCreateInfo, nullptr, &res.descriptor.imageView));
 
-    //@TODO: sampler pool
-    VK_CHECK_RESULT(vkCreateSampler(m_device, &a_samplerCreateInfo, nullptr, &res.descriptor.sampler));
+    res.descriptor.sampler = m_samplerPool.acquireSampler(a_samplerCreateInfo);
 
     return res;
   }
 
   std::vector<VulkanTexture> ResourceManager::CreateTextures(const std::vector<VkImageCreateInfo>& a_createInfos,
-    std::vector<VkImageViewCreateInfo>& a_imgViewCreateInfos)
+                                                             std::vector<VkImageViewCreateInfo>& a_imgViewCreateInfos)
   {
     std::vector<VulkanTexture> res(a_createInfos.size());
 
@@ -204,6 +207,32 @@ namespace vk_utils
     }
 
     return res;
+  }
+
+  std::vector<VulkanTexture> ResourceManager::CreateTextures(const std::vector<VkImageCreateInfo>& a_createInfos,
+                                                             std::vector<VkImageViewCreateInfo>& a_imgViewCreateInfos,
+                                                             const std::vector<VkSamplerCreateInfo>& a_samplerCreateInfos)
+  {
+    std::vector<VulkanTexture> res(a_createInfos.size());
+
+    auto imgs = CreateImages(a_createInfos);
+    for(size_t i = 0; i < a_createInfos.size(); ++i)
+    {
+      res[i].image = imgs[i];
+      res[i].resource_id = m_imgAllocs[res[i].image];
+
+      a_imgViewCreateInfos[i].image = res[i].image;
+      VK_CHECK_RESULT(vkCreateImageView(m_device, &a_imgViewCreateInfos[i], nullptr, &res[i].descriptor.imageView));
+
+      res[i].descriptor.sampler = CreateSampler(a_samplerCreateInfos[i]);
+    }
+
+    return res;
+  }
+
+  VkSampler ResourceManager::CreateSampler(const VkSamplerCreateInfo& a_samplerCreateInfo)
+  {
+    return m_samplerPool.acquireSampler(a_samplerCreateInfo);
   }
 
   void ResourceManager::DestroyBuffer(VkBuffer &a_buffer)
@@ -244,12 +273,21 @@ namespace vk_utils
       a_texture.descriptor.imageView = VK_NULL_HANDLE;
     }
 
-    //@TODO: sampler pool
     if(a_texture.descriptor.sampler != VK_NULL_HANDLE)
     {
-      vkDestroySampler(m_device, a_texture.descriptor.sampler, nullptr);
+      m_samplerPool.releaseSampler(a_texture.descriptor.sampler);
       a_texture.descriptor.sampler = VK_NULL_HANDLE;
     }
   }
+
+  void ResourceManager::DestroySampler(VkSampler &a_sampler)
+  {
+    if(a_sampler != VK_NULL_HANDLE)
+    {
+      m_samplerPool.releaseSampler(a_sampler);
+      a_sampler = VK_NULL_HANDLE;
+    }
+  }
+
 
 }
