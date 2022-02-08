@@ -1,5 +1,5 @@
-#ifndef VULKAN_FSQUAD_H
-#define VULKAN_FSQUAD_H
+#ifndef VK_UTILS_QUAD_H
+#define VK_UTILS_QUAD_H
 
 #include "vk_utils.h"
 
@@ -124,4 +124,4 @@ namespace vk_utils
 
 };
 
-#endif
+#endif // VK_UTILS_QUAD_H

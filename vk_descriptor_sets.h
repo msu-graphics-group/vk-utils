@@ -1,5 +1,5 @@
-#ifndef VK_SORT_VK_UTILS_H
-#define VK_SORT_VK_UTILS_H
+#ifndef VK_UTILS_DESCRIPTOR_SETS_H
+#define VK_UTILS_DESCRIPTOR_SETS_H
 
 #include "vk_include.h"
 
@@ -52,4 +52,4 @@ namespace vk_utils
   };
 }// namespace vk_utils
 
-#endif// VK_SORT_VK_UTILS_H
+#endif// VK_UTILS_DESCRIPTOR_SETS_H

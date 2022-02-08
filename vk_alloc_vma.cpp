@@ -478,7 +478,6 @@ namespace vk_utils
       vkDestroySampler(m_device, a_texture.descriptor.sampler, nullptr);
       a_texture.descriptor.sampler = VK_NULL_HANDLE;
     }
-
   }
 
 }

@@ -1,5 +1,5 @@
-#ifndef VULKAN_COPY_H
-#define VULKAN_COPY_H
+#ifndef VK_UTILS_COPY_H
+#define VK_UTILS_COPY_H
 
 #include "vk_include.h"
 
@@ -133,4 +133,4 @@ namespace vk_utils
 
 }
 
-#endif
+#endif // VK_UTILS_COPY_H

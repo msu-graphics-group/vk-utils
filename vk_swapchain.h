@@ -1,5 +1,5 @@
-#ifndef VK_SWAPCHAIN_H
-#define VK_SWAPCHAIN_H
+#ifndef VK_UTILS_SWAPCHAIN_H
+#define VK_UTILS_SWAPCHAIN_H
 
 #include "vk_include.h"
 
@@ -100,4 +100,4 @@ namespace vk_utils
   SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device, const VkSurfaceKHR &surface);
 }
 
-#endif //VK_SWAPCHAIN_H
+#endif //VK_UTILS_SWAPCHAIN_H

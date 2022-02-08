@@ -1,5 +1,5 @@
-#ifndef VK_SORT_VK_TEXTURES_H
-#define VK_SORT_VK_TEXTURES_H
+#ifndef VK_UTILS_IMAGES_H
+#define VK_UTILS_IMAGES_H
 
 #include "vk_include.h"
 #include "vk_copy.h"
@@ -112,4 +112,4 @@ namespace vk_utils
 }
 
 
-#endif //VK_SORT_VK_TEXTURES_H
+#endif //VK_UTILS_IMAGES_H

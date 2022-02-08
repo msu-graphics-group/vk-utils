@@ -1,5 +1,5 @@
-#ifndef CHIMERA_VK_FBUF_ATTACHMENT_H
-#define CHIMERA_VK_FBUF_ATTACHMENT_H
+#ifndef VK_UTILS_FBUF_ATTACHMENT_H
+#define VK_UTILS_FBUF_ATTACHMENT_H
 
 #include "vk_include.h"
 #include "vk_swapchain.h"
@@ -62,5 +62,5 @@ namespace vk_utils
     uint32_t m_numColorAttachments = 0;
   };
 }
-#endif//CHIMERA_VK_FBUF_ATTACHMENT_H
+#endif //VK_UTILS_FBUF_ATTACHMENT_H
 

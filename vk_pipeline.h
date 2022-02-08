@@ -1,4 +1,6 @@
-#pragma once
+#ifndef VK_UTILS_PIPELINE_H
+#define VK_UTILS_PIPELINE_H
+
 
 #include "vk_include.h"
 
@@ -70,3 +72,4 @@ namespace vk_utils
   void destroyPipelineIfExists(VkDevice a_device, VkPipeline &a_pipeline, VkPipelineLayout &a_layout);
 }
 
+#endif // VK_UTILS_PIPELINE_H

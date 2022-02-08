@@ -1,5 +1,5 @@
-#ifndef VKUTILS_VK_DESCRIPTOR_HELPERS_H
-#define VKUTILS_VK_DESCRIPTOR_HELPERS_H
+#ifndef VK_UTILS_DESCRIPTOR_HELPERS_H
+#define VK_UTILS_DESCRIPTOR_HELPERS_H
 
 #include <vector>
 #include <unordered_map>
@@ -99,4 +99,4 @@ namespace vk_utils
     }
   };
 }
-#endif //VKUTILS_VK_DESCRIPTOR_HELPERS_H
+#endif //VK_UTILS_DESCRIPTOR_HELPERS_H
