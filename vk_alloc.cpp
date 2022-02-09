@@ -28,6 +28,8 @@ namespace vk_utils
     }
     m_imgAllocs.clear();
 
+    m_allocRefCount.clear();
+
     m_samplerPool.deinit();
   }
 
@@ -46,6 +48,10 @@ namespace vk_utils
       vkBindBufferMemory(m_device, buf, m_pAlloc->GetMemoryBlock(allocId).memory, m_pAlloc->GetMemoryBlock(allocId).offset);
 
       m_bufAllocs[buf] = allocId;
+      if(m_allocRefCount.count(allocId))
+        m_allocRefCount[allocId] += 1;
+      else
+        m_allocRefCount[allocId] = 1;
 
       return buf;
   }
@@ -95,6 +101,11 @@ namespace vk_utils
       m_bufAllocs[buffers[i]] = allocId;
     }
 
+    if(m_allocRefCount.count(allocId))
+      m_allocRefCount[allocId] += buffers.size();
+    else
+      m_allocRefCount[allocId] = buffers.size();
+
     return buffers;
   }
 
@@ -107,7 +118,13 @@ namespace vk_utils
     allocInfo.memProps = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
     vkGetImageMemoryRequirements(m_device, image, &allocInfo.memReq);
 
-    m_imgAllocs[image] = m_pAlloc->Allocate(allocInfo);
+    auto allocId = m_pAlloc->Allocate(allocInfo);
+    m_imgAllocs[image] = allocId;
+
+    if(m_allocRefCount.count(allocId))
+      m_allocRefCount[allocId] += 1;
+    else
+      m_allocRefCount[allocId] = 1;
 
     return image;
   }
@@ -160,6 +177,11 @@ namespace vk_utils
     {
       m_imgAllocs[images[i]] = allocId;
     }
+
+    if(m_allocRefCount.count(allocId))
+      m_allocRefCount[allocId] += images.size();
+    else
+      m_allocRefCount[allocId] = images.size();
 
     return images;
   }
@@ -243,8 +265,13 @@ namespace vk_utils
       return;
     }
 
+    auto id = m_bufAllocs[a_buffer];
     vkDestroyBuffer(m_device, a_buffer, nullptr);
-    m_pAlloc->Free(m_bufAllocs[a_buffer]);
+
+    m_allocRefCount[id] -= 1;
+    if(m_allocRefCount[id] == 0)
+      m_pAlloc->Free(id);
+
     m_bufAllocs.erase(a_buffer);
     a_buffer = VK_NULL_HANDLE;
   }
@@ -257,8 +284,13 @@ namespace vk_utils
       return;
     }
 
+    auto id = m_imgAllocs[a_image];
     vkDestroyImage(m_device, a_image, nullptr);
-    m_pAlloc->Free(m_imgAllocs[a_image]);
+
+    m_allocRefCount[id] -= 1;
+    if(m_allocRefCount[id] == 0)
+      m_pAlloc->Free(id);
+
     m_imgAllocs.erase(a_image);
     a_image = VK_NULL_HANDLE;
   }

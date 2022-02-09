@@ -159,6 +159,8 @@ namespace vk_utils
 
     std::unordered_map<VkBuffer, uint32_t> m_bufAllocs;
     std::unordered_map<VkImage,  uint32_t> m_imgAllocs;
+
+    std::unordered_map<uint32_t, uint32_t> m_allocRefCount;
   };
 }
 
