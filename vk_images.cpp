@@ -570,17 +570,20 @@ namespace vk_utils
       if(mip_h > 1) mip_h /= 2;
     }
 
-    VkImageSubresourceRange subresourceRange = {};
-    subresourceRange.baseMipLevel = 0;
-    subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    subresourceRange.levelCount = a_mipLevels;
-    subresourceRange.layerCount = 1;
-    vk_utils::setImageLayout(
+    for(uint32_t i = 0; i < a_mipLevels; i++)
+    {
+      VkImageSubresourceRange subresourceRange = {};
+      subresourceRange.baseMipLevel            = i;
+      subresourceRange.aspectMask              = VK_IMAGE_ASPECT_COLOR_BIT;
+      subresourceRange.levelCount              = 1;
+      subresourceRange.layerCount              = 1;
+      vk_utils::setImageLayout(
         a_cmdBuf,
         a_image,
         VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
         a_targetLayout,
         subresourceRange);
+    }
 
     vkEndCommandBuffer(a_cmdBuf);
   }
