@@ -102,7 +102,7 @@ namespace vk_utils
 
   struct ResourceManager : IResourceManager
   {
-    ResourceManager(VkDevice a_device, VkPhysicalDevice a_physicalDevice, IMemoryAlloc* a_pAlloc, ICopyEngine* a_pCopy);
+    ResourceManager(VkDevice a_device, VkPhysicalDevice a_physicalDevice, std::shared_ptr<IMemoryAlloc> a_pAlloc, std::shared_ptr<ICopyEngine> a_pCopy);
 
     ResourceManager(ResourceManager const&) = delete;
     ResourceManager& operator=(ResourceManager const&) = delete;

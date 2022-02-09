@@ -92,6 +92,17 @@ namespace vk_utils
     m_vma = initVMA(a_instance, a_device, a_physicalDevice, a_flags, a_vkAPIVersion);
   }
 
+  MemoryAlloc_VMA::~MemoryAlloc_VMA()
+  {
+    Cleanup();
+//    vmaDestroyAllocator(m_vma); // should be done externally
+  }
+
+  void MemoryAlloc_VMA::Cleanup()
+  {
+    FreeAllMemory();
+  }
+
   uint32_t MemoryAlloc_VMA::Allocate(const MemAllocInfo& a_allocInfo)
   {
     VmaAllocationCreateInfo vmaAllocCreateInfo = {};
@@ -251,10 +262,16 @@ namespace vk_utils
   
   //*********************************************************************************
   
-  ResourceManager_VMA::ResourceManager_VMA(VkDevice a_device, VkPhysicalDevice a_physicalDevice, VmaAllocator a_allocator, ICopyEngine *a_pCopy) :
+  ResourceManager_VMA::ResourceManager_VMA(VkDevice a_device, VkPhysicalDevice a_physicalDevice, VmaAllocator a_allocator, std::shared_ptr<ICopyEngine> a_pCopy) :
     m_device(a_device), m_physicalDevice(a_physicalDevice), m_vma(a_allocator), m_pCopy(a_pCopy)
   {
     m_samplerPool.init(m_device);
+  }
+
+  ResourceManager_VMA::~ResourceManager_VMA()
+  {
+    Cleanup();
+    vmaDestroyAllocator(m_vma);
   }
 
   void ResourceManager_VMA::Cleanup()

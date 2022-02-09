@@ -17,6 +17,9 @@ namespace vk_utils
     MemoryAlloc_VMA(VkInstance a_instance, VkDevice a_device, VkPhysicalDevice a_physicalDevice,
       VkFlags a_flags = 0, uint32_t a_vkAPIVersion = VK_API_VERSION_1_1);
 
+    ~MemoryAlloc_VMA() override;
+
+    void Cleanup();
 
     uint32_t Allocate(const MemAllocInfo& a_allocInfo) override;
     uint32_t Allocate(const MemAllocInfo& a_allocInfoBuffers, const std::vector<VkBuffer> &a_buffers) override;
@@ -44,12 +47,12 @@ namespace vk_utils
 
   struct ResourceManager_VMA : IResourceManager
   {
-    ResourceManager_VMA(VkDevice a_device, VkPhysicalDevice a_physicalDevice, VmaAllocator a_allocator, ICopyEngine* a_pCopy);
+    ResourceManager_VMA(VkDevice a_device, VkPhysicalDevice a_physicalDevice, VmaAllocator a_allocator, std::shared_ptr<ICopyEngine> a_pCopy);
 
     ResourceManager_VMA(ResourceManager_VMA const&) = delete;
     ResourceManager_VMA& operator=(ResourceManager_VMA const&) = delete;
 
-    virtual ~ResourceManager_VMA() { Cleanup(); };
+    virtual ~ResourceManager_VMA();
 
     void Cleanup();
 

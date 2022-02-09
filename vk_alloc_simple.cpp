@@ -22,6 +22,16 @@ namespace vk_utils
     vkGetPhysicalDeviceMemoryProperties(m_physicalDevice, &m_physicalMemoryProps);
   }
 
+  MemoryAlloc_Simple::~MemoryAlloc_Simple()
+  {
+    Cleanup();
+  }
+
+  void MemoryAlloc_Simple::Cleanup()
+  {
+    FreeAllMemory();
+  }
+
   uint32_t MemoryAlloc_Simple::Allocate(const MemAllocInfo& a_allocInfo)
   {
     VkMemoryAllocateInfo memAllocInfo {};
@@ -61,9 +71,11 @@ namespace vk_utils
     block.size   = memAllocInfo.allocationSize;
     block.offset = 0;
 
-    m_allocations.push_back(block);
+    auto allocId = nextAllocIdx;
+    m_allocations[allocId] = block;
+    nextAllocIdx++;
 
-    return m_allocations.size() - 1;
+    return allocId;
   }
 
   uint32_t MemoryAlloc_Simple::Allocate(const MemAllocInfo& a_allocInfoBuffers, const std::vector<VkBuffer> &a_buffers)
@@ -185,27 +197,27 @@ namespace vk_utils
 
   void MemoryAlloc_Simple::Free(uint32_t a_memBlockId)
   {
-    if(a_memBlockId >= m_allocations.size() || m_allocations[a_memBlockId].memory == VK_NULL_HANDLE)
+    if(!m_allocations.count(a_memBlockId)|| m_allocations[a_memBlockId].memory == VK_NULL_HANDLE)
       return;
 
     vkFreeMemory(m_device, m_allocations[a_memBlockId].memory, nullptr);
-    m_allocations[a_memBlockId].memory = VK_NULL_HANDLE;
+    m_allocations.erase(a_memBlockId);
   }
 
   void MemoryAlloc_Simple::FreeAllMemory()
   {
-    for(auto& alloc : m_allocations)
+    for(auto& [alloc_id, alloc] : m_allocations)
     {
-      vkFreeMemory(m_device, alloc.memory, nullptr);
+      Free(alloc_id);
     }
   }
 
   MemoryBlock MemoryAlloc_Simple::GetMemoryBlock(uint32_t a_memBlockId) const
   {
-    if(a_memBlockId >= m_allocations.size())
+    if(!m_allocations.count(a_memBlockId))
       return {};
 
-    return m_allocations[a_memBlockId];
+    return m_allocations.at(a_memBlockId);
   }
 
   void* MemoryAlloc_Simple::Map(uint32_t a_memBlockId, VkDeviceSize a_offset, VkDeviceSize a_size)
@@ -234,6 +246,16 @@ namespace vk_utils
     m_device(a_device), m_physicalDevice(a_physicalDevice)
   {
     vkGetPhysicalDeviceMemoryProperties(m_physicalDevice, &m_physicalMemoryProps);
+  }
+
+  MemoryAlloc_Special::~MemoryAlloc_Special()
+  {
+    Cleanup();
+  }
+
+  void MemoryAlloc_Special::Cleanup()
+  {
+    FreeAllMemory();
   }
 
   uint32_t MemoryAlloc_Special::Allocate(const MemAllocInfo& a_allocInfo)
