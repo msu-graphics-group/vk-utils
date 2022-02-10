@@ -63,6 +63,7 @@ namespace vk_utils
 
   struct IResourceManager
   {
+    virtual ~IResourceManager() = default;
     virtual VkBuffer CreateBuffer(VkDeviceSize a_size, VkBufferUsageFlags a_usage,
       VkMemoryPropertyFlags a_memProps, VkMemoryAllocateFlags flags) = 0;
     virtual VkBuffer CreateBuffer(const void* a_data, VkDeviceSize a_size, VkBufferUsageFlags a_usage,

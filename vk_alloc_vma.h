@@ -42,7 +42,8 @@ namespace vk_utils
 
     VmaAllocator m_vma = VK_NULL_HANDLE;
 
-    std::vector<VmaAllocation> m_allocations;
+    uint32_t nextAllocIdx = 0;
+    std::unordered_map<uint32_t, VmaAllocation> m_allocations;
   };
 
   struct ResourceManager_VMA : IResourceManager

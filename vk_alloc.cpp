@@ -102,9 +102,9 @@ namespace vk_utils
     }
 
     if(m_allocRefCount.count(allocId))
-      m_allocRefCount[allocId] += buffers.size();
+      m_allocRefCount[allocId] += static_cast<uint32_t>(buffers.size());
     else
-      m_allocRefCount[allocId] = buffers.size();
+      m_allocRefCount[allocId]  = static_cast<uint32_t>(buffers.size());
 
     return buffers;
   }
@@ -179,9 +179,9 @@ namespace vk_utils
     }
 
     if(m_allocRefCount.count(allocId))
-      m_allocRefCount[allocId] += images.size();
+      m_allocRefCount[allocId] += static_cast<uint32_t>(images.size());
     else
-      m_allocRefCount[allocId] = images.size();
+      m_allocRefCount[allocId]  = static_cast<uint32_t>(images.size());
 
     return images;
   }
@@ -259,6 +259,8 @@ namespace vk_utils
 
   void ResourceManager::DestroyBuffer(VkBuffer &a_buffer)
   {
+    if(a_buffer == VK_NULL_HANDLE)
+      return;
     if(!m_bufAllocs.count(a_buffer))
     {
       logWarning("[ResourceManager::DestroyBuffer] trying to destroy unknown buffer");
@@ -278,6 +280,8 @@ namespace vk_utils
 
   void ResourceManager::DestroyImage(VkImage &a_image)
   {
+    if(a_image == VK_NULL_HANDLE)
+      return;
     if(!m_imgAllocs.count(a_image))
     {
       logWarning("[ResourceManager::DestroyImage] trying to destroy unknown image");

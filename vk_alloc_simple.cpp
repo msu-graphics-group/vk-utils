@@ -97,7 +97,7 @@ namespace vk_utils
       if(bufMemReqs[i].memoryTypeBits != bufMemReqs[0].memoryTypeBits)
       {
         logWarning("[MemoryAlloc_Simple::Allocate]: input buffers have different memReq.memoryTypeBits");
-        return -1;
+        return UINT32_MAX;
       }
     }
 
@@ -124,7 +124,7 @@ namespace vk_utils
         bindInfos.emplace_back(info);
       }
     }
-    vkBindBufferMemory2(m_device, bindInfos.size(), bindInfos.data());
+    vkBindBufferMemory2(m_device, static_cast<uint32_t>(bindInfos.size()), bindInfos.data());
 #else
     for(size_t i = 0; i < bufMemReqs.size(); i++)
     {
@@ -155,7 +155,7 @@ namespace vk_utils
       if(imgMemReqs[i].memoryTypeBits != imgMemReqs[0].memoryTypeBits)
       {
         logWarning("[MemoryAlloc_Simple::Allocate]: input images have different memReq.memoryTypeBits");
-        return -1;
+        return UINT32_MAX;
       }
     }
 
@@ -182,7 +182,7 @@ namespace vk_utils
         bindInfos.emplace_back(info);
       }
     }
-    vkBindImageMemory2(m_device, bindInfos.size(), bindInfos.data());
+    vkBindImageMemory2(m_device, static_cast<uint32_t>(bindInfos.size()), bindInfos.data());
 #else
     for(size_t i = 0; i < imgMemReqs.size(); i++)
     {
@@ -260,8 +260,9 @@ namespace vk_utils
 
   uint32_t MemoryAlloc_Special::Allocate(const MemAllocInfo& a_allocInfo)
   {
+    (void)a_allocInfo;
     vk_utils::logWarning("[MemoryAlloc_Special::Allocate] general allocation not supported");
-    return -1;
+    return UINT32_MAX;
   }
 
   MemoryBlock MemoryAlloc_Special::AllocateInternal(const MemAllocInfo& a_allocInfo)
@@ -324,7 +325,7 @@ namespace vk_utils
       if(bufMemReqs[i].memoryTypeBits != bufMemReqs[0].memoryTypeBits)
       {
         logWarning("[MemoryAlloc_Special::Allocate]: input buffers have different memReq.memoryTypeBits");
-        return -1;
+        return UINT32_MAX;
       }
     }
 
@@ -357,7 +358,7 @@ namespace vk_utils
         bindInfos.emplace_back(info);
       }
     }
-    vkBindBufferMemory2(m_device, bindInfos.size(), bindInfos.data());
+    vkBindBufferMemory2(m_device, static_cast<uint32_t>(bindInfos.size()), bindInfos.data());
 #else
     for(size_t i = 0; i < bufMemReqs.size(); i++)
     {
@@ -388,7 +389,7 @@ namespace vk_utils
       if(imgMemReqs[i].memoryTypeBits != imgMemReqs[0].memoryTypeBits)
       {
         logWarning("[MemoryAlloc_Simple::Allocate]: input images have different memReq.memoryTypeBits");
-        return -1;
+        return UINT32_MAX;
       }
     }
 
@@ -424,7 +425,7 @@ namespace vk_utils
         bindInfos.emplace_back(info);
       }
     }
-    vkBindImageMemory2(m_device, bindInfos.size(), bindInfos.data());
+    vkBindImageMemory2(m_device, static_cast<uint32_t>(bindInfos.size()), bindInfos.data());
 #else
     for(size_t i = 0; i < imgMemReqs.size(); i++)
     {

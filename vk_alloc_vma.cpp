@@ -119,9 +119,11 @@ namespace vk_utils
 
     VK_CHECK_RESULT(result);
 
-    m_allocations.push_back(alloc);
+    auto allocId = nextAllocIdx;
+    m_allocations[allocId] = alloc;
+    nextAllocIdx++;
 
-    return m_allocations.size() - 1;
+    return allocId;
   }
 
   uint32_t MemoryAlloc_VMA::Allocate(const MemAllocInfo& a_allocInfoBuffers, const std::vector<VkBuffer> &a_buffers)
@@ -143,7 +145,7 @@ namespace vk_utils
       if(bufMemReqs[i].memoryTypeBits != bufMemReqs[0].memoryTypeBits)
       {
         logWarning("[MemoryAlloc_VMA::Allocate]: input buffers have different memReq.memoryTypeBits");
-        return -1;
+        return UINT32_MAX;
       }
     }
 
@@ -184,7 +186,7 @@ namespace vk_utils
       if(imgMemReqs[i].memoryTypeBits != imgMemReqs[0].memoryTypeBits)
       {
         logWarning("[MemoryAlloc_VMA::Allocate]: input images have different memReq.memoryTypeBits");
-        return -1;
+        return UINT32_MAX;
       }
     }
 
@@ -207,27 +209,28 @@ namespace vk_utils
 
   void MemoryAlloc_VMA::Free(uint32_t a_memBlockId)
   {
-    if(a_memBlockId >= m_allocations.size())
+    if(!m_allocations.count(a_memBlockId))
       return;
 
     vmaFreeMemory(m_vma, m_allocations[a_memBlockId]);
+    m_allocations.erase(a_memBlockId);
   }
 
   void MemoryAlloc_VMA::FreeAllMemory()
   {
-    for(auto& alloc : m_allocations)
+    for(auto& [idx, _] : m_allocations)
     {
-      vmaFreeMemory(m_vma, alloc);
+      Free(idx);
     }
   }
 
   MemoryBlock MemoryAlloc_VMA::GetMemoryBlock(uint32_t a_memBlockId) const
   {
-    if(a_memBlockId >= m_allocations.size())
+    if(!m_allocations.count(a_memBlockId))
       return {};
 
     VmaAllocationInfo allocInfo;
-    vmaGetAllocationInfo(m_vma, m_allocations[a_memBlockId], &allocInfo);
+    vmaGetAllocationInfo(m_vma, m_allocations.at(a_memBlockId), &allocInfo);
 
     MemoryBlock memInfo = {};
     memInfo.memory = allocInfo.deviceMemory;
@@ -239,11 +242,11 @@ namespace vk_utils
 
   void* MemoryAlloc_VMA::Map(uint32_t a_memBlockId, VkDeviceSize a_offset, VkDeviceSize a_size)
   {
-    if(a_memBlockId >= m_allocations.size())
+    if(!m_allocations.count(a_memBlockId))
       return nullptr;
 
-    (void*)a_offset;
-    (void*)a_size;
+    (void)a_offset;
+    (void)a_size;
 
     void* ptr;
     VkResult result = vmaMapMemory(m_vma, m_allocations[a_memBlockId], &ptr);
@@ -254,7 +257,7 @@ namespace vk_utils
 
   void MemoryAlloc_VMA::Unmap(uint32_t a_memBlockId)
   {
-    if(a_memBlockId >= m_allocations.size())
+    if(!m_allocations.count(a_memBlockId))
       return;
 
     vmaUnmapMemory(m_vma, m_allocations[a_memBlockId]);
@@ -298,7 +301,8 @@ namespace vk_utils
   {
     VkBuffer buffer;
 
-    VkBufferCreateInfo bufferInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
+    VkBufferCreateInfo bufferInfo {};
+    bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
     bufferInfo.size  = a_size;
     bufferInfo.usage = a_usage;
 
@@ -344,7 +348,8 @@ namespace vk_utils
     std::vector<VkBuffer> buffers(a_usages.size());
     for(size_t i = 0; i < buffers.size(); ++i)
     {
-      VkBufferCreateInfo bufferInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
+      VkBufferCreateInfo bufferInfo {};
+      bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
       bufferInfo.size  = a_sizes[i];
       bufferInfo.usage = a_usages[i];
 
@@ -476,6 +481,9 @@ namespace vk_utils
 
   void ResourceManager_VMA::DestroyBuffer(VkBuffer &a_buffer)
   {
+    if(a_buffer == VK_NULL_HANDLE)
+      return;
+
     if(!m_bufAllocs.count(a_buffer))
     {
       logWarning("[ResourceManager_VMA::DestroyBuffer] trying to destroy unknown buffer");
@@ -483,11 +491,14 @@ namespace vk_utils
     }
 
     vmaDestroyBuffer(m_vma, a_buffer, m_bufAllocs[a_buffer]);
+    m_bufAllocs.erase(a_buffer);
     a_buffer = VK_NULL_HANDLE;
   }
 
   void ResourceManager_VMA::DestroyImage(VkImage &a_image)
   {
+    if(a_image == VK_NULL_HANDLE)
+      return;
     if(!m_imgAllocs.count(a_image))
     {
       logWarning("[ResourceManager_VMA::DestroyImage] trying to destroy unknown image");
@@ -495,6 +506,7 @@ namespace vk_utils
     }
 
     vmaDestroyImage(m_vma, a_image, m_imgAllocs[a_image]);
+    m_imgAllocs.erase(a_image);
     a_image = VK_NULL_HANDLE;
   }
 
