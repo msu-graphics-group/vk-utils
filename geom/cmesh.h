@@ -53,7 +53,7 @@ namespace cmesh
   SimpleMesh LoadMeshFromVSGF(const char* a_fileName);
   void       SaveMeshToVSGF  (const char* a_fileName, const SimpleMesh& a_mesh);
 
-  SimpleMesh CreateQuad(const int a_sizeX, const int a_sizeY, const float a_size);
+  SimpleMesh CreateQuad(const uint32_t a_sizeX, const uint32_t a_sizeY, const float a_size);
 };
 
 

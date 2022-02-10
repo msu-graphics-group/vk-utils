@@ -664,7 +664,7 @@ namespace vk_utils
 
       default:
         vk_utils::logWarning("[bppFromVkFormat]: unknown format");
-        return -1;
+        return 0;
     }
   }
 }

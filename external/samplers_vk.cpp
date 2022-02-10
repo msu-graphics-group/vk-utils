@@ -39,7 +39,7 @@ namespace vk_utils
       }
     }
 
-    m_freeIndex = ~0;
+    m_freeIndex = ~0u;
     m_entries.clear();
     m_samplerMap.clear();
     m_stateMap.clear();
@@ -76,7 +76,7 @@ namespace vk_utils
     if(it == m_stateMap.end())
     {
       uint32_t index = 0;
-      if(m_freeIndex != ~0)
+      if(m_freeIndex != ~0u)
       {
         index       = m_freeIndex;
         m_freeIndex = m_entries[index].nextFreeIndex;
@@ -148,7 +148,13 @@ namespace vk_utils
                                             VkBorderColor        borderColor,
                                             VkBool32             unnormalizedCoordinates)
   {
-    VkSamplerCreateInfo samplerInfo     = {VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO};
+    // unused params
+    (void)minLod;
+    (void)maxLod;
+    (void)mipLodBias;
+
+    VkSamplerCreateInfo samplerInfo;
+    samplerInfo.sType                   = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
     samplerInfo.flags                   = 0;
     samplerInfo.pNext                   = nullptr;
     samplerInfo.magFilter               = magFilter;

@@ -500,7 +500,7 @@ namespace vk_utils {
     }
 
     fseek(fp, 0, SEEK_END);
-    size_t filesize = ftell(fp);
+    auto filesize = static_cast<size_t>(ftell(fp));
     fseek(fp, 0, SEEK_SET);
 
     auto filesize_padded = getPaddedSize(filesize, sizeof(uint32_t));

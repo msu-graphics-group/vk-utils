@@ -120,13 +120,13 @@ namespace vk_utils
     struct Entry
     {
       VkSampler    sampler       = nullptr;
-      uint32_t     nextFreeIndex = ~0;
+      uint32_t     nextFreeIndex = ~0u;
       uint32_t     refCount      = 0;
       SamplerState state;
     };
 
     VkDevice           m_device    = nullptr;
-    uint32_t           m_freeIndex = ~0;
+    uint32_t           m_freeIndex = ~0u;
     std::vector<Entry> m_entries;
 
     std::unordered_map<SamplerState, uint32_t, Hash_fn> m_stateMap;

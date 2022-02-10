@@ -5,14 +5,14 @@
 #include <fstream>
 
 
-std::vector<unsigned int> CreateQuadTriIndices(const int a_sizeX, const int a_sizeY)
+std::vector<unsigned int> CreateQuadTriIndices(const uint32_t a_sizeX, const uint32_t a_sizeY)
 {
   std::vector<unsigned int> indicesData(a_sizeY*a_sizeX * 6);
   unsigned int* indexBuf = indicesData.data();
 
-  for (int i = 0; i < a_sizeY; i++)
+  for (uint32_t i = 0; i < a_sizeY; i++)
   {
-    for (int j = 0; j < a_sizeX; j++)
+    for (uint32_t j = 0; j < a_sizeX; j++)
     {
       *indexBuf++ = (unsigned int)( (i + 0) * (a_sizeX + 1) + (j + 0) );
       *indexBuf++ = (unsigned int)( (i + 1) * (a_sizeX + 1) + (j + 0) );
@@ -26,13 +26,13 @@ std::vector<unsigned int> CreateQuadTriIndices(const int a_sizeX, const int a_si
   return indicesData;
 }
 
-cmesh::SimpleMesh cmesh::CreateQuad(const int a_sizeX, const int a_sizeY, const float a_size)
+cmesh::SimpleMesh cmesh::CreateQuad(const uint32_t a_sizeX, const uint32_t a_sizeY, const float a_size)
 {
-  const int vertNumX = a_sizeX + 1;
-  const int vertNumY = a_sizeY + 1;
+  const uint32_t vertNumX = a_sizeX + 1;
+  const uint32_t vertNumY = a_sizeY + 1;
 
-  const int quadsNum = a_sizeX*a_sizeY;
-  const int vertNum  = vertNumX*vertNumY;
+  const uint32_t quadsNum = a_sizeX * a_sizeY;
+  const uint32_t vertNum  = vertNumX * vertNumY;
 
   cmesh::SimpleMesh res(vertNum, quadsNum*2*3);
 
@@ -47,15 +47,15 @@ cmesh::SimpleMesh cmesh::CreateQuad(const int a_sizeX, const int a_sizeY, const 
   float* vPos4f_f = res.vPos4f.data();
   float* vNorm4f  = res.vNorm4f.data();
 
-  for (int y = 0; y < vertNumY; y++)
+  for (uint32_t y = 0; y < vertNumY; y++)
   {
     const float ypos = startY + float(y)*edgeLength;
-    const int offset = y*vertNumX;
+    const uint32_t offset = y*vertNumX;
 
-    for (int x = 0; x < vertNumX; x++)
+    for (uint32_t x = 0; x < vertNumX; x++)
     { 
       const float xpos = startX + float(x)*edgeLength;
-      const int i      = offset + x;
+      const uint32_t i = offset + x;
 
       vPos4f_f[i * 4 + 0] = xpos;
       vPos4f_f[i * 4 + 1] = ypos;

@@ -53,7 +53,7 @@ void vk_utils::destroyPipelineIfExists(VkDevice a_device, VkPipeline &a_pipeline
 
 void vk_utils::GraphicsPipelineMaker::LoadShaders(VkDevice a_device, const std::unordered_map<VkShaderStageFlagBits, std::string> &shader_paths)
 {
-  int top = 0;
+  uint32_t top = 0u;
   for(auto& [stage, path] : shader_paths)
   {
     VkPipelineShaderStageCreateInfo stage_info = {};
