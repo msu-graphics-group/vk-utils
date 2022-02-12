@@ -2,6 +2,7 @@
 #include "vk_utils.h"
 #include "vk_buffers.h"
 #include "vk_images.h"
+#include <unordered_set>
 
 namespace vk_utils
 {
@@ -14,19 +15,28 @@ namespace vk_utils
 
   void ResourceManager::Cleanup()
   {
+    std::unordered_set<uint32_t> allocIds;
+    allocIds.reserve(m_bufAllocs.size() + m_imgAllocs.size());
     for(auto& [buf, _] : m_bufAllocs)
     {
-      VkBuffer tmp = buf;
-      DestroyBuffer(tmp);
+      auto id = m_bufAllocs[buf];
+      vkDestroyBuffer(m_device, buf, nullptr);
+
+      allocIds.insert(id);
     }
     m_bufAllocs.clear();
 
     for(auto& [img, _] : m_imgAllocs)
     {
-      VkImage tmp = img;
-      DestroyImage(tmp);
+      auto id = m_imgAllocs[img];
+      vkDestroyImage(m_device, img, nullptr);
+
+      allocIds.insert(id);
     }
     m_imgAllocs.clear();
+
+    for(auto id : allocIds)
+      m_pAlloc->Free(id);
 
     m_allocRefCount.clear();
 

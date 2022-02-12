@@ -281,15 +281,13 @@ namespace vk_utils
   {
     for(auto& [buf, _] : m_bufAllocs)
     {
-      VkBuffer tmp = buf;
-      DestroyBuffer(tmp);
+      vmaDestroyBuffer(m_vma, buf, m_bufAllocs[buf]);
     }
     m_bufAllocs.clear();
 
     for(auto& [img, _] : m_imgAllocs)
     {
-      VkImage tmp = img;
-      DestroyImage(tmp);
+      vmaDestroyImage(m_vma, img, m_imgAllocs[img]);
     }
     m_imgAllocs.clear();
 
