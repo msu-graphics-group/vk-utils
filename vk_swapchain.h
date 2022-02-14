@@ -41,6 +41,7 @@ public:
 
   void Cleanup();
 
+  VkQueue GetPresentationQueue() const {return m_presentationQ; }
   VkFormat GetFormat() const {return m_colorFormat; }
   uint32_t GetImageCount() const {return m_imageCount; }
   uint32_t GetMinImageCount() const {return m_minImageCount; }
@@ -55,6 +56,7 @@ private:
   VkSwapchainKHR m_swapChain = VK_NULL_HANDLE;
 
   VkSurfaceTransformFlagsKHR m_surfaceTransformFlags = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
+  VkQueue  m_presentationQ;
   VkFormat m_colorFormat;
   uint32_t m_imageCount;
   uint32_t m_minImageCount;

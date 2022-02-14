@@ -57,7 +57,8 @@ vk_utils::SimpleCopyHelper::~SimpleCopyHelper()
   if(stagingBuff != VK_NULL_HANDLE)
     vkDestroyBuffer(dev, stagingBuff, NULL);
 
-  vkFreeMemory   (dev, stagingBuffMemory, NULL);
+  if(stagingBuffMemory != VK_NULL_HANDLE)
+    vkFreeMemory   (dev, stagingBuffMemory, NULL);
 
   vkFreeCommandBuffers(dev, cmdPool, 1, &cmdBuff);
   vkDestroyCommandPool(dev, cmdPool, nullptr);
@@ -276,6 +277,16 @@ void vk_utils::SimpleCopyHelper::UpdateImage(VkImage a_image, const void* a_src,
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+
+vk_utils::PingPongCopyHelper::PingPongCopyHelper() : SimpleCopyHelper()
+{
+  staging[0] = VK_NULL_HANDLE;
+  staging[1] = VK_NULL_HANDLE;
+
+  stagingSizeHalf = 0;
+}
+
+
 vk_utils::PingPongCopyHelper::PingPongCopyHelper(VkPhysicalDevice a_physicalDevice, VkDevice a_device, VkQueue a_transferQueue,
   uint32_t a_transferQueueIDX, size_t a_stagingBuffSize) : SimpleCopyHelper()
 {
@@ -297,25 +308,25 @@ vk_utils::PingPongCopyHelper::PingPongCopyHelper(VkPhysicalDevice a_physicalDevi
   VK_CHECK_RESULT(vkAllocateCommandBuffers(a_device, &allocInfo, &cmdBuff));
 
   stagingSize     = a_stagingBuffSize;
-  stagingSizeHalf = a_stagingBuffSize/2; 
+  stagingSizeHalf = a_stagingBuffSize/2;
 
   {
     VkBufferCreateInfo bufferCreateInfo = {};
     bufferCreateInfo.sType       = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
     bufferCreateInfo.size        = stagingSizeHalf;
-    bufferCreateInfo.usage       = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT; 
+    bufferCreateInfo.usage       = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
     bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     VK_CHECK_RESULT(vkCreateBuffer(a_device, &bufferCreateInfo, NULL, &staging[0]));
     VK_CHECK_RESULT(vkCreateBuffer(a_device, &bufferCreateInfo, NULL, &staging[1]));
 
     bufferCreateInfo.size = stagingSize;
     VK_CHECK_RESULT(vkCreateBuffer(a_device, &bufferCreateInfo, NULL, &stagingBuff));
-    
+
     VkMemoryRequirements memoryRequirements, memoryRequirement2, memoryRequirement3;
     vkGetBufferMemoryRequirements(a_device, staging[0],  &memoryRequirements);
     vkGetBufferMemoryRequirements(a_device, staging[1],  &memoryRequirement2);
     vkGetBufferMemoryRequirements(a_device, stagingBuff, &memoryRequirement3);
-      
+
     assert(memoryRequirements.size == memoryRequirement2.size);
     assert(memoryRequirements.size + memoryRequirement2.size == memoryRequirement3.size);
 
@@ -339,9 +350,14 @@ vk_utils::PingPongCopyHelper::PingPongCopyHelper(VkPhysicalDevice a_physicalDevi
 
 vk_utils::PingPongCopyHelper::~PingPongCopyHelper()
 {
-  vkDestroyFence (dev, fence, NULL);
-  vkDestroyBuffer(dev, staging[0], NULL);
-  vkDestroyBuffer(dev, staging[1], NULL);
+  if(fence != VK_NULL_HANDLE)
+    vkDestroyFence (dev, fence, NULL);
+
+  if(staging[0] != VK_NULL_HANDLE)
+    vkDestroyBuffer(dev, staging[0], NULL);
+
+  if(staging[1] != VK_NULL_HANDLE)
+    vkDestroyBuffer(dev, staging[1], NULL);
 }
 
 void vk_utils::PingPongCopyHelper::SubmitCopy(VkBuffer a_dst, size_t a_dstOffset, size_t a_size, int a_currStagingId)

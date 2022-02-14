@@ -1,32 +1,44 @@
+#include "vk_resource_manager.h"
 #include "vk_alloc.h"
 #include "vk_utils.h"
 #include "vk_buffers.h"
 #include "vk_images.h"
+#include <unordered_set>
 
 namespace vk_utils
 {
 
-  ResourceManager::ResourceManager(VkDevice a_device, VkPhysicalDevice a_physicalDevice, std::shared_ptr<IMemoryAlloc> a_pAlloc, std::shared_ptr<ICopyEngine> a_pCopy) :
-    m_device(a_device), m_physicalDevice(a_physicalDevice), m_pAlloc(a_pAlloc), m_pCopy(a_pCopy)
+  ResourceManager::ResourceManager(VkDevice a_device, VkPhysicalDevice a_physicalDevice,
+                                   std::shared_ptr<IMemoryAlloc> a_pAlloc, std::shared_ptr<ICopyEngine> a_pCopy) :
+      m_device(a_device), m_physicalDevice(a_physicalDevice), m_pAlloc(a_pAlloc), m_pCopy(a_pCopy)
   {
     m_samplerPool.init(m_device);
   }
 
   void ResourceManager::Cleanup()
   {
+    std::unordered_set<uint32_t> allocIds;
+    allocIds.reserve(m_bufAllocs.size() + m_imgAllocs.size());
     for(auto& [buf, _] : m_bufAllocs)
     {
-      VkBuffer tmp = buf;
-      DestroyBuffer(tmp);
+      auto id = m_bufAllocs[buf];
+      vkDestroyBuffer(m_device, buf, nullptr);
+
+      allocIds.insert(id);
     }
     m_bufAllocs.clear();
 
     for(auto& [img, _] : m_imgAllocs)
     {
-      VkImage tmp = img;
-      DestroyImage(tmp);
+      auto id = m_imgAllocs[img];
+      vkDestroyImage(m_device, img, nullptr);
+
+      allocIds.insert(id);
     }
     m_imgAllocs.clear();
+
+    for(auto id : allocIds)
+      m_pAlloc->Free(id);
 
     m_allocRefCount.clear();
 
@@ -34,30 +46,30 @@ namespace vk_utils
   }
 
   VkBuffer ResourceManager::CreateBuffer(VkDeviceSize a_size, VkBufferUsageFlags a_usage, VkMemoryPropertyFlags a_memProps,
-    VkMemoryAllocateFlags flags)
+                                         VkMemoryAllocateFlags flags)
   {
-      VkMemoryRequirements memreq = {};
-      auto buf = vk_utils::createBuffer(m_device, a_size, a_usage, &memreq);
+    VkMemoryRequirements memreq = {};
+    auto buf = vk_utils::createBuffer(m_device, a_size, a_usage, &memreq);
 
-      MemAllocInfo allocInfo = {};
-      allocInfo.allocateFlags = flags;
-      allocInfo.memProps = a_memProps;
-      allocInfo.memReq = memreq;
+    MemAllocInfo allocInfo = {};
+    allocInfo.allocateFlags = flags;
+    allocInfo.memProps = a_memProps;
+    allocInfo.memReq = memreq;
 
-      uint32_t allocId = m_pAlloc->Allocate(allocInfo);
-      vkBindBufferMemory(m_device, buf, m_pAlloc->GetMemoryBlock(allocId).memory, m_pAlloc->GetMemoryBlock(allocId).offset);
+    uint32_t allocId = m_pAlloc->Allocate(allocInfo);
+    vkBindBufferMemory(m_device, buf, m_pAlloc->GetMemoryBlock(allocId).memory, m_pAlloc->GetMemoryBlock(allocId).offset);
 
-      m_bufAllocs[buf] = allocId;
-      if(m_allocRefCount.count(allocId))
-        m_allocRefCount[allocId] += 1;
-      else
-        m_allocRefCount[allocId] = 1;
+    m_bufAllocs[buf] = allocId;
+    if(m_allocRefCount.count(allocId))
+      m_allocRefCount[allocId] += 1;
+    else
+      m_allocRefCount[allocId] = 1;
 
-      return buf;
+    return buf;
   }
 
   VkBuffer ResourceManager::CreateBuffer(const void* a_data, VkDeviceSize a_size, VkBufferUsageFlags a_usage,
-    VkMemoryPropertyFlags a_memProps, VkMemoryAllocateFlags flags)
+                                         VkMemoryPropertyFlags a_memProps, VkMemoryAllocateFlags flags)
   {
     auto buf = CreateBuffer(a_size, a_usage, a_memProps, flags);
 
@@ -67,7 +79,8 @@ namespace vk_utils
   }
 
   std::vector<VkBuffer> ResourceManager::CreateBuffers(const std::vector<void*> &a_dataPointers, const std::vector<VkDeviceSize> &a_sizes,
-    const std::vector<VkBufferUsageFlags> &a_usages, VkMemoryPropertyFlags a_memProps, VkMemoryAllocateFlags flags)
+                                                       const std::vector<VkBufferUsageFlags> &a_usages,
+                                                       VkMemoryPropertyFlags a_memProps, VkMemoryAllocateFlags flags)
   {
     std::vector<VkBuffer> buffers = CreateBuffers(a_sizes, a_usages, a_memProps, flags);
 
@@ -79,8 +92,9 @@ namespace vk_utils
     return buffers;
   }
 
-  std::vector<VkBuffer> ResourceManager::CreateBuffers(const std::vector<VkDeviceSize> &a_sizes, const std::vector<VkBufferUsageFlags> &a_usages,
-    VkMemoryPropertyFlags a_memProps, VkMemoryAllocateFlags flags)
+  std::vector<VkBuffer> ResourceManager::CreateBuffers(const std::vector<VkDeviceSize> &a_sizes,
+                                                       const std::vector<VkBufferUsageFlags> &a_usages,
+                                                       VkMemoryPropertyFlags a_memProps, VkMemoryAllocateFlags flags)
   {
     std::vector<VkBuffer> buffers(a_sizes.size());
     for(size_t i = 0; i < buffers.size(); ++i)
@@ -130,7 +144,7 @@ namespace vk_utils
   }
 
   VkImage ResourceManager::CreateImage(uint32_t a_width, uint32_t a_height, VkFormat a_format, VkImageUsageFlags a_usage,
-    uint32_t a_mipLvls)
+                                       uint32_t a_mipLvls)
   {
     VkImageCreateInfo imageCreateInfo{};
     imageCreateInfo.sType         = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -151,7 +165,7 @@ namespace vk_utils
   }
 
   VkImage ResourceManager::CreateImage(const void* a_data, uint32_t a_width, uint32_t a_height, VkFormat a_format,
-    VkImageUsageFlags a_usage, VkImageLayout a_layout, uint32_t a_mipLvls)
+                                       VkImageUsageFlags a_usage, VkImageLayout a_layout, uint32_t a_mipLvls)
   {
     auto img = CreateImage(a_width, a_height, a_format, a_usage, a_mipLvls);
 
@@ -199,7 +213,7 @@ namespace vk_utils
   }
 
   VulkanTexture ResourceManager::CreateTexture(const VkImageCreateInfo& a_createInfo, VkImageViewCreateInfo& a_imgViewCreateInfo,
-    const VkSamplerCreateInfo& a_samplerCreateInfo)
+                                               const VkSamplerCreateInfo& a_samplerCreateInfo)
   {
     VulkanTexture res{};
     res.image = CreateImage(a_createInfo);
@@ -324,6 +338,5 @@ namespace vk_utils
       a_sampler = VK_NULL_HANDLE;
     }
   }
-
 
 }

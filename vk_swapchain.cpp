@@ -29,6 +29,7 @@ std::vector<VkFramebuffer> vk_utils::createFrameBuffers(VkDevice a_device, const
 }
 
 
+
 SwapChainSupportDetails vk_utils::querySwapChainSupport(VkPhysicalDevice device, const VkSurfaceKHR &surface)
 {
   SwapChainSupportDetails details;
@@ -66,10 +67,9 @@ VkQueue VulkanSwapChain::CreateSwapChain(const VkPhysicalDevice &physicalDevice,
   InitSurface(surface);
   Create(width, height, imageCount, vsync);
 
-  VkQueue presentQueue;
-  vkGetDeviceQueue(logicalDevice, m_queuePresentIndex, 0, &presentQueue);
+  vkGetDeviceQueue(logicalDevice, m_queuePresentIndex, 0, &m_presentationQ);
 
-  return presentQueue;
+  return m_presentationQ;
 }
 
 void VulkanSwapChain::InitSurface(VkSurfaceKHR &surface)
@@ -288,8 +288,8 @@ void VulkanSwapChain::Create(uint32_t &width, uint32_t &height, uint32_t imageCo
   swapchainCreateInfo.minImageCount = desiredNumberOfSwapchainImages;
   swapchainCreateInfo.imageFormat = m_colorFormat;
   swapchainCreateInfo.imageColorSpace = m_colorSpace;
-  swapchainCreateInfo.imageExtent = { m_swapchainExtent.width, m_swapchainExtent.height };
-  swapchainCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+  swapchainCreateInfo.imageExtent = m_swapchainExtent;
+  swapchainCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
   swapchainCreateInfo.preTransform = (VkSurfaceTransformFlagBitsKHR)preTransform;
   swapchainCreateInfo.imageArrayLayers = 1;
 

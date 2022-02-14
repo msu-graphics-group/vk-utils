@@ -2,7 +2,6 @@
 #define VK_UTILS_COPY_H
 
 #include "vk_include.h"
-
 #include <vector>
 
 #include <stdexcept>
@@ -67,8 +66,8 @@ namespace vk_utils
     void UpdateImage (VkImage a_image, const void* a_src, int a_width, int a_height, int a_bpp, VkImageLayout a_finalLayout) override;
     void ReadImage   (VkImage a_image, void* a_dst, int a_width, int a_height, int a_bpp, VkImageLayout a_finalLayout) override;
 
-    VkQueue  TransferQueue() const override { return queue; }
-    VkCommandBuffer CmdBuffer() const override { return cmdBuff; }
+    VkQueue         TransferQueue() const override { return queue; }
+    VkCommandBuffer CmdBuffer()     const override { return cmdBuff; }
 
   protected:
     static constexpr uint32_t SMALL_BUFF = 65536;
@@ -89,7 +88,9 @@ namespace vk_utils
 
   struct PingPongCopyHelper : SimpleCopyHelper
   {
-    PingPongCopyHelper(VkPhysicalDevice a_physicalDevice, VkDevice a_device, VkQueue a_transferQueue, uint32_t a_transferQueueIDX, size_t a_stagingBuffSize);
+    PingPongCopyHelper();
+    PingPongCopyHelper(VkPhysicalDevice a_physicalDevice, VkDevice a_device, VkQueue a_transferQueue,
+                       uint32_t a_transferQueueIDX, size_t a_stagingBuffSize);
     ~PingPongCopyHelper() override;
 
     void UpdateBuffer(VkBuffer a_dst, size_t a_dstOffset, const void* a_src, size_t a_size) override;
@@ -98,10 +99,11 @@ namespace vk_utils
 
     void SubmitCopy(VkBuffer a_dst, size_t a_dstOffset, size_t a_size, int a_currStagingId);
 
-    VkFence  fence = VK_NULL_HANDLE;;
+    VkFence  fence = VK_NULL_HANDLE;
     VkBuffer staging[2];
     size_t   stagingSizeHalf;
   };
+
 
   struct ComputeCopyHelper : public SimpleCopyHelper
   {

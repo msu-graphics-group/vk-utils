@@ -11,13 +11,15 @@
 
 namespace vk_utils
 {
-  std::shared_ptr<IMemoryAlloc> CreateMemoryAlloc_VMA(VkInstance a_instance, VkDevice a_device, VkPhysicalDevice a_physicalDevice,
-    VkFlags a_flags, uint32_t a_vkAPIVersion)
+  std::shared_ptr<IMemoryAlloc> CreateMemoryAlloc_VMA(VkInstance a_instance,
+                                                      VkDevice a_device, VkPhysicalDevice a_physicalDevice,
+                                                      VkFlags a_flags, uint32_t a_vkAPIVersion)
   {
     return std::make_shared<MemoryAlloc_VMA>(a_instance, a_device, a_physicalDevice, a_flags, a_vkAPIVersion);
   }
 
-  std::shared_ptr<IMemoryAlloc> CreateMemoryAlloc_VMA(VkDevice a_device, VkPhysicalDevice a_physicalDevice, VmaAllocator a_allocator)
+  std::shared_ptr<IMemoryAlloc> CreateMemoryAlloc_VMA(VkDevice a_device, VkPhysicalDevice a_physicalDevice,
+                                                      VmaAllocator a_allocator)
   {
     return std::make_shared<MemoryAlloc_VMA>(a_device, a_physicalDevice, a_allocator);
   }
@@ -35,7 +37,7 @@ namespace vk_utils
   }
 
   VmaAllocator initVMA(VkInstance a_instance, VkDevice a_device, VkPhysicalDevice a_physicalDevice,
-    VkFlags a_flags, uint32_t a_vkAPIVersion)
+                       VkFlags a_flags, uint32_t a_vkAPIVersion)
   {
     VmaVulkanFunctions functions = {};
     functions.vkAllocateMemory                    = vkAllocateMemory;
@@ -87,15 +89,28 @@ namespace vk_utils
   }
 
   MemoryAlloc_VMA::MemoryAlloc_VMA(VkInstance a_instance, VkDevice a_device, VkPhysicalDevice a_physicalDevice,
-    VkFlags a_flags, uint32_t a_vkAPIVersion) : m_device(a_device), m_physicalDevice(a_physicalDevice)
+                                   VkFlags a_flags, uint32_t a_vkAPIVersion) :
+                                   m_device(a_device), m_physicalDevice(a_physicalDevice)
   {
+    // vma created internally and will be destroyed internally
+    m_destroyVma = true;
     m_vma = initVMA(a_instance, a_device, a_physicalDevice, a_flags, a_vkAPIVersion);
+  }
+
+  VmaAllocator MemoryAlloc_VMA::GetVMA()
+  {
+    // don't return vma if it was created internally
+    if(m_destroyVma)
+      return nullptr;
+    else
+      return m_vma;
   }
 
   MemoryAlloc_VMA::~MemoryAlloc_VMA()
   {
     Cleanup();
-//    vmaDestroyAllocator(m_vma); // should be done externally
+    if(m_destroyVma)
+      vmaDestroyAllocator(m_vma);
   }
 
   void MemoryAlloc_VMA::Cleanup()
@@ -155,7 +170,7 @@ namespace vk_utils
     allocInfo.memReq      = bufMemReqs[0];
     allocInfo.memReq.size = bufMemTotal;
 
-    //    vmaAllocateMemoryForBuffer(m_vma, a_buffers[i], vmaAllocCreateInfo, alloc, vmaAllocInfo);
+//    vmaAllocateMemoryForBuffer(m_vma, a_buffers[i], vmaAllocCreateInfo, alloc, vmaAllocInfo);
     auto allocId = Allocate(allocInfo);
 
     for(size_t i = 0; i < bufMemReqs.size(); i++)
@@ -205,6 +220,40 @@ namespace vk_utils
     }
 
     return allocId;
+  }
+
+  VkBuffer MemoryAlloc_VMA::AllocateBuffer(const VkBufferCreateInfo& a_bufCreateInfo, VkMemoryPropertyFlags a_memProps)
+  {
+    VmaAllocationCreateInfo allocInfo = {};
+    allocInfo.usage = getVMAMemoryUsage(a_memProps);
+
+    VmaAllocation allocation;
+    VkBuffer buffer;
+    auto result = vmaCreateBuffer(m_vma, &a_bufCreateInfo, &allocInfo, &buffer, &allocation, nullptr);
+    VK_CHECK_RESULT(result);
+
+    auto allocId = nextAllocIdx;
+    m_allocations[allocId] = allocation;
+    nextAllocIdx++;
+
+    return buffer;
+  }
+
+  VkImage MemoryAlloc_VMA::AllocateImage(const VkImageCreateInfo& a_imgCreateInfo, VkMemoryPropertyFlags a_memProps)
+  {
+    VmaAllocationCreateInfo allocInfo = {};
+    allocInfo.usage = getVMAMemoryUsage(a_memProps);
+
+    VmaAllocation allocation;
+    VkImage image;
+    auto result = vmaCreateImage(m_vma, &a_imgCreateInfo, &allocInfo, &image, &allocation, nullptr);
+    VK_CHECK_RESULT(result);
+
+    auto allocId = nextAllocIdx;
+    m_allocations[allocId] = allocation;
+    nextAllocIdx++;
+
+    return image;
   }
 
   void MemoryAlloc_VMA::Free(uint32_t a_memBlockId)
@@ -262,10 +311,11 @@ namespace vk_utils
 
     vmaUnmapMemory(m_vma, m_allocations[a_memBlockId]);
   }
-  
+
   //*********************************************************************************
-  
-  ResourceManager_VMA::ResourceManager_VMA(VkDevice a_device, VkPhysicalDevice a_physicalDevice, VmaAllocator a_allocator, std::shared_ptr<ICopyEngine> a_pCopy) :
+
+  ResourceManager_VMA::ResourceManager_VMA(VkDevice a_device, VkPhysicalDevice a_physicalDevice,
+                                           VmaAllocator a_allocator, std::shared_ptr<ICopyEngine> a_pCopy) :
     m_device(a_device), m_physicalDevice(a_physicalDevice), m_vma(a_allocator), m_pCopy(a_pCopy)
   {
     m_samplerPool.init(m_device);
@@ -281,23 +331,21 @@ namespace vk_utils
   {
     for(auto& [buf, _] : m_bufAllocs)
     {
-      VkBuffer tmp = buf;
-      DestroyBuffer(tmp);
+      vmaDestroyBuffer(m_vma, buf, m_bufAllocs[buf]);
     }
     m_bufAllocs.clear();
 
     for(auto& [img, _] : m_imgAllocs)
     {
-      VkImage tmp = img;
-      DestroyImage(tmp);
+      vmaDestroyImage(m_vma, img, m_imgAllocs[img]);
     }
     m_imgAllocs.clear();
 
     m_samplerPool.deinit();
   }
 
-  VkBuffer ResourceManager_VMA::CreateBuffer(VkDeviceSize a_size, VkBufferUsageFlags a_usage, VkMemoryPropertyFlags a_memProps,
-    VkMemoryAllocateFlags)
+  VkBuffer ResourceManager_VMA::CreateBuffer(VkDeviceSize a_size, VkBufferUsageFlags a_usage,
+                                             VkMemoryPropertyFlags a_memProps, VkMemoryAllocateFlags)
   {
     VkBuffer buffer;
 
@@ -320,7 +368,7 @@ namespace vk_utils
   }
 
   VkBuffer ResourceManager_VMA::CreateBuffer(const void* a_data, VkDeviceSize a_size, VkBufferUsageFlags a_usage,
-    VkMemoryPropertyFlags a_memProps, VkMemoryAllocateFlags flags)
+                                             VkMemoryPropertyFlags a_memProps, VkMemoryAllocateFlags flags)
   {
     auto buf = CreateBuffer(a_size, a_usage, a_memProps, flags);
 
@@ -329,8 +377,10 @@ namespace vk_utils
     return buf;
   }
 
-  std::vector<VkBuffer> ResourceManager_VMA::CreateBuffers(const std::vector<void*> &a_dataPointers, const std::vector<VkDeviceSize> &a_sizes,
-    const std::vector<VkBufferUsageFlags> &a_usages, VkMemoryPropertyFlags a_memProps, VkMemoryAllocateFlags flags)
+  std::vector<VkBuffer> ResourceManager_VMA::CreateBuffers(const std::vector<void*> &a_dataPointers,
+                                                           const std::vector<VkDeviceSize> &a_sizes,
+                                                           const std::vector<VkBufferUsageFlags> &a_usages,
+                                                           VkMemoryPropertyFlags a_memProps, VkMemoryAllocateFlags flags)
   {
     std::vector<VkBuffer> buffers = CreateBuffers(a_sizes, a_usages, a_memProps, flags);
 
@@ -342,8 +392,9 @@ namespace vk_utils
     return buffers;
   }
 
-  std::vector<VkBuffer> ResourceManager_VMA::CreateBuffers(const std::vector<VkDeviceSize> &a_sizes, const std::vector<VkBufferUsageFlags> &a_usages,
-    VkMemoryPropertyFlags a_memProps, VkMemoryAllocateFlags flags)
+  std::vector<VkBuffer> ResourceManager_VMA::CreateBuffers(const std::vector<VkDeviceSize> &a_sizes,
+                                                           const std::vector<VkBufferUsageFlags> &a_usages,
+                                                           VkMemoryPropertyFlags a_memProps, VkMemoryAllocateFlags flags)
   {
     std::vector<VkBuffer> buffers(a_usages.size());
     for(size_t i = 0; i < buffers.size(); ++i)
@@ -382,8 +433,8 @@ namespace vk_utils
     return image;
   }
 
-  VkImage ResourceManager_VMA::CreateImage(uint32_t a_width, uint32_t a_height, VkFormat a_format, VkImageUsageFlags a_usage,
-    uint32_t a_mipLvls)
+  VkImage ResourceManager_VMA::CreateImage(uint32_t a_width, uint32_t a_height, VkFormat a_format,
+                                           VkImageUsageFlags a_usage, uint32_t a_mipLvls)
   {
     VkImageCreateInfo imageCreateInfo{};
     imageCreateInfo.sType         = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -404,7 +455,7 @@ namespace vk_utils
   }
 
   VkImage ResourceManager_VMA::CreateImage(const void* a_data, uint32_t a_width, uint32_t a_height, VkFormat a_format,
-    VkImageUsageFlags a_usage, VkImageLayout a_layout, uint32_t a_mipLvls)
+                                           VkImageUsageFlags a_usage, VkImageLayout a_layout, uint32_t a_mipLvls)
   {
     auto img = CreateImage(a_width, a_height, a_format, a_usage, a_mipLvls);
 
@@ -424,7 +475,8 @@ namespace vk_utils
     return res;
   }
 
-  VulkanTexture ResourceManager_VMA::CreateTexture(const VkImageCreateInfo& a_createInfo, VkImageViewCreateInfo& a_imgViewCreateInfo)
+  VulkanTexture ResourceManager_VMA::CreateTexture(const VkImageCreateInfo& a_createInfo,
+                                                   VkImageViewCreateInfo& a_imgViewCreateInfo)
   {
     VulkanTexture res{};
     res.image = CreateImage(a_createInfo);
@@ -435,8 +487,9 @@ namespace vk_utils
     return res;
   }
 
-  VulkanTexture ResourceManager_VMA::CreateTexture(const VkImageCreateInfo& a_createInfo, VkImageViewCreateInfo& a_imgViewCreateInfo,
-    const VkSamplerCreateInfo& a_samplerCreateInfo)
+  VulkanTexture ResourceManager_VMA::CreateTexture(const VkImageCreateInfo& a_createInfo,
+                                                   VkImageViewCreateInfo& a_imgViewCreateInfo,
+                                                   const VkSamplerCreateInfo& a_samplerCreateInfo)
   {
     VulkanTexture res{};
     res.image = CreateImage(a_createInfo);
