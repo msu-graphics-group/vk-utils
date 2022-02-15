@@ -186,7 +186,7 @@ namespace vk_utils {
     if (a_enableValidationLayers && !supportedLayers.empty())
     {
       for (const auto &layer : supportedLayers)
-        layer_names.push_back(layer.c_str());
+        layer_names.push_back(layer.data());
 
       createInfo.enabledLayerCount = uint32_t(layer_names.size());
       createInfo.ppEnabledLayerNames = layer_names.data();
