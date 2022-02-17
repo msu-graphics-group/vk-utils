@@ -11,7 +11,7 @@ struct MeshInfo
   uint32_t m_vertNum = 0;
   uint32_t m_indNum  = 0;
 
-  uint32_t m_vertexOffset = 0u;
+  int32_t  m_vertexOffset = 0u;
   uint32_t m_indexOffset  = 0u;
 
   VkDeviceSize m_vertexBufOffset = 0u;
