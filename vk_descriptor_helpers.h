@@ -5,6 +5,13 @@
 #include <unordered_map>
 #include <tuple>
 
+
+inline bool operator==(const VkDescriptorImageInfo& lhs, const VkDescriptorImageInfo& rhs)
+{
+  return std::tie(lhs.sampler, lhs.imageView, lhs.imageLayout) ==
+         std::tie(rhs.sampler, rhs.imageView, rhs.imageLayout);
+}
+
 namespace vk_utils
 {
   using DescriptorTypesMap = std::unordered_map<uint32_t, std::pair<VkDescriptorType, uint32_t>>;
@@ -23,18 +30,15 @@ namespace vk_utils
   {
     VkBufferView buffView = VK_NULL_HANDLE;
     VkBuffer buffer = VK_NULL_HANDLE;
-    std::vector <VkImageView> imageView;
-    std::vector <VkSampler> imageSampler;
+    std::vector<VkDescriptorImageInfo> imageDescriptor;
     VkAccelerationStructureKHR accelStruct = VK_NULL_HANDLE;
 
     VkDescriptorType type = VK_DESCRIPTOR_TYPE_MAX_ENUM;
-    VkImageLayout imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
     bool operator==(const DescriptorHandles &rhs) const
     {
-      return std::tie(type, buffer, buffView, accelStruct, imageLayout, imageView, imageSampler) ==
-             std::tie(rhs.type, rhs.buffer, rhs.buffView, rhs.accelStruct, rhs.imageLayout, rhs.imageView,
-                      rhs.imageSampler);
+      return std::tie(type, buffer, buffView, accelStruct, imageDescriptor) ==
+             std::tie(rhs.type, rhs.buffer, rhs.buffView, rhs.accelStruct, rhs.imageDescriptor);
     }
   };
 
@@ -85,11 +89,17 @@ namespace vk_utils
       {
         hash_combine(currHash, location);
         hash_combine(currHash, handle.type);
-        for (const auto &samp : handle.imageSampler)
-          hash_combine(currHash, samp);
-        for (const auto &view : handle.imageSampler)
-          hash_combine(currHash, view);
-        hash_combine(currHash, handle.imageLayout);
+        for(const auto& desc : handle.imageDescriptor)
+        {
+          hash_combine(currHash, desc.imageView);
+          hash_combine(currHash, desc.sampler);
+          hash_combine(currHash, desc.imageLayout);
+        }
+//        for (const auto &samp : handle.imageSampler)
+//          hash_combine(currHash, samp);
+//        for (const auto &view : handle.imageSampler)
+//          hash_combine(currHash, view);
+//        hash_combine(currHash, handle.imageLayout);
         hash_combine(currHash, handle.accelStruct);
         hash_combine(currHash, handle.buffView);
         hash_combine(currHash, handle.buffer);

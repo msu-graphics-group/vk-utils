@@ -135,11 +135,8 @@ namespace vk_utils
                                   VkImageLayout a_imageLayout)
   {
     DescriptorHandles h{};
-    if(a_imageView)
-      h.imageView.push_back(a_imageView);
-    if(a_sampler)
-      h.imageSampler.push_back(a_sampler);
-    h.imageLayout = a_imageLayout;
+    VkDescriptorImageInfo info {a_sampler, a_imageView, a_imageLayout};
+    h.imageDescriptor.push_back(info);
     h.type = a_bindType;
 
     if (m_bindings.count(a_loc))
@@ -153,24 +150,51 @@ namespace vk_utils
   {
     if(a_imageView.empty())
     {
-      logWarning("[DescriptorMaker::BindImage] binding ignored - empty image views array");
+      logWarning("[DescriptorMaker::BindImageArray] binding ignored - empty image views array");
       return;
     }
 
     if(a_bindType == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER && a_sampler.empty())
     {
-      logWarning("[DescriptorMaker::BindImage] binding ignored - empty samplers array for combined image sampler");
+      logWarning("[DescriptorMaker::BindImageArray] binding ignored - empty samplers array for combined image sampler");
+      return;
+    }
+
+    std::vector<VkDescriptorImageInfo> tmp;
+    tmp.reserve(a_imageView.size());
+    for(size_t i = 0; i < a_imageView.size(); ++i)
+    {
+      VkDescriptorImageInfo info {VK_NULL_HANDLE, a_imageView[i], a_imageLayout};
+      if(!a_sampler.empty())
+        info.sampler = a_sampler[i];
+      tmp.push_back(info);
+    }
+
+    DescriptorHandles h{};
+    h.imageDescriptor = std::move(tmp);
+    h.type = a_bindType;
+
+    if (m_bindings.count(a_loc))
+      logWarning("[DescriptorMaker::BindImageArray] binding to the same location!");
+
+    m_bindings[a_loc] = h;
+  }
+
+  void DescriptorMaker::BindImageArray(uint32_t a_loc, const std::vector<VkDescriptorImageInfo> &a_imageDesc,
+    VkDescriptorType a_bindType)
+  {
+    if(a_imageDesc.empty())
+    {
+      logWarning("[DescriptorMaker::BindImageArray] binding ignored - empty VkDescriptorImageInfo array");
       return;
     }
 
     DescriptorHandles h{};
-    h.imageView = a_imageView;
-    h.imageSampler = a_sampler;
-    h.imageLayout = a_imageLayout;
-    h.type = a_bindType;
+    h.type            = a_bindType;
+    h.imageDescriptor = a_imageDesc;
 
     if (m_bindings.count(a_loc))
-      logWarning("[DescriptorMaker::BindImage] binding to the same location!");
+      logWarning("[DescriptorMaker::BindImageArray] binding to the same location!");
 
     m_bindings[a_loc] = h;
   }
@@ -202,15 +226,12 @@ namespace vk_utils
       switch (handle.type)
       {
       case VK_DESCRIPTOR_TYPE_SAMPLER:
-        count = (uint32_t)handle.imageSampler.size();
-        totalImageInfos += handle.imageSampler.size();
-        break;
       case VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER:
       case VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE:
       case VK_DESCRIPTOR_TYPE_STORAGE_IMAGE:
       case VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT:
-        count = (uint32_t)handle.imageView.size();
-        totalImageInfos += handle.imageView.size();
+        count = (uint32_t)handle.imageDescriptor.size();
+        totalImageInfos += handle.imageDescriptor.size();
         break;
       case VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER: //TODO: test and fix
       case VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER: //TODO: test and fix
@@ -299,23 +320,13 @@ namespace vk_utils
       switch (writeDescriptorSet.descriptorType)
       {
       case VK_DESCRIPTOR_TYPE_SAMPLER:
-        writeDescriptorSet.pImageInfo = &dImageInfos[imgInfoIdx];
-        for(size_t j = 0; j < writeDescriptorSet.descriptorCount; ++j)
-          dImageInfos[imgInfoIdx++] = {m_bindings[location].imageSampler[j], VK_NULL_HANDLE, VK_IMAGE_LAYOUT_UNDEFINED};
-        break;
-
       case VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE:
       case VK_DESCRIPTOR_TYPE_STORAGE_IMAGE:
       case VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT:
-        writeDescriptorSet.pImageInfo = &dImageInfos[imgInfoIdx];
-        for(size_t j = 0; j < writeDescriptorSet.descriptorCount; ++j)
-          dImageInfos[imgInfoIdx++] = {VK_NULL_HANDLE, m_bindings[location].imageView[j], m_bindings[location].imageLayout};
-        break;
-
       case VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER:
         writeDescriptorSet.pImageInfo = &dImageInfos[imgInfoIdx];
         for(size_t j = 0; j < writeDescriptorSet.descriptorCount; ++j)
-          dImageInfos[imgInfoIdx++] = {m_bindings[location].imageSampler[j], m_bindings[location].imageView[j], m_bindings[location].imageLayout};
+          dImageInfos[imgInfoIdx++] = m_bindings[location].imageDescriptor[j];
         break;
 
       case VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER:
