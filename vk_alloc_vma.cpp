@@ -36,6 +36,32 @@ namespace vk_utils
     return VMA_MEMORY_USAGE_UNKNOWN;
   }
 
+  static inline VmaMemoryUsage getVMAMemoryUsage2(VkMemoryPropertyFlags flags)
+  {
+    if((flags & VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)       == VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)
+      return VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
+//    else if((flags & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT) == VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)
+//      return VMA_MEMORY_USAGE_AUTO_PREFER_HOST;
+//    else if((flags & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT)  == VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT)
+//      return VMA_MEMORY_USAGE_CPU_TO_GPU;
+
+    return VMA_MEMORY_USAGE_AUTO;
+  }
+
+  static inline VmaAllocationCreateFlags getVMAFlags(VkMemoryPropertyFlags flags)
+  {
+    if((flags & VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)       == VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)
+      return 0;
+    else if((flags & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT) == VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)
+      return VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT;
+    else if((flags & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT)  == VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT)
+      return VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
+
+    //TODO: VMA_ALLOCATION_CREATE_HOST_ACCESS_ALLOW_TRANSFER_INSTEAD_BIT
+
+    return VMA_MEMORY_USAGE_UNKNOWN;
+  }
+
   VmaAllocator initVMA(VkInstance a_instance, VkDevice a_device, VkPhysicalDevice a_physicalDevice,
                        VkFlags a_flags, uint32_t a_vkAPIVersion)
   {
@@ -121,7 +147,7 @@ namespace vk_utils
   uint32_t MemoryAlloc_VMA::Allocate(const MemAllocInfo& a_allocInfo)
   {
     VmaAllocationCreateInfo vmaAllocCreateInfo = {};
-    vmaAllocCreateInfo.usage = getVMAMemoryUsage(a_allocInfo.memProps);
+    vmaAllocCreateInfo.usage = getVMAMemoryUsage(a_allocInfo.memUsage);
     if(a_allocInfo.dedicated_image || a_allocInfo.dedicated_buffer)
     {
       vmaAllocCreateInfo.flags |= VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
@@ -225,7 +251,8 @@ namespace vk_utils
   VkBuffer MemoryAlloc_VMA::AllocateBuffer(const VkBufferCreateInfo& a_bufCreateInfo, VkMemoryPropertyFlags a_memProps)
   {
     VmaAllocationCreateInfo allocInfo = {};
-    allocInfo.usage = getVMAMemoryUsage(a_memProps);
+    allocInfo.usage = getVMAMemoryUsage2(a_memProps);
+    allocInfo.flags |= getVMAFlags(a_memProps);
 
     VmaAllocation allocation;
     VkBuffer buffer;
@@ -242,7 +269,8 @@ namespace vk_utils
   VkImage MemoryAlloc_VMA::AllocateImage(const VkImageCreateInfo& a_imgCreateInfo, VkMemoryPropertyFlags a_memProps)
   {
     VmaAllocationCreateInfo allocInfo = {};
-    allocInfo.usage = getVMAMemoryUsage(a_memProps);
+    allocInfo.usage = getVMAMemoryUsage2(a_memProps);
+    allocInfo.flags |= getVMAFlags(a_memProps);
 
     VmaAllocation allocation;
     VkImage image;
@@ -355,8 +383,8 @@ namespace vk_utils
     bufferInfo.usage = a_usage;
 
     VmaAllocationCreateInfo allocInfo = {};
-//    allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
-    allocInfo.requiredFlags = a_memProps;
+    allocInfo.usage = getVMAMemoryUsage2(a_memProps);
+    allocInfo.flags |= getVMAFlags(a_memProps);
 
     VmaAllocation allocation;
     vmaCreateBuffer(m_vma, &bufferInfo, &allocInfo, &buffer,
@@ -405,7 +433,8 @@ namespace vk_utils
       bufferInfo.usage = a_usages[i];
 
       VmaAllocationCreateInfo allocInfo = {};
-      allocInfo.requiredFlags = a_memProps;
+      allocInfo.usage = getVMAMemoryUsage2(a_memProps);
+      allocInfo.flags |= getVMAFlags(a_memProps);
 
       VmaAllocation allocation;
       vmaCreateBuffer(m_vma, &bufferInfo, &allocInfo, &buffers[i],
@@ -419,14 +448,14 @@ namespace vk_utils
 
   VkImage ResourceManager_VMA::CreateImage(const VkImageCreateInfo& a_createInfo)
   {
-    VmaAllocationCreateInfo allocCreateInfo = {};
-    allocCreateInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
-//    allocCreateInfo.flags = VMA_ALLOCATION_CREATE_USER_DATA_COPY_STRING_BIT;
-//    allocCreateInfo.pUserData = imageName.c_str();
+    VmaAllocationCreateInfo allocInfo = {};
+    allocInfo.usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
+//    allocInfo.flags = VMA_ALLOCATION_CREATE_USER_DATA_COPY_STRING_BIT;
+//    allocInfo.pUserData = imageName.c_str();
 
     VkImage image;
     VmaAllocation allocation;
-    vmaCreateImage(m_vma, &a_createInfo, &allocCreateInfo, &image, &allocation, nullptr);
+    vmaCreateImage(m_vma, &a_createInfo, &allocInfo, &image, &allocation, nullptr);
 
     m_imgAllocs[image] = allocation;
 

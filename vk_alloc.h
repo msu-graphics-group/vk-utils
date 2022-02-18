@@ -19,7 +19,7 @@ namespace vk_utils
   struct MemAllocInfo
   {
     VkMemoryRequirements  memReq {0, 0, 0};
-    VkMemoryPropertyFlags memProps {0};
+    VkFlags               memUsage {0};
     VkMemoryAllocateFlags allocateFlags {0};
     VkImage               dedicated_image  {VK_NULL_HANDLE};
     VkBuffer              dedicated_buffer {VK_NULL_HANDLE};

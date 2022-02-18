@@ -51,10 +51,10 @@ namespace vk_utils
     VkMemoryRequirements memreq = {};
     auto buf = vk_utils::createBuffer(m_device, a_size, a_usage, &memreq);
 
-    MemAllocInfo allocInfo = {};
+    MemAllocInfo allocInfo  = {};
     allocInfo.allocateFlags = flags;
-    allocInfo.memProps = a_memProps;
-    allocInfo.memReq = memreq;
+    allocInfo.memUsage      = a_memProps;
+    allocInfo.memReq        = memreq;
 
     uint32_t allocId = m_pAlloc->Allocate(allocInfo);
     vkBindBufferMemory(m_device, buf, m_pAlloc->GetMemoryBlock(allocId).memory, m_pAlloc->GetMemoryBlock(allocId).offset);
@@ -104,9 +104,9 @@ namespace vk_utils
       buffers[i]  = buf;
     }
 
-    MemAllocInfo allocInfo = {};
-    allocInfo.allocateFlags    = flags;
-    allocInfo.memProps         = a_memProps;
+    MemAllocInfo allocInfo  = {};
+    allocInfo.allocateFlags = flags;
+    allocInfo.memUsage      = a_memProps;
 
     uint32_t allocId = m_pAlloc->Allocate(allocInfo, buffers);
 
@@ -129,7 +129,7 @@ namespace vk_utils
     VK_CHECK_RESULT(vkCreateImage(m_device, &a_createInfo, nullptr, &image));
 
     MemAllocInfo allocInfo{};
-    allocInfo.memProps = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+    allocInfo.memUsage = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
     vkGetImageMemoryRequirements(m_device, image, &allocInfo.memReq);
 
     auto allocId = m_pAlloc->Allocate(allocInfo);
@@ -183,7 +183,7 @@ namespace vk_utils
     }
 
     MemAllocInfo allocInfo = {};
-    allocInfo.memProps     = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+    allocInfo.memUsage     = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
     uint32_t allocId = m_pAlloc->Allocate(allocInfo, images);
 

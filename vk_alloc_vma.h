@@ -10,7 +10,7 @@
 namespace vk_utils
 {
   VmaAllocator initVMA(VkInstance a_instance, VkDevice a_device, VkPhysicalDevice a_physicalDevice,
-                       VkFlags a_flags, uint32_t a_vkAPIVersion);
+    VkFlags a_flags = 0, uint32_t a_vkAPIVersion = VK_API_VERSION_1_1);
 
   struct MemoryAlloc_VMA : IMemoryAlloc
   {
@@ -50,6 +50,7 @@ namespace vk_utils
     VkImage AllocateImage(const VkImageCreateInfo &a_imgCreateInfo, VkMemoryPropertyFlags a_memProps);
 
     VmaAllocator GetVMA();
+    void SetDestroyVMA(bool doDestroy) { m_destroyVma = doDestroy; }
 
   private:
     bool m_destroyVma = false;

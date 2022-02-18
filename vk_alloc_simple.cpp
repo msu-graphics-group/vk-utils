@@ -37,7 +37,7 @@ namespace vk_utils
     VkMemoryAllocateInfo memAllocInfo {};
     memAllocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
     memAllocInfo.allocationSize = a_allocInfo.memReq.size;
-    memAllocInfo.memoryTypeIndex = vk_utils::findMemoryType(a_allocInfo.memReq.memoryTypeBits, a_allocInfo.memProps,
+    memAllocInfo.memoryTypeIndex = vk_utils::findMemoryType(a_allocInfo.memReq.memoryTypeBits, a_allocInfo.memUsage,
       m_physicalDevice);
 
     VkMemoryDedicatedAllocateInfo dedicatedInfo {};
@@ -270,7 +270,7 @@ namespace vk_utils
     VkMemoryAllocateInfo memAllocInfo {};
     memAllocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
     memAllocInfo.allocationSize = a_allocInfo.memReq.size;
-    memAllocInfo.memoryTypeIndex = vk_utils::findMemoryType(a_allocInfo.memReq.memoryTypeBits, a_allocInfo.memProps,
+    memAllocInfo.memoryTypeIndex = vk_utils::findMemoryType(a_allocInfo.memReq.memoryTypeBits, a_allocInfo.memUsage,
       m_physicalDevice);
 
     VkMemoryDedicatedAllocateInfo dedicatedInfo {};
