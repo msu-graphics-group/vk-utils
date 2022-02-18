@@ -39,7 +39,7 @@ namespace vk_utils
     staging[1] =  vk_utils::createBuffer(dev, stagingSizeHalf, usage);
 
     MemAllocInfo allocInfo{};
-    allocInfo.memProps = memProps;
+    allocInfo.memUsage = memProps;
 
     std::vector<VkBuffer> tmpVec = {staging[0], staging[1]};
     allocId = a_pAlloc->Allocate(allocInfo, tmpVec);
