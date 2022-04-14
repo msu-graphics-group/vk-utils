@@ -27,6 +27,8 @@ namespace vk_utils
     std::shared_ptr<ICopyEngine>  pCopyHelper       = nullptr;
     std::shared_ptr<IMemoryAlloc> pAllocatorCommon  = nullptr;
     std::shared_ptr<IMemoryAlloc> pAllocatorSpecial = nullptr;
+
+    VkPhysicalDeviceSubgroupProperties subgroupProps;
   };
 
   bool          globalContextIsInitialized(const std::vector<const char*>& requiredExtensions = std::vector<const char*>());

@@ -95,7 +95,7 @@ vk_utils::VulkanContext vk_utils::globalContextInit(const std::vector<const char
                                (supportedExtensions.find("VK_KHR_ray_query")              != supportedExtensions.end());
 
   const bool supportBindless = (supportedExtensions.find("VK_EXT_descriptor_indexing") != supportedExtensions.end());
-  
+
   VkPhysicalDeviceVariablePointersFeatures varPointersQuestion = {};
   varPointersQuestion.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VARIABLE_POINTERS_FEATURES;
 
@@ -103,6 +103,23 @@ vk_utils::VulkanContext vk_utils::globalContextInit(const std::vector<const char
   deviceFeaturesQuestion.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
   deviceFeaturesQuestion.pNext = &varPointersQuestion;
   vkGetPhysicalDeviceFeatures2(g_ctx.physicalDevice, &deviceFeaturesQuestion);
+  
+  // query for subgroup operations
+  //
+  {
+    VkPhysicalDeviceSubgroupProperties subgroupProperties;
+    subgroupProperties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SUBGROUP_PROPERTIES;
+    subgroupProperties.pNext = NULL;
+    
+    VkPhysicalDeviceProperties2 physicalDeviceProperties;
+    physicalDeviceProperties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
+    physicalDeviceProperties.pNext = &subgroupProperties;
+    
+    vkGetPhysicalDeviceProperties2(g_ctx.physicalDevice, &physicalDeviceProperties);
+    g_ctx.subgroupProps = subgroupProperties;
+    //g_ctx.subgroupArithSupport = (subgroupProperties.supportedOperations & VK_SUBGROUP_FEATURE_ARITHMETIC_BIT);
+    //g_ctx.subgroupSize         = subgroupProperties.subgroupSize;
+  }
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -117,6 +134,10 @@ vk_utils::VulkanContext vk_utils::globalContextInit(const std::vector<const char
   varPointers.pNext = supportRayQuery ? &rtxFeatures.m_enabledAccelStructFeatures : nullptr;
   varPointers.variablePointers              = varPointersQuestion.variablePointers;
   varPointers.variablePointersStorageBuffer = varPointersQuestion.variablePointersStorageBuffer;
+
+  
+
+
 
   VkPhysicalDeviceDescriptorIndexingFeatures indexingFeatures{};
   indexingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
