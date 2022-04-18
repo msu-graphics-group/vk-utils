@@ -101,7 +101,7 @@ namespace vk_utils
       }
     }
 
-    auto bufOffsets  = assignMemOffsetsWithPadding(bufMemReqs);
+    auto bufOffsets  = calculateMemOffsets(bufMemReqs);
     auto bufMemTotal = bufOffsets[bufOffsets.size() - 1];
 
     allocInfo.memReq      = bufMemReqs[0];
@@ -159,7 +159,7 @@ namespace vk_utils
       }
     }
 
-    auto imgOffsets  = assignMemOffsetsWithPadding(imgMemReqs);
+    auto imgOffsets  = calculateMemOffsets(imgMemReqs);
     auto imgMemTotal = imgOffsets[imgOffsets.size() - 1];
 
     allocInfo.memReq      = imgMemReqs[0];
@@ -329,7 +329,7 @@ namespace vk_utils
       }
     }
 
-    auto bufOffsets  = assignMemOffsetsWithPadding(bufMemReqs);
+    auto bufOffsets  = calculateMemOffsets(bufMemReqs);
     auto bufMemTotal = bufOffsets[bufOffsets.size() - 1];
 
     if(m_bufAlloc.size < bufMemTotal)
@@ -393,7 +393,7 @@ namespace vk_utils
       }
     }
 
-    auto imgOffsets  = assignMemOffsetsWithPadding(imgMemReqs);
+    auto imgOffsets  = calculateMemOffsets(imgMemReqs);
     auto imgMemTotal = imgOffsets[imgOffsets.size() - 1];
 
     allocInfo.memReq      = imgMemReqs[0];
