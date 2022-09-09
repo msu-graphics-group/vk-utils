@@ -182,7 +182,7 @@ void Mesh4F::Append(const float* vertices4f, size_t numVertices)
 {
   assert(numVertices > 0);
   auto old_size = vertices.size();
-  vertices.resize(vertices.size() + numVertices);
+  vertices.resize(vertices.size() + numVertices / 4);
 
   memcpy(vertices.data() + old_size, vertices4f, numVertices * sizeof(vertices4f[0]));
 }
