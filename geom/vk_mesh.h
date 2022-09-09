@@ -21,6 +21,8 @@ struct MeshInfo
 struct IMeshData
 {
   virtual void Append(const cmesh::SimpleMesh &meshData) = 0;
+  virtual void Append(const float* vertices4f, size_t numVertices) = 0;
+
   virtual float* VertexData() = 0;
   virtual uint32_t* IndexData() = 0;
 
@@ -38,6 +40,7 @@ struct IMeshData
 struct Mesh8F : IMeshData
 {
   void Append(const cmesh::SimpleMesh &meshData) override;
+  void Append(const float* vertices4f, size_t numVertices) override;
 
   float*    VertexData() override { return (float*)vertices.data();}
   uint32_t* IndexData()  override { return indices.data();}
@@ -66,6 +69,7 @@ private:
 struct Mesh4F : IMeshData
 {
   void Append(const cmesh::SimpleMesh &meshData) override;
+  void Append(const float* vertices4f, size_t numVertices) override;
 
   float*    VertexData() override { return (float*)vertices.data();}
   uint32_t* IndexData()  override { return indices.data();}

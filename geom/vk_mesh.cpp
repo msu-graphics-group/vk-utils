@@ -112,6 +112,27 @@ void Mesh8F::Append(const cmesh::SimpleMesh &meshData)
   }
 }
 
+void Mesh8F::Append(const float* vertices4f, size_t numVertices)
+{
+  assert(numVertices > 0);
+  vertices.reserve(vertices.size() + numVertices);
+  for(size_t i = 0; i < numVertices; ++i)
+  {
+    vertex v = {};
+
+    v.posNorm[0] = vertices4f[i * 4 + 0];
+    v.posNorm[1] = vertices4f[i * 4 + 1];
+    v.posNorm[2] = vertices4f[i * 4 + 2];
+    v.posNorm[3] = 0.0f;
+
+    v.texCoordTang[0] = 0.0f;
+    v.texCoordTang[1] = 0.0f;
+    v.texCoordTang[2] = 0.0f;
+    v.texCoordTang[3] = 0.0f;
+    vertices.push_back(v);
+  }
+}
+
 // ************************************************************************
 // Mesh4F
 
@@ -155,4 +176,13 @@ void Mesh4F::Append(const cmesh::SimpleMesh &meshData)
 
     vertices.push_back(v);
   }
+}
+
+void Mesh4F::Append(const float* vertices4f, size_t numVertices)
+{
+  assert(numVertices > 0);
+  auto old_size = vertices.size();
+  vertices.resize(vertices.size() + numVertices);
+
+  memcpy(vertices.data() + old_size, vertices4f, numVertices * sizeof(vertices4f[0]));
 }
