@@ -3,6 +3,8 @@
 
 #if defined(USE_VOLK)
 #include "volk.h"
+#elif defined(USE_ETNA)
+#include <etna/Vulkan.hpp>
 #else
 #include <vulkan/vulkan.h>
 #endif
