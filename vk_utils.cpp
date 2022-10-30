@@ -586,7 +586,7 @@ namespace vk_utils {
     return commandBuffers;
   }
 
-  VkRenderPass createDefaultRenderPass(VkDevice a_device, VkFormat a_imageFormat, VkImageLayout a_colorFinalLayout)
+  VkRenderPass createDefaultRenderPass(VkDevice a_device, VkFormat a_imageFormat, VkFormat a_depthFormat, VkImageLayout a_colorFinalLayout)
   {
     VkAttachmentDescription colorAttachment = {};
     colorAttachment.format = a_imageFormat;
@@ -603,7 +603,7 @@ namespace vk_utils {
     colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
     VkAttachmentDescription depthAttachment = {};
-    depthAttachment.format = VK_FORMAT_D32_SFLOAT;
+    depthAttachment.format = a_depthFormat;
     depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
     depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
     depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;

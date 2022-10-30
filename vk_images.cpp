@@ -287,7 +287,7 @@ namespace vk_utils
     result.format = a_format;
 
     VkImageCreateInfo imgCreateInfo = defaultImageCreateInfo(a_width, a_height, a_format, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, 1);
-    VkImageViewCreateInfo imageViewInfo = defaultImageViewCreateInfo(VK_NULL_HANDLE, VK_FORMAT_D32_SFLOAT, 1, VK_IMAGE_ASPECT_DEPTH_BIT);
+    VkImageViewCreateInfo imageViewInfo = defaultImageViewCreateInfo(VK_NULL_HANDLE, a_format, 1, VK_IMAGE_ASPECT_DEPTH_BIT);
 
     createImgAllocAndBind(a_device, a_physDevice, a_width, a_height, a_format, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
                           &result, 
