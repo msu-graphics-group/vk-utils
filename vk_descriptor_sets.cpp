@@ -126,7 +126,7 @@ namespace vk_utils
     h.type = a_bindType;
 
     if (m_bindings.count(a_loc))
-      logWarning("[DescriptorMaker::BindBuffer] binding to the same location!");
+      VK_UTILS_LOG_WARNING("[DescriptorMaker::BindBuffer] binding to the same location!");
 
     m_bindings[a_loc] = h;
   }
@@ -140,7 +140,7 @@ namespace vk_utils
     h.type = a_bindType;
 
     if (m_bindings.count(a_loc))
-      logWarning("[DescriptorMaker::BindImage] binding to the same location!");
+      VK_UTILS_LOG_WARNING("[DescriptorMaker::BindImage] binding to the same location!");
 
     m_bindings[a_loc] = h;
   }
@@ -150,13 +150,13 @@ namespace vk_utils
   {
     if(a_imageView.empty())
     {
-      logWarning("[DescriptorMaker::BindImageArray] binding ignored - empty image views array");
+      VK_UTILS_LOG_WARNING("[DescriptorMaker::BindImageArray] binding ignored - empty image views array");
       return;
     }
 
     if(a_bindType == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER && a_sampler.empty())
     {
-      logWarning("[DescriptorMaker::BindImageArray] binding ignored - empty samplers array for combined image sampler");
+      VK_UTILS_LOG_WARNING("[DescriptorMaker::BindImageArray] binding ignored - empty samplers array for combined image sampler");
       return;
     }
 
@@ -175,7 +175,7 @@ namespace vk_utils
     h.type = a_bindType;
 
     if (m_bindings.count(a_loc))
-      logWarning("[DescriptorMaker::BindImageArray] binding to the same location!");
+      VK_UTILS_LOG_WARNING("[DescriptorMaker::BindImageArray] binding to the same location!");
 
     m_bindings[a_loc] = h;
   }
@@ -185,7 +185,7 @@ namespace vk_utils
   {
     if(a_imageDesc.empty())
     {
-      logWarning("[DescriptorMaker::BindImageArray] binding ignored - empty VkDescriptorImageInfo array");
+      VK_UTILS_LOG_WARNING("[DescriptorMaker::BindImageArray] binding ignored - empty VkDescriptorImageInfo array");
       return;
     }
 
@@ -194,7 +194,7 @@ namespace vk_utils
     h.imageDescriptor = a_imageDesc;
 
     if (m_bindings.count(a_loc))
-      logWarning("[DescriptorMaker::BindImageArray] binding to the same location!");
+      VK_UTILS_LOG_WARNING("[DescriptorMaker::BindImageArray] binding to the same location!");
 
     m_bindings[a_loc] = h;
   }
@@ -206,7 +206,7 @@ namespace vk_utils
     h.type = a_bindType;
 
     if (m_bindings.count(a_loc))
-      logWarning("[DescriptorMaker::BindAccelStruct] binding to the same location!");
+      VK_UTILS_LOG_WARNING("[DescriptorMaker::BindAccelStruct] binding to the same location!");
 
     m_bindings[a_loc] = h;
   }
@@ -348,7 +348,7 @@ namespace vk_utils
         accStructInfoIdx++;
         break;
       case VK_DESCRIPTOR_TYPE_INLINE_UNIFORM_BLOCK_EXT:
-        logWarning("[DescriptorMaker::BindEnd] VK_DESCRIPTOR_TYPE_INLINE_UNIFORM_BLOCK_EXT not yet supported");
+        VK_UTILS_LOG_WARNING("[DescriptorMaker::BindEnd] VK_DESCRIPTOR_TYPE_INLINE_UNIFORM_BLOCK_EXT not yet supported");
         break;
         //case VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_NV:
       default:

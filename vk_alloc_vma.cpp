@@ -185,7 +185,7 @@ namespace vk_utils
     {
       if(bufMemReqs[i].memoryTypeBits != bufMemReqs[0].memoryTypeBits)
       {
-        logWarning("[MemoryAlloc_VMA::Allocate]: input buffers have different memReq.memoryTypeBits");
+        VK_UTILS_LOG_WARNING("[MemoryAlloc_VMA::Allocate]: input buffers have different memReq.memoryTypeBits");
         return UINT32_MAX;
       }
     }
@@ -226,7 +226,7 @@ namespace vk_utils
     {
       if(imgMemReqs[i].memoryTypeBits != imgMemReqs[0].memoryTypeBits)
       {
-        logWarning("[MemoryAlloc_VMA::Allocate]: input images have different memReq.memoryTypeBits");
+        VK_UTILS_LOG_WARNING("[MemoryAlloc_VMA::Allocate]: input images have different memReq.memoryTypeBits");
         return UINT32_MAX;
       }
     }
@@ -568,7 +568,7 @@ namespace vk_utils
 
     if(!m_bufAllocs.count(a_buffer))
     {
-      logWarning("[ResourceManager_VMA::DestroyBuffer] trying to destroy unknown buffer");
+      VK_UTILS_LOG_WARNING("[ResourceManager_VMA::DestroyBuffer] trying to destroy unknown buffer");
       return;
     }
 
@@ -583,7 +583,7 @@ namespace vk_utils
       return;
     if(!m_imgAllocs.count(a_image))
     {
-      logWarning("[ResourceManager_VMA::DestroyImage] trying to destroy unknown image");
+      VK_UTILS_LOG_WARNING("[ResourceManager_VMA::DestroyImage] trying to destroy unknown image");
       return;
     }
 

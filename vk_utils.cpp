@@ -46,29 +46,73 @@ namespace vk_utils {
     }
   };
 
+  namespace
+  {
+
+    FILE* log_file = stderr;
+
+    void defaultLogCallback(LogLevel level, const char *msg, const char* file, int line)
+    {
+      fprintf(log_file, "[%s:%d] %s: %s\n", file, line, logLevelToString(level), msg);
+      if (level == LogLevel::ERROR || level == LogLevel::FATAL)
+      {
+        fflush(log_file);
+      }
+    }
+
+    LogCallback log_callback = defaultLogCallback;
+
+  } // namespace
+
+  const char *logLevelToString(LogLevel level)
+  {
+    switch(level)
+    {
+    case LogLevel::DEBUG:   return "DEBUG";
+    case LogLevel::INFO:    return "INFO";
+    case LogLevel::WARNING: return "WARNING";
+    case LogLevel::ERROR:   return "ERROR";
+    case LogLevel::FATAL:   return "FATAL";
+    default: return "UNKNOWN_LOG_LEVEL";
+    }
+  }
+
+  void setLogCallback(LogCallback callback)
+  {
+    log_callback = callback;
+  }
+
+  void log(LogLevel level, const char *msg, const char *file, int line)
+  {
+    if (log_callback)
+    {
+      log_callback(level, msg, file, line);
+    }
+  }
+
+  void log(LogLevel level, const std::string &msg, const char *file, int line)
+  {
+    log(level, msg.c_str(), file, line);
+  }
+
   void setLogToFile(const std::string &path)
   {
     FILE* log_fd = fopen( path.c_str(), "w" );
     if(!log_fd)
     {
-      std::perror("[setLogToFile] File opening failed, logging to stderr");
+      VK_UTILS_LOG_ERROR("[setLogToFile] File opening failed, logging to stderr: " +
+                         std::string(std::strerror(errno)));
     }
     else
     {
-      log = log_fd;
+      log_file = log_fd;
     }
   }
 
   void runTimeError(const char* file, int line, const char* msg)
   {
-    fprintf(log, "Runtime error at %s, line %d : %s", file, line, msg);
-    fflush(log);
+    log(LogLevel::ERROR, msg, file, line);
     exit(99);
-  }
-
-  void logWarning(const std::string& msg)
-  {
-    fprintf(log, "Warning : %s\n", msg.c_str());
   }
 
   bool checkDeviceExtensionSupport(VkPhysicalDevice device, std::vector<const char *> &requestedExtensions)
@@ -114,7 +158,7 @@ namespace vk_utils {
       {
         std::stringstream ss;
         ss << "Requested layer " << layer << " not found";
-        logWarning(ss.str());
+        VK_UTILS_LOG_WARNING(ss.str());
 
         all_layers_supported = false;
       }
@@ -244,7 +288,7 @@ namespace vk_utils {
     VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
 
     if (a_printInfo)
-      std::cout << "findPhysicalDevice: { " << std::endl;
+      VK_UTILS_LOG_INFO("findPhysicalDevice: { ");
 
     VkPhysicalDeviceProperties props;
     VkPhysicalDeviceFeatures features;
@@ -254,27 +298,33 @@ namespace vk_utils {
       vkGetPhysicalDeviceProperties(devices[i], &props);
       vkGetPhysicalDeviceFeatures(devices[i], &features);
 
+      std::string deviceDescription;
       if (a_printInfo)
-        std::cout << "  device " << i << ", name = " << props.deviceName;
+        deviceDescription = "  device " + std::to_string(i) + ", name = " + props.deviceName;
 
       if (i == a_preferredDeviceId)
       {
         if (checkDeviceExtensionSupport(devices[i], a_deviceExt))
         {
           physicalDevice = devices[i];
-          std::cout << " <-- (selected)" << std::endl;
+          if (a_printInfo)
+            deviceDescription += " <-- (selected)";
         }
         else
         {
-          std::cout << " <-- preferred device does not support requested extensions. Trying to find another device..." << std::endl;
+          if (a_printInfo)
+            deviceDescription += " <-- preferred device does not support requested extensions. Trying to find another device...";
         }
       }
 
-      std::cout << std::endl;
+      if (a_printInfo)
+      {
+        VK_UTILS_LOG_INFO(deviceDescription);
+      }
     }
 
     if (a_printInfo)
-      std::cout << "}" << std::endl;
+      VK_UTILS_LOG_INFO("}");
 
     // try to select some device if preferred was not selected
     //

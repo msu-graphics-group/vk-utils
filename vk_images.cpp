@@ -69,7 +69,7 @@ namespace vk_utils
 
     VK_CHECK_RESULT(vkCreateImage(a_device, &imageInfo, nullptr, &result.image));
     vkGetImageMemoryRequirements(a_device, result.image, &result.memReq);
-    
+
     return result;
   }
 
@@ -106,7 +106,7 @@ namespace vk_utils
     {
       if(memInfos[i].memoryTypeBits != memInfos[0].memoryTypeBits)
       {
-        logWarning("[allocateAndBindWithPadding]: input buffers have different memReq.memoryTypeBits");
+        VK_UTILS_LOG_WARNING("[allocateAndBindWithPadding]: input buffers have different memReq.memoryTypeBits");
         return VK_NULL_HANDLE;
       }
     }
@@ -290,7 +290,7 @@ namespace vk_utils
     VkImageViewCreateInfo imageViewInfo = defaultImageViewCreateInfo(VK_NULL_HANDLE, a_format, 1, VK_IMAGE_ASPECT_DEPTH_BIT);
 
     createImgAllocAndBind(a_device, a_physDevice, a_width, a_height, a_format, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
-                          &result, 
+                          &result,
                           &imgCreateInfo, &imageViewInfo);
 
     return result;
@@ -663,7 +663,7 @@ namespace vk_utils
         return 16;
 
       default:
-        vk_utils::logWarning("[bppFromVkFormat]: unknown format");
+        VK_UTILS_LOG_WARNING("[bppFromVkFormat]: unknown format");
         return 0;
     }
   }

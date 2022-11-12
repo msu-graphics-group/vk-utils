@@ -277,7 +277,7 @@ namespace vk_utils
       return;
     if(!m_bufAllocs.count(a_buffer))
     {
-      logWarning("[ResourceManager::DestroyBuffer] trying to destroy unknown buffer");
+      VK_UTILS_LOG_WARNING("[ResourceManager::DestroyBuffer] trying to destroy unknown buffer");
       return;
     }
 
@@ -298,7 +298,7 @@ namespace vk_utils
       return;
     if(!m_imgAllocs.count(a_image))
     {
-      logWarning("[ResourceManager::DestroyImage] trying to destroy unknown image");
+      VK_UTILS_LOG_WARNING("[ResourceManager::DestroyImage] trying to destroy unknown image");
       return;
     }
 
