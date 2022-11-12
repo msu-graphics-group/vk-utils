@@ -656,7 +656,7 @@ namespace vk_rt_utils
     submitInfo.commandBufferCount = 1;
     submitInfo.pCommandBuffers    = &buildCmdBuf;
 
-//    std::cout << "Submitting BLAS#" << idx << " for building...\n";
+    VK_UTILS_LOG_DEBUG("Submitting BLAS#" + std::to_string(idx) + " for building...");
     VK_CHECK_RESULT(vkQueueSubmit(m_queue, 1, &submitInfo, m_buildFences.back()));
   }
 

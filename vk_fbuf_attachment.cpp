@@ -244,7 +244,7 @@ namespace vk_utils
   {
     if (a_clearValues.size() != m_attachments.size())
     {
-      vk_utils::logWarning("[RenderTarget::GetRenderPassBeginInfo] clear values size doesn't match attachment count");
+      VK_UTILS_LOG_WARNING("[RenderTarget::GetRenderPassBeginInfo] clear values size doesn't match attachment count");
     }
 
     VkRenderPassBeginInfo renderPassInfo = {};

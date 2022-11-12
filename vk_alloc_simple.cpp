@@ -96,7 +96,7 @@ namespace vk_utils
     {
       if(bufMemReqs[i].memoryTypeBits != bufMemReqs[0].memoryTypeBits)
       {
-        logWarning("[MemoryAlloc_Simple::Allocate]: input buffers have different memReq.memoryTypeBits");
+        VK_UTILS_LOG_WARNING("[MemoryAlloc_Simple::Allocate]: input buffers have different memReq.memoryTypeBits");
         return UINT32_MAX;
       }
     }
@@ -154,7 +154,7 @@ namespace vk_utils
     {
       if(imgMemReqs[i].memoryTypeBits != imgMemReqs[0].memoryTypeBits)
       {
-        logWarning("[MemoryAlloc_Simple::Allocate]: input images have different memReq.memoryTypeBits");
+        VK_UTILS_LOG_WARNING("[MemoryAlloc_Simple::Allocate]: input images have different memReq.memoryTypeBits");
         return UINT32_MAX;
       }
     }
@@ -261,7 +261,7 @@ namespace vk_utils
   uint32_t MemoryAlloc_Special::Allocate(const MemAllocInfo& a_allocInfo)
   {
     (void)a_allocInfo;
-    vk_utils::logWarning("[MemoryAlloc_Special::Allocate] general allocation not supported");
+    VK_UTILS_LOG_WARNING("[MemoryAlloc_Special::Allocate] general allocation not supported");
     return UINT32_MAX;
   }
 
@@ -324,7 +324,7 @@ namespace vk_utils
     {
       if(bufMemReqs[i].memoryTypeBits != bufMemReqs[0].memoryTypeBits)
       {
-        logWarning("[MemoryAlloc_Special::Allocate]: input buffers have different memReq.memoryTypeBits");
+        VK_UTILS_LOG_WARNING("[MemoryAlloc_Special::Allocate]: input buffers have different memReq.memoryTypeBits");
         return UINT32_MAX;
       }
     }
@@ -334,7 +334,7 @@ namespace vk_utils
 
     if(m_bufAlloc.size < bufMemTotal)
     {
-      std::cout << "[MemoryAlloc_Special::Allocate] Buffers REALLOC : old_size = " << m_bufAlloc.size << ", new_size = " << bufMemTotal << std::endl;
+      VK_UTILS_LOG_INFO("[MemoryAlloc_Special::Allocate] Buffers REALLOC : old_size = " + std::to_string(m_bufAlloc.size) + ", new_size = " + std::to_string(bufMemTotal));
 
       allocInfo.memReq      = bufMemReqs[0];
       allocInfo.memReq.size = bufMemTotal;
@@ -388,7 +388,7 @@ namespace vk_utils
     {
       if(imgMemReqs[i].memoryTypeBits != imgMemReqs[0].memoryTypeBits)
       {
-        logWarning("[MemoryAlloc_Simple::Allocate]: input images have different memReq.memoryTypeBits");
+        VK_UTILS_LOG_WARNING("[MemoryAlloc_Simple::Allocate]: input images have different memReq.memoryTypeBits");
         return UINT32_MAX;
       }
     }
@@ -401,7 +401,10 @@ namespace vk_utils
 
     if(m_imgAlloc.size < imgMemTotal)
     {
-      std::cout << "[MemoryAlloc_Special::Allocate] Textures REALLOC : old_size = " << m_imgAlloc.size << ", new_size = " << imgMemTotal << std::endl;
+      VK_UTILS_LOG_INFO("[MemoryAlloc_Special::Allocate] Textures REALLOC : old_size = "
+                        + std::to_string(m_imgAlloc.size)
+                        + ", new_size = "
+                        + std::to_string(imgMemTotal));
 
       allocInfo.memReq      = imgMemReqs[0];
       allocInfo.memReq.size = imgMemTotal;

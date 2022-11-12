@@ -6,7 +6,7 @@ namespace vk_utils
   VkBuffer createBuffer(VkDevice a_dev, VkDeviceSize a_size, VkBufferUsageFlags a_usageFlags, VkMemoryRequirements* a_pMemReq)
   {
     assert(a_dev != VK_NULL_HANDLE);
-    
+
     VkBuffer result = VK_NULL_HANDLE;
     VkBufferCreateInfo bufferCreateInfo = {};
     bufferCreateInfo.sType       = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -15,7 +15,7 @@ namespace vk_utils
     bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
     VK_CHECK_RESULT(vkCreateBuffer(a_dev, &bufferCreateInfo, VK_NULL_HANDLE, &result));
-    if(a_pMemReq != nullptr) 
+    if(a_pMemReq != nullptr)
       vkGetBufferMemoryRequirements(a_dev, result, a_pMemReq);
 
     return result;
@@ -68,7 +68,7 @@ namespace vk_utils
   {
     if(a_buffers.empty())
     {
-      logWarning("[allocateAndBindWithPadding]: buffers vector is empty");
+      VK_UTILS_LOG_WARNING("[allocateAndBindWithPadding]: buffers vector is empty");
       return VK_NULL_HANDLE;
     }
 
@@ -87,7 +87,7 @@ namespace vk_utils
     {
       if(memInfos[i].memoryTypeBits != memInfos[0].memoryTypeBits)
       {
-        logWarning("[allocateAndBindWithPadding]: input buffers have different memReq.memoryTypeBits");
+        VK_UTILS_LOG_WARNING("[allocateAndBindWithPadding]: input buffers have different memReq.memoryTypeBits");
         return VK_NULL_HANDLE;
       }
     }

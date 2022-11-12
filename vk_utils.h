@@ -77,11 +77,32 @@ namespace vk_utils
 
   // *** errors and debugging ***
   //
-  static FILE* log = stderr;
+  enum class LogLevel {
+      DEBUG,
+      INFO,
+      WARNING,
+      ERROR,
+      FATAL,
+  };
+
+  const char* logLevelToString(LogLevel level);
+
+  typedef void(*LogCallback)(LogLevel level, const char* msg, const char* file, int line);
+
+  void setLogCallback(LogCallback callback);
+
+  void log(LogLevel level, const char *msg, const char *file, int line);
+  void log(LogLevel level, const std::string &msg, const char *file, int line);
+
+  #define VK_UTILS_LOG_DEBUG(msg)   vk_utils::log(vk_utils::LogLevel::DEBUG,   msg, __FILE__, __LINE__)
+  #define VK_UTILS_LOG_INFO(msg)    vk_utils::log(vk_utils::LogLevel::INFO,    msg, __FILE__, __LINE__)
+  #define VK_UTILS_LOG_WARNING(msg) vk_utils::log(vk_utils::LogLevel::WARNING, msg, __FILE__, __LINE__)
+  #define VK_UTILS_LOG_ERROR(msg)   vk_utils::log(vk_utils::LogLevel::ERROR,   msg, __FILE__, __LINE__)
+  #define VK_UTILS_LOG_FATAL(msg)   vk_utils::log(vk_utils::LogLevel::FATAL,   msg, __FILE__, __LINE__)
 
   void setLogToFile(const std::string &path);
+  #define logWarning(msg) log(vk_utils::LogLevel::WARNING, msg, __FILE__, __LINE__)
   void runTimeError(const char* file, int line, const char* msg);
-  void logWarning(const std::string& msg);
   std::string errorString(VkResult errorCode);
 
   typedef VkBool32 (VKAPI_PTR *DebugReportCallbackFuncType)(VkDebugReportFlagsEXT      flags,
@@ -97,15 +118,17 @@ namespace vk_utils
   // ****************
 }
 
-#define VK_CHECK_RESULT(f) 													           \
-{																										           \
-    VkResult __vk_check_result = (f);													 \
-    if (__vk_check_result != VK_SUCCESS)											 \
-    {																								           \
-        fprintf(vk_utils::log, "Fatal : VkResult is %s in %s at line %d\n",    \
-                vk_utils::errorString(__vk_check_result).c_str(),  __FILE__, __LINE__); \
-        assert(__vk_check_result == VK_SUCCESS);							 \
-    }																								           \
+#define VK_CHECK_RESULT(f) 													                \
+{																										                \
+    VkResult __vk_check_result = (f);													      \
+    if (__vk_check_result != VK_SUCCESS)											      \
+    {                                                               \
+        char message[256];                                          \
+        snprintf(message, sizeof(message), "VkResult is %s",        \
+                 vk_utils::errorString(__vk_check_result).c_str()); \
+        VK_UTILS_LOG_FATAL(message);                                \
+        assert(__vk_check_result == VK_SUCCESS);							      \
+    }																								                \
 }
 
 #undef  RUN_TIME_ERROR
