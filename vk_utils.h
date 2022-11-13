@@ -78,11 +78,11 @@ namespace vk_utils
   // *** errors and debugging ***
   //
   enum class LogLevel {
-      DEBUG,
-      INFO,
-      WARNING,
-      ERROR,
-      FATAL,
+      LOG_DEBUG,
+      LOG_INFO,
+      LOG_WARNING,
+      LOG_ERROR,
+      LOG_FATAL,
   };
 
   const char* logLevelToString(LogLevel level);
@@ -94,14 +94,14 @@ namespace vk_utils
   void log(LogLevel level, const char *msg, const char *file, int line);
   void log(LogLevel level, const std::string &msg, const char *file, int line);
 
-  #define VK_UTILS_LOG_DEBUG(msg)   vk_utils::log(vk_utils::LogLevel::DEBUG,   msg, __FILE__, __LINE__)
-  #define VK_UTILS_LOG_INFO(msg)    vk_utils::log(vk_utils::LogLevel::INFO,    msg, __FILE__, __LINE__)
-  #define VK_UTILS_LOG_WARNING(msg) vk_utils::log(vk_utils::LogLevel::WARNING, msg, __FILE__, __LINE__)
-  #define VK_UTILS_LOG_ERROR(msg)   vk_utils::log(vk_utils::LogLevel::ERROR,   msg, __FILE__, __LINE__)
-  #define VK_UTILS_LOG_FATAL(msg)   vk_utils::log(vk_utils::LogLevel::FATAL,   msg, __FILE__, __LINE__)
+  #define VK_UTILS_LOG_DEBUG(msg)   vk_utils::log(vk_utils::LogLevel::LOG_DEBUG,   msg, __FILE__, __LINE__)
+  #define VK_UTILS_LOG_INFO(msg)    vk_utils::log(vk_utils::LogLevel::LOG_INFO,    msg, __FILE__, __LINE__)
+  #define VK_UTILS_LOG_WARNING(msg) vk_utils::log(vk_utils::LogLevel::LOG_WARNING, msg, __FILE__, __LINE__)
+  #define VK_UTILS_LOG_ERROR(msg)   vk_utils::log(vk_utils::LogLevel::LOG_ERROR,   msg, __FILE__, __LINE__)
+  #define VK_UTILS_LOG_FATAL(msg)   vk_utils::log(vk_utils::LogLevel::LOG_FATAL,   msg, __FILE__, __LINE__)
 
   void setLogToFile(const std::string &path);
-  #define logWarning(msg) log(vk_utils::LogLevel::WARNING, msg, __FILE__, __LINE__)
+  #define logWarning(msg) log(vk_utils::LogLevel::LOG_WARNING, msg, __FILE__, __LINE__)
   void runTimeError(const char* file, int line, const char* msg);
   std::string errorString(VkResult errorCode);
 

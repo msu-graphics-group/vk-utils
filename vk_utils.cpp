@@ -54,7 +54,7 @@ namespace vk_utils {
     void defaultLogCallback(LogLevel level, const char *msg, const char* file, int line)
     {
       fprintf(log_file, "[%s:%d] %s: %s\n", file, line, logLevelToString(level), msg);
-      if (level == LogLevel::ERROR || level == LogLevel::FATAL)
+      if(level == LogLevel::LOG_ERROR || level == LogLevel::LOG_FATAL)
       {
         fflush(log_file);
       }
@@ -68,11 +68,11 @@ namespace vk_utils {
   {
     switch(level)
     {
-    case LogLevel::DEBUG:   return "DEBUG";
-    case LogLevel::INFO:    return "INFO";
-    case LogLevel::WARNING: return "WARNING";
-    case LogLevel::ERROR:   return "ERROR";
-    case LogLevel::FATAL:   return "FATAL";
+    case LogLevel::LOG_DEBUG:   return "DEBUG";
+    case LogLevel::LOG_INFO:    return "INFO";
+    case LogLevel::LOG_WARNING: return "WARNING";
+    case LogLevel::LOG_ERROR:   return "ERROR";
+    case LogLevel::LOG_FATAL:   return "FATAL";
     default: return "UNKNOWN_LOG_LEVEL";
     }
   }
@@ -111,7 +111,7 @@ namespace vk_utils {
 
   void runTimeError(const char* file, int line, const char* msg)
   {
-    log(LogLevel::ERROR, msg, file, line);
+    log(LogLevel::LOG_ERROR, msg, file, line);
     exit(99);
   }
 

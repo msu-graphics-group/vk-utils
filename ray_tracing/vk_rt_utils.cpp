@@ -578,7 +578,7 @@ namespace vk_rt_utils
       std::stringstream ss;
       ss << "[AccelStructureBuilderV2::BuildOneBLAS(" << idx << ")]: estimated total BLAS memory size (" << m_totalBLASSizeEstimate
          << ") exceeded (" << m_totalBLASSize << "). Need realloc (not implemented yet). Shutting down.";
-      vk_utils::logWarning(ss.str());
+      VK_UTILS_LOG_WARNING(ss.str());
       //      assert(m_totalBLASSize >= sizeInfo.buildScratchSize);
       RUN_TIME_ERROR(ss.str().c_str());
     }
@@ -588,7 +588,7 @@ namespace vk_rt_utils
       std::stringstream ss;
       ss << "[AccelStructureBuilderV2::BuildOneBLAS(" << idx << ")]: estimated scratch buffer size (" << m_scratchSize
          << ") exceeded (" << sizeInfo.buildScratchSize << "). Need realloc (not implemented yet). Shutting down.";
-      vk_utils::logWarning(ss.str());
+      VK_UTILS_LOG_WARNING(ss.str());
       //      assert(m_scratchSize >= sizeInfo.buildScratchSize);
       RUN_TIME_ERROR(ss.str().c_str());
     }
