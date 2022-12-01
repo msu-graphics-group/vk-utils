@@ -79,16 +79,19 @@ VkPipelineLayout vk_utils::GraphicsPipelineMaker::MakeLayout(VkDevice a_device, 
 {
   auto m_device = a_device;
 
-  pcRange.stageFlags = 0;
-  for (unsigned i = 0; i < m_stagesNum; ++i)
-    pcRange.stageFlags |= shaderStageInfos[i].stage;
-  pcRange.offset     = 0;
-  pcRange.size       = a_pcRangeSize;
+  if (a_pcRangeSize)
+  {
+    pcRange.stageFlags = 0;
+    for (unsigned i = 0; i < m_stagesNum; ++i)
+      pcRange.stageFlags |= shaderStageInfos[i].stage;
+    pcRange.offset     = 0;
+    pcRange.size       = a_pcRangeSize;
+  }
+
 
   pipelineLayoutInfo.sType                  = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-  pipelineLayoutInfo.pushConstantRangeCount = 0;
-  pipelineLayoutInfo.pushConstantRangeCount = 1;
-  pipelineLayoutInfo.pPushConstantRanges    = &pcRange;
+  pipelineLayoutInfo.pushConstantRangeCount = a_pcRangeSize ? 1 : 0;
+  pipelineLayoutInfo.pPushConstantRanges    = a_pcRangeSize ? &pcRange : nullptr;
 
   if(!a_dslayouts.empty())
   {
