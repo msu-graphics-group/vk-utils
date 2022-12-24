@@ -11,6 +11,10 @@ namespace vk_utils {
 
   static const char *g_debugReportExtName = VK_EXT_DEBUG_REPORT_EXTENSION_NAME;
 
+#if defined(__ANDROID__)
+  static AAssetManager* g_AssetManager = nullptr;
+#endif
+
   std::string errorString(VkResult errorCode)
   {
     switch (errorCode)
@@ -541,6 +545,36 @@ namespace vk_utils {
     vkDestroyFence(a_device, fence, NULL);
   }
 
+#if defined(__ANDROID__)
+
+  void setAssetManager(AAssetManager* assetManager) {
+    g_AssetManager = assetManager;
+  }
+
+  AAssetManager* getAssetManager() {
+    return g_AssetManager;
+  }
+
+
+  std::vector<uint32_t> readSPVFile(const char* filename)
+  {
+    AAsset* file = AAssetManager_open(g_AssetManager, filename, AASSET_MODE_BUFFER);
+    size_t fileLength = AAsset_getLength(file);
+
+    auto fileSizePadded = uint64_t(ceil(fileLength / 4.0)) * 4;
+    std::vector<uint32_t> resData(fileSizePadded/4);
+
+    char *str = (char*)resData.data();
+    AAsset_read(file, str, fileLength);
+    AAsset_close(file);
+
+    // data padding.
+    for (auto i = fileLength; i < fileSizePadded; i++)
+      str[i] = 0;
+
+    return resData;
+  }
+#else
   std::vector<uint32_t> readSPVFile(const char *filename)
   {
     FILE *fp = fopen(filename, "rb");
@@ -566,6 +600,7 @@ namespace vk_utils {
 
     return resData;
   }
+#endif
 
   VkShaderModule createShaderModule(VkDevice a_device, const std::vector<uint32_t> &code)
   {

@@ -4,6 +4,7 @@
 #include <cstring>
 #include <fstream>
 
+#include "vk_utils.h"
 
 std::vector<unsigned int> CreateQuadTriIndices(const uint32_t a_sizeX, const uint32_t a_sizeY)
 {
@@ -91,6 +92,40 @@ struct Header
     uint32_t flags;
 };
 
+#if defined(__ANDROID__)
+cmesh::SimpleMesh cmesh::LoadMeshFromVSGF(const char* a_fileName)
+{
+  AAsset* asset = AAssetManager_open(vk_utils::getAssetManager(), a_fileName, AASSET_MODE_STREAMING);
+  assert(asset);
+
+  size_t asset_size = AAsset_getLength(asset);
+  assert(asset_size > 0);
+
+  Header header = {};
+
+  AAsset_read(asset, &header, sizeof(Header));
+  SimpleMesh res(header.verticesNum, header.indicesNum);
+
+  AAsset_read(asset, res.vPos4f.data(),  res.vPos4f.size() * sizeof(float));
+
+  if(!(header.flags & HAS_NO_NORMALS))
+    AAsset_read(asset, res.vNorm4f.data(), res.vNorm4f.size()*sizeof(float));
+  else
+    memset(res.vNorm4f.data(), 0, res.vNorm4f.size()*sizeof(float)); // #TODO: calc at flat normals in this case
+
+  if(header.flags & HAS_TANGENT)
+    AAsset_read(asset, res.vTang4f.data(), res.vTang4f.size()*sizeof(float));
+  else
+    memset(res.vTang4f.data(), 0, res.vTang4f.size()*sizeof(float));
+
+  AAsset_read(asset, res.vTexCoord2f.data(), res.vTexCoord2f.size()*sizeof(float));
+  AAsset_read(asset, res.indices.data(),    res.indices.size()*sizeof(unsigned int));
+  AAsset_read(asset, res.matIndices.data(), res.matIndices.size()*sizeof(unsigned int));
+  AAsset_close(asset);
+
+  return res;
+}
+#else
 cmesh::SimpleMesh cmesh::LoadMeshFromVSGF(const char* a_fileName)
 {
   std::ifstream input(a_fileName, std::ios::binary);
@@ -121,6 +156,7 @@ cmesh::SimpleMesh cmesh::LoadMeshFromVSGF(const char* a_fileName)
 
   return res; 
 }
+#endif
 
 void cmesh::SaveMeshToVSGF(const char* a_fileName, const SimpleMesh& a_mesh)
 {
