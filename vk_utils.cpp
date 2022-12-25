@@ -55,6 +55,28 @@ namespace vk_utils {
 
     FILE* log_file = stderr;
 
+#if defined(__ANDROID__)
+
+    void defaultLogCallback(LogLevel level, const char *msg, const char* file, int line)
+    {
+      android_LogPriority logPriority;
+      switch (level) {
+        default:
+        case LogLevel::LOG_DEBUG:
+          logPriority = ANDROID_LOG_DEBUG; break;
+        case LogLevel::LOG_INFO:
+          logPriority = ANDROID_LOG_INFO; break;
+        case LogLevel::LOG_WARNING:
+          logPriority = ANDROID_LOG_WARN; break;
+        case LogLevel::LOG_ERROR:
+          logPriority = ANDROID_LOG_ERROR; break;
+        case LogLevel::LOG_FATAL:
+          logPriority = ANDROID_LOG_FATAL; break;
+      }
+      __android_log_print (logPriority, "VkUtils::VkResultERR",
+        "[%s:%d]  %s\n", file, line, logLevelToString(level), msg);
+    }
+#else
     void defaultLogCallback(LogLevel level, const char *msg, const char* file, int line)
     {
       fprintf(log_file, "[%s:%d] %s: %s\n", file, line, logLevelToString(level), msg);
@@ -63,6 +85,7 @@ namespace vk_utils {
         fflush(log_file);
       }
     }
+#endif
 
     LogCallback log_callback = defaultLogCallback;
 
@@ -99,6 +122,7 @@ namespace vk_utils {
     log(level, msg.c_str(), file, line);
   }
 
+  // Android build does not support writing to a log file
   void setLogToFile(const std::string &path)
   {
     FILE* log_fd = fopen( path.c_str(), "w" );
