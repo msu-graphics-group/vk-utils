@@ -205,7 +205,7 @@ vk_utils::VulkanContext vk_utils::globalContextInit(const std::vector<const char
   g_ctx.pAllocatorSpecial = vk_utils::CreateMemoryAlloc_Special(g_ctx.device, g_ctx.physicalDevice);
   {
     vk_utils::MemAllocInfo tempMemoryAllocInfo;
-    tempMemoryAllocInfo.memProps = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT; // TODO, selecty depending on device and sample/application (???)    
+    tempMemoryAllocInfo.memUsage = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT; // TODO, selecty depending on device and sample/application (???)
     VkBuffer tempBuffer = vk_utils::createBuffer(g_ctx.device, size_t(4*2048*2048)*sizeof(int), VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT); // reserve 64 MB for temp buffers
     auto     tempImg    = vk_utils::createImg(g_ctx.device, 2048, 2048, VK_FORMAT_R32G32B32A32_SFLOAT, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_SAMPLED_BIT);   // reserve 64 MB for temp buffers
     g_ctx.pAllocatorSpecial->Allocate(tempMemoryAllocInfo, {tempBuffer});
