@@ -9,6 +9,11 @@
 #include <cassert>
 #include <sstream>
 
+#if defined(__ANDROID__)
+#include <android/log.h>
+#include <android/asset_manager_jni.h>
+#endif
+
 namespace vk_utils
 {
   constexpr uint64_t DEFAULT_TIMEOUT = 100000000000l;
@@ -116,19 +121,24 @@ namespace vk_utils
 
   void initDebugReportCallback(VkInstance a_instance, DebugReportCallbackFuncType a_callback, VkDebugReportCallbackEXT* a_debugReportCallback);
   // ****************
+
+#if defined(__ANDROID__)
+  void setAssetManager(AAssetManager* assetManager);
+  AAssetManager* getAssetManager();
+#endif
 }
 
-#define VK_CHECK_RESULT(f) 													                \
-{																										                \
-    VkResult __vk_check_result = (f);													      \
-    if (__vk_check_result != VK_SUCCESS)											      \
+#define VK_CHECK_RESULT(f)                                          \
+{                                                                   \
+    VkResult __vk_check_result = (f);                               \
+    if (__vk_check_result != VK_SUCCESS)                            \
     {                                                               \
         char message[256];                                          \
         snprintf(message, sizeof(message), "VkResult is %s",        \
                  vk_utils::errorString(__vk_check_result).c_str()); \
         VK_UTILS_LOG_FATAL(message);                                \
-        assert(__vk_check_result == VK_SUCCESS);							      \
-    }																								                \
+        assert(__vk_check_result == VK_SUCCESS);                    \
+    }                                                               \
 }
 
 #undef  RUN_TIME_ERROR
