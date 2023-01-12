@@ -18,7 +18,7 @@ namespace vk_utils
                                             VkMemoryAllocateFlags flags = {});
 
   std::vector<size_t> assignMemOffsetsWithPadding(const std::vector<VkMemoryRequirements> &a_memInfos);
-  std::vector<size_t> calculateMemOffsets(const std::vector<VkMemoryRequirements> &a_memReqs);
+  std::vector<size_t> calculateMemOffsets(const std::vector<VkMemoryRequirements> &a_memReqs, size_t a_buffImageGranularity = 0);
 }
 
 #endif //VK_UTILS_VK_BUFFERS_H

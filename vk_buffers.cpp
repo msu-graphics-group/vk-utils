@@ -122,7 +122,7 @@ namespace vk_utils
     return res;
   }
 
-  std::vector<size_t> calculateMemOffsets(const std::vector<VkMemoryRequirements> &a_memReqs)
+  std::vector<size_t> calculateMemOffsets(const std::vector<VkMemoryRequirements> &a_memReqs, size_t a_buffImageGranularity)
   {
     assert(!a_memReqs.empty());
 
@@ -130,7 +130,7 @@ namespace vk_utils
     size_t currOffset = 0;
     for (auto& reqs : a_memReqs)
     {
-      currOffset = getPaddedSize(currOffset, reqs.alignment);
+      currOffset = getPaddedSize(currOffset, std::max<size_t>(reqs.alignment, a_buffImageGranularity));
       mem_offsets.push_back(currOffset);
       currOffset += reqs.size;
     }
@@ -138,5 +138,4 @@ namespace vk_utils
     mem_offsets.push_back(currOffset);
     return mem_offsets;
   }
-
 }
