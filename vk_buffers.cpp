@@ -151,20 +151,13 @@ namespace vk_utils
 
     std::vector<VkDeviceSize> mem_offsets;
     size_t currOffset = 0;
-    for (size_t i = 0; i < a_memReqs.size() - 1; i++)
+    for (auto& reqs : a_memReqs)
     {
+      currOffset = getPaddedSize(currOffset, std::max<size_t>(reqs.alignment, a_buffImageGranularity));
       mem_offsets.push_back(currOffset);
-      currOffset += getPaddedSize(a_memReqs[i].size, std::max<size_t>(a_memReqs[i + 1].alignment, a_buffImageGranularity) );
+      currOffset += reqs.size;
     }
 
-    // put mem offset for last element of 'a_memInfos'
-    //
-    size_t last = a_memReqs.size() - 1;
-    mem_offsets.push_back(currOffset);
-    currOffset += getPaddedSize(a_memReqs[last].size, std::max<size_t>(a_memReqs[last].alignment, a_buffImageGranularity));
-
-    // put total mem amount in last vector element
-    //
     mem_offsets.push_back(currOffset);
     return mem_offsets;
   }
