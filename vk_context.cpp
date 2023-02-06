@@ -155,6 +155,7 @@ vk_utils::VulkanContext vk_utils::globalContextInit(const std::vector<const char
   std::vector<const char*> validationLayers, deviceExtensions;
   VkPhysicalDeviceFeatures enabledDeviceFeatures = {};
   enabledDeviceFeatures.shaderInt64   = deviceFeaturesQuestion.features.shaderInt64;
+  enabledDeviceFeatures.shaderInt16   = deviceFeaturesQuestion.features.shaderInt16;
   enabledDeviceFeatures.shaderFloat64 = deviceFeaturesQuestion.features.shaderFloat64;
   
   vk_utils::QueueFID_T fIDs = {};
