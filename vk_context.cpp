@@ -96,8 +96,13 @@ vk_utils::VulkanContext vk_utils::globalContextInit(const std::vector<const char
 
   const bool supportBindless = (supportedExtensions.find("VK_EXT_descriptor_indexing") != supportedExtensions.end());
 
+  VkPhysicalDeviceShaderFloat16Int8Features featuresQuestion = {};
+  featuresQuestion.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_FLOAT16_INT8_FEATURES;
+  featuresQuestion.pNext = nullptr;
+
   VkPhysicalDeviceVariablePointersFeatures varPointersQuestion = {};
   varPointersQuestion.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VARIABLE_POINTERS_FEATURES;
+  varPointersQuestion.pNext = &featuresQuestion;
 
   VkPhysicalDeviceFeatures2 deviceFeaturesQuestion = {};
   deviceFeaturesQuestion.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
@@ -135,9 +140,6 @@ vk_utils::VulkanContext vk_utils::globalContextInit(const std::vector<const char
   varPointers.variablePointers              = varPointersQuestion.variablePointers;
   varPointers.variablePointersStorageBuffer = varPointersQuestion.variablePointersStorageBuffer;
 
-  
-
-
 
   VkPhysicalDeviceDescriptorIndexingFeatures indexingFeatures{};
   indexingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
@@ -147,15 +149,13 @@ vk_utils::VulkanContext vk_utils::globalContextInit(const std::vector<const char
 
   // query features for shaderInt8
   //
-  VkPhysicalDeviceShaderFloat16Int8Features features = {};
-  features.sType      = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_FLOAT16_INT8_FEATURES;
-  features.shaderInt8 = deviceFeaturesQuestion.features.shaderInt16;
-  features.pNext      = &indexingFeatures;
+  VkPhysicalDeviceShaderFloat16Int8Features features = featuresQuestion;
+  features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_FLOAT16_INT8_FEATURES;
+  features.pNext = &indexingFeatures;
 
   std::vector<const char*> validationLayers, deviceExtensions;
   VkPhysicalDeviceFeatures enabledDeviceFeatures = {};
   enabledDeviceFeatures.shaderInt64   = deviceFeaturesQuestion.features.shaderInt64;
-  enabledDeviceFeatures.shaderInt16   = deviceFeaturesQuestion.features.shaderInt16;
   enabledDeviceFeatures.shaderFloat64 = deviceFeaturesQuestion.features.shaderFloat64;
   
   vk_utils::QueueFID_T fIDs = {};
