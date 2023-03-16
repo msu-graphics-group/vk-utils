@@ -441,6 +441,9 @@ namespace vk_utils {
       a_queueIDXs.compute = a_queueIDXs.graphics;
     }
 
+    #ifdef __ANDROID__
+    a_queueIDXs.transfer = a_queueIDXs.graphics;
+    #else
     // Dedicated transfer queue
     if (requestedQueueTypes & VK_QUEUE_TRANSFER_BIT)
     {
@@ -459,7 +462,7 @@ namespace vk_utils {
     {
       a_queueIDXs.transfer = a_queueIDXs.graphics;
     }
-
+    #endif
 
     VkDeviceCreateInfo deviceCreateInfo = {};
     deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
