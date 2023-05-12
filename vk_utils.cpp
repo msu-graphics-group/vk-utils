@@ -73,13 +73,12 @@ namespace vk_utils {
         case LogLevel::LOG_FATAL:
           logPriority = ANDROID_LOG_FATAL; break;
       }
-      __android_log_print (logPriority, "VkUtils::VkResultERR",
-        "[%s:%d]  %s\n", file, line, logLevelToString(level), msg);
+      __android_log_print (logPriority, "VkUtils", "[VkUtils::%s] [%s:%d]: %s\n", logLevelToString(level), file, line, msg);
     }
 #else
     void defaultLogCallback(LogLevel level, const char *msg, const char* file, int line)
     {
-      fprintf(log_file, "[%s:%d] %s: %s\n", file, line, logLevelToString(level), msg);
+      fprintf(log_file, "[VkUtils::%s] [%s:%d]: %s\n", logLevelToString(level), file, line, msg);
       if(level == LogLevel::LOG_ERROR || level == LogLevel::LOG_FATAL)
       {
         fflush(log_file);
