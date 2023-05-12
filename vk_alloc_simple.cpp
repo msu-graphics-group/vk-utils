@@ -2,6 +2,7 @@
 #include "vk_utils.h"
 #include "vk_buffers.h"
 #include "vk_images.h"
+#include <unordered_map>
 
 namespace vk_utils
 {
@@ -324,8 +325,22 @@ namespace vk_utils
     {
       if(bufMemReqs[i].memoryTypeBits != bufMemReqs[0].memoryTypeBits)
       {
-        VK_UTILS_LOG_WARNING("[MemoryAlloc_Special::Allocate]: input buffers have different memReq.memoryTypeBits");
-        return UINT32_MAX;
+        std::unordered_map<uint32_t, std::vector<uint32_t> > bufferSets;
+        for(uint32_t j = 0; j < uint32_t(bufMemReqs.size()); ++j)
+        {
+          uint32_t key = uint32_t(bufMemReqs[j].memoryTypeBits);
+          bufferSets[key].push_back(j);
+        }
+
+        for(const auto& buffGroup : bufferSets)
+        {
+          std::vector<VkBuffer> currGroup;
+          for(auto id : buffGroup.second)
+            currGroup.push_back(a_buffers[id]);
+          Allocate(a_allocInfoBuffers, currGroup);
+        }
+
+        return BUF_ALLOC_ID;
       }
     }
 
