@@ -28,7 +28,7 @@ namespace vk_utils
   struct IMemoryAlloc
   {
     virtual uint32_t Allocate(const MemAllocInfo& a_allocInfo) = 0;
-    virtual uint32_t Allocate(const MemAllocInfo& a_allocInfoBuffers, const std::vector<VkBuffer> &a_buffers) = 0;
+    virtual uint32_t Allocate(const MemAllocInfo& a_allocInfoBuffers, const std::vector<VkBuffer> &a_buffers, size_t a_offset = 0, size_t* a_pAllocatedSize = nullptr) = 0;
     virtual uint32_t Allocate(const MemAllocInfo& a_allocInfoImages, const std::vector<VkImage> &a_images) = 0;
 
     virtual void Free(uint32_t a_memBlockId) = 0;

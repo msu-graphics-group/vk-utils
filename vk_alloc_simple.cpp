@@ -79,7 +79,7 @@ namespace vk_utils
     return allocId;
   }
 
-  uint32_t MemoryAlloc_Simple::Allocate(const MemAllocInfo& a_allocInfoBuffers, const std::vector<VkBuffer> &a_buffers)
+  uint32_t MemoryAlloc_Simple::Allocate(const MemAllocInfo& a_allocInfoBuffers, const std::vector<VkBuffer> &a_buffers, size_t a_offset, size_t* a_pAllocatedSize)
   {
     MemAllocInfo allocInfo = a_allocInfoBuffers;
     std::vector<VkMemoryRequirements> bufMemReqs(a_buffers.size());
@@ -307,7 +307,7 @@ namespace vk_utils
     return block;
   }
 
-  uint32_t MemoryAlloc_Special::Allocate(const MemAllocInfo& a_allocInfoBuffers, const std::vector<VkBuffer> &a_buffers)
+  uint32_t MemoryAlloc_Special::Allocate(const MemAllocInfo& a_allocInfoBuffers, const std::vector<VkBuffer> &a_buffers, size_t a_offset, size_t* a_pAllocatedSize)
   {
     MemAllocInfo allocInfo = a_allocInfoBuffers;
     std::vector<VkMemoryRequirements> bufMemReqs(a_buffers.size());
@@ -332,12 +332,14 @@ namespace vk_utils
           bufferSets[key].push_back(j);
         }
 
+        size_t currOffset = 0, currSize = 0;
         for(const auto& buffGroup : bufferSets)
         {
           std::vector<VkBuffer> currGroup;
           for(auto id : buffGroup.second)
             currGroup.push_back(a_buffers[id]);
-          Allocate(a_allocInfoBuffers, currGroup);
+          Allocate(a_allocInfoBuffers, currGroup, currOffset, &currSize);
+          currOffset += currSize;
         }
 
         return BUF_ALLOC_ID;
@@ -347,7 +349,10 @@ namespace vk_utils
     auto bufOffsets  = calculateMemOffsets(bufMemReqs);
     auto bufMemTotal = bufOffsets[bufOffsets.size() - 1];
 
-    if(m_bufAlloc.size < bufMemTotal)
+    if(a_pAllocatedSize != nullptr)
+      (*a_pAllocatedSize) = bufMemTotal;
+
+    if(m_bufAlloc.size < a_offset + bufMemTotal)
     {
       VK_UTILS_LOG_INFO("[MemoryAlloc_Special::Allocate] Buffers REALLOC : old_size = " + std::to_string(m_bufAlloc.size) + ", new_size = " + std::to_string(bufMemTotal));
 
@@ -369,7 +374,7 @@ namespace vk_utils
         info.sType        = VK_STRUCTURE_TYPE_BIND_BUFFER_MEMORY_INFO;
         info.buffer       = a_buffers[i];
         info.memory       = m_bufAlloc.memory;
-        info.memoryOffset = m_bufAlloc.offset + bufOffsets[i];
+        info.memoryOffset = m_bufAlloc.offset + bufOffsets[i] + a_offset;
         bindInfos.emplace_back(info);
       }
     }
@@ -378,7 +383,7 @@ namespace vk_utils
     for(size_t i = 0; i < bufMemReqs.size(); i++)
     {
       if(a_buffers[i] != VK_NULL_HANDLE)
-        vkBindBufferMemory(m_device, a_buffers[i], m_bufAlloc.memory, m_bufAlloc.offset + bufOffsets[i]);
+        vkBindBufferMemory(m_device, a_buffers[i], m_bufAlloc.memory, m_bufAlloc.offset + bufOffsets[i] + a_offset);
     }
 #endif
 

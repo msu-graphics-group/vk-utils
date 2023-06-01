@@ -14,7 +14,7 @@ namespace vk_utils
     ~MemoryAlloc_Simple() override;
 
     uint32_t Allocate(const MemAllocInfo& a_allocInfo) override;
-    uint32_t Allocate(const MemAllocInfo& a_allocInfoBuffers, const std::vector<VkBuffer> &a_buffers) override;
+    uint32_t Allocate(const MemAllocInfo& a_allocInfoBuffers, const std::vector<VkBuffer> &a_buffers, size_t a_offset, size_t* a_pAllocatedSize) override;
     uint32_t Allocate(const MemAllocInfo& a_allocInfoImages, const std::vector<VkImage> &a_images) override;
 
     void Cleanup();
@@ -41,7 +41,7 @@ namespace vk_utils
     ~MemoryAlloc_Special() override;
 
     uint32_t Allocate(const MemAllocInfo& a_allocInfo) override;
-    uint32_t Allocate(const MemAllocInfo& a_allocInfoBuffers, const std::vector<VkBuffer> &a_buffers) override;
+    uint32_t Allocate(const MemAllocInfo& a_allocInfoBuffers, const std::vector<VkBuffer> &a_buffers, size_t a_offset, size_t* a_pAllocatedSize) override;
     uint32_t Allocate(const MemAllocInfo& a_allocInfoImages, const std::vector<VkImage> &a_images) override;
 
     void Cleanup();
