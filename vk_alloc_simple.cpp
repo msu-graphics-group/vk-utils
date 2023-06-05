@@ -307,82 +307,92 @@ namespace vk_utils
     return block;
   }
 
-  uint32_t MemoryAlloc_Special::Allocate(const MemAllocInfo& a_allocInfoBuffers, const std::vector<VkBuffer> &a_buffers)
+uint32_t MemoryAlloc_Special::AllocateHidden(const MemAllocInfo& a_allocInfoBuffers, const std::vector<VkBuffer> &a_buffers, size_t a_offset, size_t* a_pAllocatedSize)
+{
+  MemAllocInfo allocInfo = a_allocInfoBuffers;
+  std::vector<VkMemoryRequirements> bufMemReqs(a_buffers.size());
+  for(size_t i = 0; i < a_buffers.size(); ++i)
   {
-    MemAllocInfo allocInfo = a_allocInfoBuffers;
-    std::vector<VkMemoryRequirements> bufMemReqs(a_buffers.size());
-    for(size_t i = 0; i < a_buffers.size(); ++i)
+    if(a_buffers[i] != VK_NULL_HANDLE)
+      vkGetBufferMemoryRequirements(m_device, a_buffers[i], &bufMemReqs[i]);
+    else
     {
-      if(a_buffers[i] != VK_NULL_HANDLE)
-        vkGetBufferMemoryRequirements(m_device, a_buffers[i], &bufMemReqs[i]);
-      else
+      bufMemReqs[i] = bufMemReqs[0];
+      bufMemReqs[i].size = 0;
+    }
+  }
+  for(size_t i = 1; i < bufMemReqs.size(); ++i)
+  {
+    if(bufMemReqs[i].memoryTypeBits != bufMemReqs[0].memoryTypeBits)
+    {
+      std::unordered_map<uint32_t, std::vector<uint32_t> > bufferSets;
+      for(uint32_t j = 0; j < uint32_t(bufMemReqs.size()); ++j)
       {
-        bufMemReqs[i] = bufMemReqs[0];
-        bufMemReqs[i].size = 0;
+        uint32_t key = uint32_t(bufMemReqs[j].memoryTypeBits);
+        bufferSets[key].push_back(j);
       }
-    }
-    for(size_t i = 1; i < bufMemReqs.size(); ++i)
-    {
-      if(bufMemReqs[i].memoryTypeBits != bufMemReqs[0].memoryTypeBits)
+
+      size_t currOffset = 0, currSize = 0;
+      for(const auto& buffGroup : bufferSets)
       {
-        std::unordered_map<uint32_t, std::vector<uint32_t> > bufferSets;
-        for(uint32_t j = 0; j < uint32_t(bufMemReqs.size()); ++j)
-        {
-          uint32_t key = uint32_t(bufMemReqs[j].memoryTypeBits);
-          bufferSets[key].push_back(j);
-        }
-
-        for(const auto& buffGroup : bufferSets)
-        {
-          std::vector<VkBuffer> currGroup;
-          for(auto id : buffGroup.second)
-            currGroup.push_back(a_buffers[id]);
-          Allocate(a_allocInfoBuffers, currGroup);
-        }
-
-        return BUF_ALLOC_ID;
+        std::vector<VkBuffer> currGroup;
+        for(auto id : buffGroup.second)
+          currGroup.push_back(a_buffers[id]);
+        AllocateHidden(a_allocInfoBuffers, currGroup, currOffset, &currSize);
+        currOffset += currSize;
       }
+
+      return BUF_ALLOC_ID;
     }
+  }
 
-    auto bufOffsets  = calculateMemOffsets(bufMemReqs);
-    auto bufMemTotal = bufOffsets[bufOffsets.size() - 1];
+  auto bufOffsets  = calculateMemOffsets(bufMemReqs);
+  auto bufMemTotal = bufOffsets[bufOffsets.size() - 1];
 
-    if(m_bufAlloc.size < bufMemTotal)
-    {
-      VK_UTILS_LOG_INFO("[MemoryAlloc_Special::Allocate] Buffers REALLOC : old_size = " + std::to_string(m_bufAlloc.size) + ", new_size = " + std::to_string(bufMemTotal));
+  if(a_pAllocatedSize != nullptr)
+    (*a_pAllocatedSize) = bufMemTotal;
 
-      allocInfo.memReq      = bufMemReqs[0];
-      allocInfo.memReq.size = bufMemTotal;
+  if(m_bufAlloc.size < a_offset + bufMemTotal)
+  {
+    VK_UTILS_LOG_INFO("[MemoryAlloc_Special::Allocate] Buffers REALLOC : old_size = " + std::to_string(m_bufAlloc.size) + ", new_size = " + std::to_string(bufMemTotal));
 
-      Free(BUF_ALLOC_ID);
-      m_bufAlloc = AllocateInternal(allocInfo);
-    }
+    allocInfo.memReq      = bufMemReqs[0];
+    allocInfo.memReq.size = bufMemTotal;
+
+    Free(BUF_ALLOC_ID);
+    m_bufAlloc = AllocateInternal(allocInfo);
+  }
 
 #if defined(VK_VERSION_1_1)
-    std::vector<VkBindBufferMemoryInfo> bindInfos;
-    bindInfos.reserve(bufMemReqs.size());
-    for(size_t i = 0; i < bufMemReqs.size(); ++i)
+  std::vector<VkBindBufferMemoryInfo> bindInfos;
+  bindInfos.reserve(bufMemReqs.size());
+  for(size_t i = 0; i < bufMemReqs.size(); ++i)
+  {
+    if(a_buffers[i] != VK_NULL_HANDLE)
     {
-      if(a_buffers[i] != VK_NULL_HANDLE)
-      {
-        VkBindBufferMemoryInfo info {};
-        info.sType        = VK_STRUCTURE_TYPE_BIND_BUFFER_MEMORY_INFO;
-        info.buffer       = a_buffers[i];
-        info.memory       = m_bufAlloc.memory;
-        info.memoryOffset = m_bufAlloc.offset + bufOffsets[i];
-        bindInfos.emplace_back(info);
-      }
+      VkBindBufferMemoryInfo info {};
+      info.sType        = VK_STRUCTURE_TYPE_BIND_BUFFER_MEMORY_INFO;
+      info.buffer       = a_buffers[i];
+      info.memory       = m_bufAlloc.memory;
+      info.memoryOffset = m_bufAlloc.offset + bufOffsets[i] + a_offset;
+      bindInfos.emplace_back(info);
     }
-    vkBindBufferMemory2(m_device, static_cast<uint32_t>(bindInfos.size()), bindInfos.data());
+  }
+  vkBindBufferMemory2(m_device, static_cast<uint32_t>(bindInfos.size()), bindInfos.data());
 #else
-    for(size_t i = 0; i < bufMemReqs.size(); i++)
+  for(size_t i = 0; i < bufMemReqs.size(); i++)
     {
       if(a_buffers[i] != VK_NULL_HANDLE)
-        vkBindBufferMemory(m_device, a_buffers[i], m_bufAlloc.memory, m_bufAlloc.offset + bufOffsets[i]);
+        vkBindBufferMemory(m_device, a_buffers[i], m_bufAlloc.memory, m_bufAlloc.offset + bufOffsets[i] + a_offset);
     }
 #endif
 
-    return BUF_ALLOC_ID;
+  return BUF_ALLOC_ID;
+}
+
+  uint32_t MemoryAlloc_Special::Allocate(const MemAllocInfo& a_allocInfoBuffers, const std::vector<VkBuffer> &a_buffers)
+  {
+    return AllocateHidden(a_allocInfoBuffers, a_buffers);
   }
 
   uint32_t MemoryAlloc_Special::Allocate(const MemAllocInfo& a_allocInfoImages, const std::vector<VkImage> &a_images)
