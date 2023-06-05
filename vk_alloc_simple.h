@@ -27,6 +27,7 @@ namespace vk_utils
     VkPhysicalDevice GetPhysicalDevice() const override { return m_physicalDevice; }
 
   private:
+
     VkDevice m_device = VK_NULL_HANDLE;
     VkPhysicalDevice m_physicalDevice = VK_NULL_HANDLE;
     VkPhysicalDeviceMemoryProperties m_physicalMemoryProps = {};
@@ -58,6 +59,7 @@ namespace vk_utils
     static constexpr uint8_t IMG_ALLOC_ID = 1;
 
     MemoryBlock AllocateInternal(const MemAllocInfo& a_allocInfo);
+    uint32_t AllocateHidden(const MemAllocInfo& a_allocInfoBuffers, const std::vector<VkBuffer> &a_buffers, size_t a_offset = 0, size_t* a_pAllocatedSize = nullptr);
 
     VkDevice m_device = VK_NULL_HANDLE;
     VkPhysicalDevice m_physicalDevice = VK_NULL_HANDLE;
