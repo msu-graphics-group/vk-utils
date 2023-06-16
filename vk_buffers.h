@@ -9,6 +9,15 @@
 
 namespace vk_utils
 {
+  struct BufferOffsetPair
+  {
+    VkBuffer buffer = VK_NULL_HANDLE;
+    size_t   offset = 0u;
+
+    BufferOffsetPair(VkBuffer a_buff, size_t a_offset) : buffer(a_buff), offset(a_offset) {}
+  };
+
+
   VkBuffer createBuffer(VkDevice a_dev, VkDeviceSize a_size, VkBufferUsageFlags a_usageFlags, VkMemoryRequirements* a_pMemReq = nullptr);
 
   void createBufferStaging(VkDevice a_device, VkPhysicalDevice a_physDevice, size_t a_bufferSize,
