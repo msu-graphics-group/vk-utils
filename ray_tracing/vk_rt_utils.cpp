@@ -203,7 +203,7 @@ namespace vk_rt_utils
   {
     m_blasInputData = a_input;
 
-    auto nBlas = m_blasInputData.size();
+    auto nBlas = static_cast<uint32_t>(m_blasInputData.size());
     m_blas.resize(nBlas);
 
     std::vector<VkAccelerationStructureBuildGeometryInfoKHR> buildInfos(nBlas);
@@ -211,7 +211,7 @@ namespace vk_rt_utils
     {
       buildInfos[idx].sType                    = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR;
       buildInfos[idx].flags                    = a_commonFlags | m_blasInputData[idx].buildFlags;
-      buildInfos[idx].geometryCount            = m_blasInputData[idx].geom.size();
+      buildInfos[idx].geometryCount            = static_cast<uint32_t>(m_blasInputData[idx].geom.size());
       buildInfos[idx].pGeometries              = m_blasInputData[idx].geom.data();
       buildInfos[idx].mode                     = VK_BUILD_ACCELERATION_STRUCTURE_MODE_BUILD_KHR;
       buildInfos[idx].type                     = VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR;
@@ -522,7 +522,7 @@ namespace vk_rt_utils
 
     VkAccelerationStructureBuildRangeInfoKHR accelerationStructureBuildRangeInfo{};
     accelerationStructureBuildRangeInfo.primitiveCount  = a_meshInfo.m_indNum / 3;
-    accelerationStructureBuildRangeInfo.primitiveOffset = a_meshInfo.m_indexBufOffset;
+    accelerationStructureBuildRangeInfo.primitiveOffset = static_cast<uint32_t>(a_meshInfo.m_indexBufOffset);
     accelerationStructureBuildRangeInfo.firstVertex     = a_meshInfo.m_vertexOffset;
     accelerationStructureBuildRangeInfo.transformOffset = 0;
 
@@ -531,7 +531,7 @@ namespace vk_rt_utils
     blasInput.buildRange.emplace_back(accelerationStructureBuildRangeInfo);
     m_blasInputs.emplace_back(blasInput);
 
-    uint32_t idx = m_blasInputs.size() - 1;
+    uint32_t idx = static_cast<uint32_t>(m_blasInputs.size()) - 1u;
 
     if(m_queueBuild)
     {
@@ -564,7 +564,7 @@ namespace vk_rt_utils
     VkAccelerationStructureBuildGeometryInfoKHR buildInfo = {};
     buildInfo.sType                                       = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR;
     buildInfo.flags                                       = m_blasInputs[idx].buildFlags;
-    buildInfo.geometryCount                               = m_blasInputs[idx].geom.size();
+    buildInfo.geometryCount                               = static_cast<uint32_t>(m_blasInputs[idx].geom.size());
     buildInfo.pGeometries                                 = m_blasInputs[idx].geom.data();
     buildInfo.mode                                        = VK_BUILD_ACCELERATION_STRUCTURE_MODE_BUILD_KHR;
     buildInfo.type                                        = VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR;
@@ -665,16 +665,22 @@ namespace vk_rt_utils
     VkDeviceOrHostAddressConstKHR a_vertexBufAddress, VkDeviceOrHostAddressConstKHR a_indexBufAddress,
     VkBuildAccelerationStructureFlagsKHR a_flags)
   {
+    (void)idx;
+    (void)a_meshInfo;
+    (void)a_vertexBufAddress;
+    (void)a_indexBufAddress;
+    (void)a_flags;
   }
 
   void AccelStructureBuilderV2::BuildAllBLAS()
   {
     if(!m_queueBuild)
     {
-      for(size_t i = 0; i < m_blasInputs.size(); ++i)
+      for(uint32_t i = 0; i < m_blasInputs.size(); ++i)
         BuildOneBLAS(i);
     }
-    VK_CHECK_RESULT(vkWaitForFences(m_device, m_buildFences.size(), m_buildFences.data(), VK_TRUE, vk_utils::DEFAULT_TIMEOUT));
+    VK_CHECK_RESULT(vkWaitForFences(m_device, static_cast<uint32_t>(m_buildFences.size()), m_buildFences.data(),
+                                    VK_TRUE, vk_utils::DEFAULT_TIMEOUT));
   }
 
   void AccelStructureBuilderV2::BuildTLAS(uint32_t a_instNum, VkDeviceOrHostAddressConstKHR a_instBufAddress,
@@ -807,7 +813,7 @@ namespace vk_rt_utils
     VkPipelineLayoutCreateInfo layoutCreateInfo = {};
     layoutCreateInfo.sType          = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     layoutCreateInfo.pSetLayouts    = a_dslayouts.data();
-    layoutCreateInfo.setLayoutCount = a_dslayouts.size();
+    layoutCreateInfo.setLayoutCount = static_cast<uint32_t>(a_dslayouts.size());
     VK_CHECK_RESULT(vkCreatePipelineLayout(a_device, &layoutCreateInfo, nullptr, &m_pipelineLayout));
 
     return m_pipelineLayout;

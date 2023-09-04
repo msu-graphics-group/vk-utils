@@ -16,12 +16,12 @@ namespace cmesh
   {
     static const uint64_t POINTS_IN_TRIANGLE = 3;
     SimpleMesh() = default;
-    SimpleMesh(uint32_t a_vertNum, uint32_t a_indNum) { Resize(a_vertNum, a_indNum); }
+    SimpleMesh(size_t a_vertNum, size_t a_indNum) { Resize(a_vertNum, a_indNum); }
 
     inline size_t VerticesNum()  const { return vPos4f.size() / 4; }
     inline size_t IndicesNum()   const { return indices.size();  }
     inline size_t TrianglesNum() const { return IndicesNum() / POINTS_IN_TRIANGLE;  }
-    inline void   Resize(uint32_t a_vertNum, uint32_t a_indNum)
+    inline void   Resize(size_t a_vertNum, size_t a_indNum)
     {
       vPos4f.resize(a_vertNum * 4);
       vNorm4f.resize(a_vertNum * 4);

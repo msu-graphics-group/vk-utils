@@ -328,7 +328,7 @@ uint32_t MemoryAlloc_Special::AllocateHidden(const MemAllocInfo& a_allocInfoBuff
       std::unordered_map<uint32_t, std::vector<uint32_t> > bufferSets;
       for(uint32_t j = 0; j < uint32_t(bufMemReqs.size()); ++j)
       {
-        uint32_t key = uint32_t(bufMemReqs[j].memoryTypeBits);
+        uint32_t key = bufMemReqs[j].memoryTypeBits;
         bufferSets[key].push_back(j);
       }
 

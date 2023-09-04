@@ -197,7 +197,7 @@ vk_utils::VulkanContext vk_utils::globalContextInit(const std::vector<const char
   // (2) initialize vulkan helpers
   //  
   {
-    auto queueComputeFID = vk_utils::getQueueFamilyIndex(g_ctx.physicalDevice, VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT);
+    queueComputeFID = vk_utils::getQueueFamilyIndex(g_ctx.physicalDevice, VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT);
     vkGetDeviceQueue(g_ctx.device, queueComputeFID, 0, &g_ctx.computeQueue);
     vkGetDeviceQueue(g_ctx.device, queueComputeFID, 0, &g_ctx.transferQueue);
   }
