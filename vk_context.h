@@ -32,7 +32,10 @@ namespace vk_utils
   };
 
   bool          globalContextIsInitialized(const std::vector<const char*>& requiredExtensions = std::vector<const char*>());
-  VulkanContext globalContextInit(const std::vector<const char*>& requiredExtensions = std::vector<const char*>(), bool enableValidationLayers = false, unsigned int a_preferredDeviceId = 0);
+  VulkanContext globalContextInit(const std::vector<const char*>& requiredExtensions = std::vector<const char*>(), 
+                                  bool enableValidationLayers = false, 
+                                  unsigned int a_preferredDeviceId = 0,
+                                  VkPhysicalDeviceFeatures2* a_pKnownFeatures = nullptr);
   VulkanContext globalContextGet(bool enableValidationLayers = false, unsigned int a_preferredDeviceId = 0);
   void          globalContextDestroy();
 

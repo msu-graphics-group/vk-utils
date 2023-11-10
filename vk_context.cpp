@@ -72,7 +72,10 @@ static RTXDeviceFeatures SetupRTXFeatures(VkPhysicalDevice a_physDev)
   return g_rtFeatures;
 }
 
-vk_utils::VulkanContext vk_utils::globalContextInit(const std::vector<const char*>& requiredExtensions, bool enableValidationLayers, unsigned int a_preferredDeviceId)
+vk_utils::VulkanContext vk_utils::globalContextInit(const std::vector<const char*>& requiredExtensions, 
+                                                    bool enableValidationLayers, 
+                                                    unsigned int a_preferredDeviceId,
+                                                    VkPhysicalDeviceFeatures2* a_pKnownFeatures)
 {
   if(globalContextIsInitialized(requiredExtensions))
     return g_ctx;
@@ -140,7 +143,6 @@ vk_utils::VulkanContext vk_utils::globalContextInit(const std::vector<const char
   varPointers.variablePointers              = varPointersQuestion.variablePointers;
   varPointers.variablePointersStorageBuffer = varPointersQuestion.variablePointersStorageBuffer;
 
-
   VkPhysicalDeviceDescriptorIndexingFeatures indexingFeatures{};
   indexingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
   indexingFeatures.pNext = &varPointers;
@@ -187,10 +189,21 @@ vk_utils::VulkanContext vk_utils::globalContextInit(const std::vector<const char
     deviceExtensions.push_back("VK_EXT_descriptor_indexing");
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  void* pExtendedDeviceFeatures = &features;
+
+  // use input extenstions and features if specified
+  //
+  if(a_pKnownFeatures != nullptr)
+  {
+    deviceExtensions        = requiredExtensions;
+    enabledDeviceFeatures   = a_pKnownFeatures->features;
+    pExtendedDeviceFeatures = a_pKnownFeatures->pNext;
+  }
 
   fIDs.compute = queueComputeFID;
   g_ctx.device = vk_utils::createLogicalDevice(g_ctx.physicalDevice, validationLayers, deviceExtensions, enabledDeviceFeatures,
-                                               fIDs, VK_QUEUE_TRANSFER_BIT | VK_QUEUE_COMPUTE_BIT, &features);
+                                               fIDs, VK_QUEUE_TRANSFER_BIT | VK_QUEUE_COMPUTE_BIT, pExtendedDeviceFeatures);
   volkLoadDevice(g_ctx.device);                                            
   g_ctx.commandPool = vk_utils::createCommandPool(g_ctx.device, fIDs.compute, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
 
