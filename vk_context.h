@@ -35,7 +35,9 @@ namespace vk_utils
   VulkanContext globalContextInit(const std::vector<const char*>& requiredExtensions = std::vector<const char*>(), 
                                   bool enableValidationLayers = false, 
                                   unsigned int a_preferredDeviceId = 0,
-                                  VkPhysicalDeviceFeatures2* a_pKnownFeatures = nullptr);
+                                  VkPhysicalDeviceFeatures2* a_pKnownFeatures = nullptr,
+                                  size_t memForBuffers = size_t(-1), 
+                                  size_t memForTextures = size_t(-1));
   VulkanContext globalContextGet(bool enableValidationLayers = false, unsigned int a_preferredDeviceId = 0);
   void          globalContextDestroy();
 
