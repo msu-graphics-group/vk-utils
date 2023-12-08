@@ -75,7 +75,9 @@ static RTXDeviceFeatures SetupRTXFeatures(VkPhysicalDevice a_physDev)
 vk_utils::VulkanContext vk_utils::globalContextInit(const std::vector<const char*>& requiredExtensions, 
                                                     bool enableValidationLayers, 
                                                     unsigned int a_preferredDeviceId,
-                                                    VkPhysicalDeviceFeatures2* a_pKnownFeatures)
+                                                    VkPhysicalDeviceFeatures2* a_pKnownFeatures,
+                                                    size_t memForBuffers, 
+                                                    size_t memForTextures)
 {
   if(globalContextIsInitialized(requiredExtensions))
     return g_ctx;
@@ -218,10 +220,21 @@ vk_utils::VulkanContext vk_utils::globalContextInit(const std::vector<const char
   g_ctx.pCopyHelper       = std::make_shared<vk_utils::SimpleCopyHelper>(g_ctx.physicalDevice, g_ctx.device, g_ctx.transferQueue, queueComputeFID, 64*1024*1024); // TODO, select PinPong Helper by default!
   g_ctx.pAllocatorSpecial = vk_utils::CreateMemoryAlloc_Special(g_ctx.device, g_ctx.physicalDevice);
   {
+    if(memForBuffers == size_t(-1))
+       memForBuffers = size_t(4*2048*2048)*sizeof(int);
+    uint32_t imgWidth = 2048;
+    uint32_t imgHeight = 2048;
+    if(memForTextures != size_t(-1))
+    {
+      double imgWidth2 = std::sqrt(double(memForTextures/16)); // float4
+      imgWidth  = uint32_t(imgWidth2 + 16.0); // add some reserve
+      imgHeight = imgWidth;
+    }
+
     vk_utils::MemAllocInfo tempMemoryAllocInfo;
     tempMemoryAllocInfo.memUsage = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT; // TODO, selecty depending on device and sample/application (???)
-    VkBuffer tempBuffer = vk_utils::createBuffer(g_ctx.device, size_t(4*2048*2048)*sizeof(int), VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT); // reserve 64 MB for temp buffers
-    auto     tempImg    = vk_utils::createImg(g_ctx.device, 2048, 2048, VK_FORMAT_R32G32B32A32_SFLOAT, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_SAMPLED_BIT);   // reserve 64 MB for temp buffers
+    VkBuffer tempBuffer = vk_utils::createBuffer(g_ctx.device, memForBuffers, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT); // reserve 64 MB for temp buffers
+    auto     tempImg    = vk_utils::createImg(g_ctx.device, imgWidth, imgHeight, VK_FORMAT_R32G32B32A32_SFLOAT, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_SAMPLED_BIT);   // reserve 64 MB for temp buffers
     g_ctx.pAllocatorSpecial->Allocate(tempMemoryAllocInfo, {tempBuffer});
     g_ctx.pAllocatorSpecial->Allocate(tempMemoryAllocInfo, {tempImg.image});
     vkDestroyBuffer(g_ctx.device, tempBuffer, nullptr);

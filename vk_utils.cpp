@@ -78,7 +78,11 @@ namespace vk_utils {
 #else
     void defaultLogCallback(LogLevel level, const char *msg, const char* file, int line)
     {
+      #ifdef _DEBUG
       fprintf(log_file, "[VkUtils::%s] [%s:%d]: %s\n", logLevelToString(level), file, line, msg);
+      #else
+      fprintf(log_file, "[VkUtils::%s] %s\n", logLevelToString(level), msg);
+      #endif
       if(level == LogLevel::LOG_ERROR || level == LogLevel::LOG_FATAL)
       {
         fflush(log_file);
