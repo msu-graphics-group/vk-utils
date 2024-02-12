@@ -446,6 +446,29 @@ namespace vk_utils
     return buffers;
   }
 
+
+  void* ResourceManager_VMA::MapBufferToHostMemory(VkBuffer a_buf, VkDeviceSize a_offset, VkDeviceSize a_size)
+  {
+    void* pRes = nullptr;
+    if(m_bufAllocs.count(a_buf) > 0)
+    {
+      (void)a_offset;
+      (void)a_size;
+
+      VkResult result = vmaMapMemory(m_vma, m_bufAllocs[a_buf], &pRes);
+      VK_CHECK_RESULT(result);
+    }
+    return pRes;
+  }
+
+  void ResourceManager_VMA::UnmapBuffer(VkBuffer a_buf)
+  {
+    if(m_bufAllocs.count(a_buf) > 0)
+    {
+      vmaUnmapMemory(m_vma, m_bufAllocs[a_buf]);
+    }
+  }
+
   VkImage ResourceManager_VMA::CreateImage(const VkImageCreateInfo& a_createInfo)
   {
     VmaAllocationCreateInfo allocInfo = {};

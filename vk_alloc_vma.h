@@ -78,36 +78,35 @@ namespace vk_utils
 
     void SetCopyEngine(std::shared_ptr<ICopyEngine> a_pCopy) { m_pCopy = a_pCopy; }
 
-    ICopyEngine *GetCopyEngine() { return m_pCopy.get(); }
+    std::shared_ptr<ICopyEngine>  GetCopyEngine() override {return m_pCopy; }
 
     VkBuffer CreateBuffer(VkDeviceSize a_size, VkBufferUsageFlags a_usage, VkMemoryPropertyFlags a_memProps,
                           VkMemoryAllocateFlags flags) override;
 
-    VkBuffer
-    CreateBuffer(const void *a_data, VkDeviceSize a_size, VkBufferUsageFlags a_usage, VkMemoryPropertyFlags a_memProps,
-                 VkMemoryAllocateFlags flags) override;
+    VkBuffer CreateBuffer(const void *a_data, VkDeviceSize a_size, VkBufferUsageFlags a_usage, VkMemoryPropertyFlags a_memProps,
+                          VkMemoryAllocateFlags flags) override;
 
-    std::vector<VkBuffer>
-    CreateBuffers(const std::vector<VkDeviceSize> &a_sizes, const std::vector<VkBufferUsageFlags> &a_usages,
-                  VkMemoryPropertyFlags a_memProps, VkMemoryAllocateFlags flags) override;
+    std::vector<VkBuffer> CreateBuffers(const std::vector<VkDeviceSize> &a_sizes, const std::vector<VkBufferUsageFlags> &a_usages,
+                                        VkMemoryPropertyFlags a_memProps, VkMemoryAllocateFlags flags) override;
 
     std::vector<VkBuffer> CreateBuffers(const std::vector<void *> &a_data, const std::vector<VkDeviceSize> &a_sizes,
                                         const std::vector<VkBufferUsageFlags> &a_usages,
                                         VkMemoryPropertyFlags a_memProps, VkMemoryAllocateFlags flags) override;
+
+    void* MapBufferToHostMemory(VkBuffer a_buf, VkDeviceSize a_offset, VkDeviceSize a_size) override;
+    void UnmapBuffer(VkBuffer a_buf) override;
 
     VkImage CreateImage(const VkImageCreateInfo &a_createInfo) override;
 
     VkImage CreateImage(uint32_t a_width, uint32_t a_height, VkFormat a_format, VkImageUsageFlags a_usage,
                         uint32_t a_mipLvls) override;
 
-    VkImage
-    CreateImage(const void *a_data, uint32_t a_width, uint32_t a_height, VkFormat a_format, VkImageUsageFlags a_usage,
-                VkImageLayout a_finalLayout, uint32_t a_mipLvls) override;
+    VkImage CreateImage(const void *a_data, uint32_t a_width, uint32_t a_height, VkFormat a_format, VkImageUsageFlags a_usage,
+                        VkImageLayout a_finalLayout, uint32_t a_mipLvls) override;
 
     std::vector<VkImage> CreateImages(const std::vector<VkImageCreateInfo> &a_createInfos) override;
 
-    VulkanTexture
-    CreateTexture(const VkImageCreateInfo &a_createInfo, VkImageViewCreateInfo &a_imgViewCreateInfo) override;
+    VulkanTexture CreateTexture(const VkImageCreateInfo &a_createInfo, VkImageViewCreateInfo &a_imgViewCreateInfo) override;
 
     VulkanTexture CreateTexture(const VkImageCreateInfo &a_createInfo, VkImageViewCreateInfo &a_imgViewCreateInfo,
                                 const VkSamplerCreateInfo &a_samplerCreateInfo) override;

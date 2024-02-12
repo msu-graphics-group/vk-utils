@@ -2,6 +2,7 @@
 #define CHIMERA_VK_RT_UTILS_H
 
 #include "vk_include.h"
+#include "vk_resource_manager.h"
 #include "geom/vk_mesh.h"
 #include <array>
 #include <vector>
@@ -39,6 +40,13 @@ namespace vk_rt_utils
 
   VkStridedDeviceAddressRegionKHR getSBTStridedDeviceAddressRegion(VkDevice a_device, VkBuffer buffer,
                                                                    uint32_t handleCount, uint32_t handleSizeAligned);
+
+  std::vector<VkStridedDeviceAddressRegionKHR> CreateShaderBindingTable(VkDevice a_device, 
+                                                                        std::shared_ptr<vk_utils::IResourceManager> a_pResMgr,
+                                                                        VkPipeline a_rtPipeline,
+                                                                        uint32_t a_numShaderGroups, uint32_t a_numHitStages,
+                                                                        uint32_t a_numMissStages,
+                                                                        VkPhysicalDeviceRayTracingPipelinePropertiesKHR a_rtPipelineProps);
 
   struct AccelStructureSizeInfo
   {

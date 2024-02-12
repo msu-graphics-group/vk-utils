@@ -167,6 +167,69 @@ namespace vk_rt_utils
   }
 
 
+  std::vector<VkStridedDeviceAddressRegionKHR> CreateShaderBindingTable(VkDevice a_device, 
+                                                                        std::shared_ptr<vk_utils::IResourceManager> a_pResMgr,
+                                                                        VkPipeline a_rtPipeline,
+                                                                        uint32_t a_numShaderGroups, uint32_t a_numHitStages,
+                                                                        uint32_t a_numMissStages,
+                                                                        VkPhysicalDeviceRayTracingPipelinePropertiesKHR a_rtPipelineProps)
+  {
+    std::vector<VkStridedDeviceAddressRegionKHR> SBT_strides;
+
+    const uint32_t handleSize        = a_rtPipelineProps.shaderGroupHandleSize;
+    const uint32_t handleSizeAligned = vk_utils::getSBTAlignedSize(a_rtPipelineProps.shaderGroupHandleSize, a_rtPipelineProps.shaderGroupHandleAlignment);
+    const uint32_t sbtSize           = a_numShaderGroups * handleSize;
+
+    std::vector<uint8_t> shaderHandleStorage(sbtSize);
+    VK_CHECK_RESULT(vkGetRayTracingShaderGroupHandlesKHR(a_device, a_rtPipeline, 0, a_numShaderGroups, sbtSize, shaderHandleStorage.data()));
+
+    VkBufferUsageFlags flags = VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_SHADER_BINDING_TABLE_BIT_KHR |
+                               VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
+
+    auto sbtBuf = a_pResMgr->CreateBuffer(sbtSize, flags, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, 0);
+
+    const auto sbtAddress = vk_rt_utils::getBufferDeviceAddress(a_device, sbtBuf);
+    const auto rgenStride = vk_utils::getSBTAlignedSize(handleSizeAligned, a_rtPipelineProps.shaderGroupBaseAlignment);
+    const auto missSize   = vk_utils::getSBTAlignedSize(a_numMissStages * handleSizeAligned, a_rtPipelineProps.shaderGroupBaseAlignment);
+    const auto hitSize    = vk_utils::getSBTAlignedSize(a_numHitStages  * handleSizeAligned, a_rtPipelineProps.shaderGroupBaseAlignment);
+    SBT_strides.push_back({ sbtAddress, rgenStride, rgenStride });
+    SBT_strides.push_back({ SBT_strides.back().deviceAddress + SBT_strides.back().size, handleSizeAligned, missSize });
+    SBT_strides.push_back({ SBT_strides.back().deviceAddress + SBT_strides.back().size, handleSizeAligned, hitSize });
+    SBT_strides.push_back({ 0u, 0u, 0u });
+
+    void* hostBuf = std::malloc(sbtSize);
+    {
+      auto *pBuf  = reinterpret_cast<uint8_t *>(hostBuf);
+      auto *pData = pBuf;
+
+      //  Raygen
+      uint32_t handleIdx{ 0 };
+      memcpy(pData, shaderHandleStorage.data() + (handleIdx++) * handleSize, handleSize);
+
+      // Miss
+      pData = pBuf + SBT_strides[0].size;
+      for(uint32_t i = 0; i < a_numMissStages; i++)
+      {
+        memcpy(pData, shaderHandleStorage.data() + (handleIdx++) * handleSize, handleSize);
+        pData += SBT_strides[1].stride;
+      }
+
+      // Hit
+      pData = pBuf + SBT_strides[0].size + SBT_strides[1].size;
+      for(uint32_t i = 0; i < a_numHitStages; i++)
+      {
+        memcpy(pData, shaderHandleStorage.data() + (handleIdx++) * handleSize, handleSize);
+        pData += SBT_strides[2].stride;
+      }
+      
+      a_pResMgr->GetCopyEngine()->UpdateBuffer(sbtBuf, 0, pBuf, sbtSize);
+    }
+    std::free(hostBuf);
+
+    return SBT_strides;
+  }
+
+
   ////////////////////////////////////////////////////////////////////////
   // AccelStructureBuilder
 

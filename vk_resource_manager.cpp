@@ -123,6 +123,31 @@ namespace vk_utils
     return buffers;
   }
 
+  void* ResourceManager::MapBufferToHostMemory(VkBuffer a_buf, VkDeviceSize a_offset, VkDeviceSize a_size)
+  {
+    void* pRes = nullptr;
+    if(m_bufAllocs.count(a_buf) > 0)
+    {
+      auto allocId = m_bufAllocs[a_buf];
+      pRes = m_pAlloc->Map(allocId, a_offset, a_size);
+
+      if(pRes)
+        m_allocsMapped.insert(allocId);
+    }
+    return pRes;
+  }
+
+  void ResourceManager::UnmapBuffer(VkBuffer a_buf)
+  {
+    if(m_bufAllocs.count(a_buf) > 0)
+    {
+      auto allocId = m_bufAllocs[a_buf];
+      m_pAlloc->Unmap(allocId);
+      
+      m_allocsMapped.erase(allocId);
+    }
+  }
+
   VkImage ResourceManager::CreateImage(const VkImageCreateInfo& a_createInfo)
   {
     VkImage image;
@@ -286,7 +311,14 @@ namespace vk_utils
 
     m_allocRefCount[id] -= 1;
     if(m_allocRefCount[id] == 0)
+    {
+      if(m_allocsMapped.count(id) > 0)
+      {
+        m_pAlloc->Unmap(id);
+        m_allocsMapped.erase(id);
+      }
       m_pAlloc->Free(id);
+    }
 
     m_bufAllocs.erase(a_buffer);
     a_buffer = VK_NULL_HANDLE;
