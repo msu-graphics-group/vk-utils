@@ -899,6 +899,7 @@ namespace vk_rt_utils
       shaderStage.pName = "main";
       assert(shaderStage.module != VK_NULL_HANDLE);
       shaderStages.push_back(shaderStage);
+      m_stagesNum += 1;
 
       VkRayTracingShaderGroupCreateInfoKHR shaderGroup{};
       shaderGroup.sType = VK_STRUCTURE_TYPE_RAY_TRACING_SHADER_GROUP_CREATE_INFO_KHR;
@@ -935,6 +936,13 @@ namespace vk_rt_utils
     createInfo.maxPipelineRayRecursionDepth = a_maxDepth;
     createInfo.layout = m_pipelineLayout;
     VK_CHECK_RESULT(vkCreateRayTracingPipelinesKHR(a_device, VK_NULL_HANDLE, VK_NULL_HANDLE, 1, &createInfo, nullptr, &m_pipeline));
+
+  for (size_t i = 0; i < m_stagesNum; ++i)
+  {
+    if(shaderModules[i] != VK_NULL_HANDLE)
+      vkDestroyShaderModule(a_device, shaderModules[i], VK_NULL_HANDLE);
+    shaderModules[i] = VK_NULL_HANDLE;
+  }
 
     return m_pipeline;
   }
