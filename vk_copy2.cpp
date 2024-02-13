@@ -104,7 +104,7 @@ namespace vk_utils
       // (1) (copy src ==> staging[curr])
       //
      
-      void* mappedMemory = pAlloc->Map(allocIds[currStaging], currStaging * stagingSizeHalf, currCopySize);
+      void* mappedMemory = pAlloc->Map(allocIds[currStaging], 0, currCopySize);
       memcpy(mappedMemory, ((char*)(a_src)) + currPos, currCopySize);
       pAlloc->Unmap(allocIds[currStaging]);
       

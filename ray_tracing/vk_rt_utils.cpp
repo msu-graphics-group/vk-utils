@@ -183,10 +183,10 @@ namespace vk_rt_utils
     std::vector<uint8_t> shaderHandleStorage(sbtSize);
     VK_CHECK_RESULT(vkGetRayTracingShaderGroupHandlesKHR(a_device, a_rtPipeline, 0, a_numShaderGroups, sbtSize, shaderHandleStorage.data()));
 
-    VkBufferUsageFlags flags = VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_SHADER_BINDING_TABLE_BIT_KHR |
-                               VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
+    VkBufferUsageFlags flags = VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT |
+                               VK_BUFFER_USAGE_SHADER_BINDING_TABLE_BIT_KHR |VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
 
-    auto sbtBuf = a_pResMgr->CreateBuffer(sbtSize, flags, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, 0);
+    auto sbtBuf = a_pResMgr->CreateBuffer(sbtSize, flags, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT);
 
     const auto sbtAddress = vk_rt_utils::getBufferDeviceAddress(a_device, sbtBuf);
     const auto rgenStride = vk_utils::getSBTAlignedSize(handleSizeAligned, a_rtPipelineProps.shaderGroupBaseAlignment);

@@ -223,7 +223,7 @@ namespace vk_utils
 
   void* MemoryAlloc_Simple::Map(uint32_t a_memBlockId, VkDeviceSize a_offset, VkDeviceSize a_size)
   {
-    if(a_memBlockId >= m_allocations.size())
+    if(!m_allocations.count(a_memBlockId))
       return nullptr;
 
     void* ptr = nullptr;
@@ -235,7 +235,7 @@ namespace vk_utils
 
   void MemoryAlloc_Simple::Unmap(uint32_t a_memBlockId)
   {
-    if(a_memBlockId >= m_allocations.size())
+    if(!m_allocations.count(a_memBlockId))
       return;
 
     vkUnmapMemory(m_device, m_allocations[a_memBlockId].memory);

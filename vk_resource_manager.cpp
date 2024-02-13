@@ -165,6 +165,8 @@ namespace vk_utils
     else
       m_allocRefCount[allocId] = 1;
 
+    vkBindImageMemory(m_device, image, m_pAlloc->GetMemoryBlock(allocId).memory, m_pAlloc->GetMemoryBlock(allocId).offset);
+
     return image;
   }
 
