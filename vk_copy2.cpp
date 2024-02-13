@@ -41,8 +41,10 @@ namespace vk_utils
     MemAllocInfo allocInfo{};
     allocInfo.memUsage = memProps;
 
-    std::vector<VkBuffer> tmpVec = {staging[0], staging[1]};
-    allocId = a_pAlloc->Allocate(allocInfo, tmpVec);
+    // since VMA maps entire allocation when MapMemory is called,
+    // we need to create separate allocations for staging buffer halfs
+    allocIds[0] = a_pAlloc->Allocate(allocInfo, {staging[0]});
+    allocIds[1] = a_pAlloc->Allocate(allocInfo, {staging[1]});
 
     VkFenceCreateInfo fenceCreateInfo = {};
     fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
@@ -52,7 +54,72 @@ namespace vk_utils
 
   PingPongCopyHelper2::~PingPongCopyHelper2()
   {
-    pAlloc->Free(allocId);
+    pAlloc->Free(allocIds[0]);
+    pAlloc->Free(allocIds[1]);
   }
 
+
+  void PingPongCopyHelper2::UpdateBuffer(VkBuffer a_dst, size_t a_dstOffset, const void* a_src, size_t a_size)
+  {
+    assert(a_dstOffset % 4 == 0);
+    assert(a_size      % 4 == 0);
+
+    VkMemoryRequirements memInfo = {};
+    vkGetBufferMemoryRequirements(dev, a_dst, &memInfo);
+
+    if (a_size <= SMALL_BUFF)
+    {
+      VkCommandBufferBeginInfo beginInfo = {};
+      beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+
+      vkResetCommandBuffer(cmdBuff, 0);
+      vkBeginCommandBuffer(cmdBuff, &beginInfo);
+      vkCmdUpdateBuffer   (cmdBuff, a_dst, a_dstOffset, a_size, a_src);
+      vkEndCommandBuffer  (cmdBuff);
+      
+      vkResetFences(dev, 1, &fence);
+      VkSubmitInfo submitInfo       = {};
+      submitInfo.sType              = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+      submitInfo.commandBufferCount = 1;        
+      submitInfo.pCommandBuffers    = &cmdBuff; 
+      VK_CHECK_RESULT(vkQueueSubmit(queue, 1, &submitInfo, fence));
+      VK_CHECK_RESULT(vkWaitForFences(dev, 1, &fence, VK_TRUE, vk_utils::DEFAULT_TIMEOUT));
+
+      return;
+    }
+
+    uint32_t currStaging = 0;
+    size_t currPos  = 0;
+    size_t prevCopySize = 0;
+
+    for(; currPos < a_size; currPos += stagingSizeHalf) // use ping-pong shceme
+    {
+      size_t currCopySize = std::min(a_size - currPos, stagingSizeHalf);
+
+      // (0) begin (copy staging[prev] ==> result) in parallel with further vkMapMemory/memcpy/vkUnmapMemory
+      //
+      if(currPos != 0) 
+        SubmitCopy(a_dst, a_dstOffset + currPos - stagingSizeHalf, prevCopySize, 1 - currStaging);
+      
+      // (1) (copy src ==> staging[curr])
+      //
+     
+      void* mappedMemory = pAlloc->Map(allocIds[currStaging], currStaging * stagingSizeHalf, currCopySize);
+      memcpy(mappedMemory, ((char*)(a_src)) + currPos, currCopySize);
+      pAlloc->Unmap(allocIds[currStaging]);
+      
+      // (3) end (staging[prev] ==> result)
+      //
+      if(currPos != 0) 
+        vkWaitForFences(dev, 1, &fence, VK_TRUE, vk_utils::DEFAULT_TIMEOUT);
+
+      currStaging  = 1 - currStaging;
+      prevCopySize = currCopySize;
+    }
+
+    // last iter copy: (staging[prev] ==> result)
+    //
+    SubmitCopy(a_dst, a_dstOffset + currPos - stagingSizeHalf, prevCopySize, 1 - currStaging);
+    VK_CHECK_RESULT(vkWaitForFences(dev, 1, &fence, VK_TRUE, vk_utils::DEFAULT_TIMEOUT));
+  }
 }

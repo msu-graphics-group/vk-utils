@@ -17,9 +17,11 @@ namespace vk_utils
 
     ~PingPongCopyHelper2() override;
 
+    void UpdateBuffer(VkBuffer a_dst, size_t a_dstOffset, const void* a_src, size_t a_size) override;
+
 
   protected:
-    uint32_t allocId = UINT32_MAX;
+    uint32_t allocIds[2] = {UINT32_MAX, UINT32_MAX};
     std::shared_ptr<IMemoryAlloc> pAlloc;
   };
 }

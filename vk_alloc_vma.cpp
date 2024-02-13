@@ -94,6 +94,12 @@ namespace vk_utils
       functions.vkGetPhysicalDeviceMemoryProperties2KHR = vkGetPhysicalDeviceMemoryProperties2;
     }
 
+    if(a_vkAPIVersion >= VK_API_VERSION_1_3)
+    {
+      functions.vkGetDeviceBufferMemoryRequirements = vkGetDeviceBufferMemoryRequirements;
+      functions.vkGetDeviceImageMemoryRequirements  = vkGetDeviceImageMemoryRequirements;
+    }
+
     VmaAllocatorCreateInfo allocatorInfo = {};
     allocatorInfo.vulkanApiVersion = a_vkAPIVersion;
     allocatorInfo.instance         = a_instance;
