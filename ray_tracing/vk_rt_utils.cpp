@@ -186,7 +186,8 @@ namespace vk_rt_utils
     VkBufferUsageFlags flags = VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT |
                                VK_BUFFER_USAGE_SHADER_BINDING_TABLE_BIT_KHR |VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
 
-    auto sbtBuf = a_pResMgr->CreateBuffer(sbtSize, flags, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT);
+    auto sbtBuf = a_pResMgr->CreateBuffer(sbtSize, flags, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                                          VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT);
 
     const auto sbtAddress = vk_rt_utils::getBufferDeviceAddress(a_device, sbtBuf);
     const auto rgenStride = vk_utils::getSBTAlignedSize(handleSizeAligned, a_rtPipelineProps.shaderGroupBaseAlignment);
@@ -197,9 +198,9 @@ namespace vk_rt_utils
     SBT_strides.push_back({ SBT_strides.back().deviceAddress + SBT_strides.back().size, handleSizeAligned, hitSize });
     SBT_strides.push_back({ 0u, 0u, 0u });
 
-    void* hostBuf = std::malloc(sbtSize);
+    void* mapped = a_pResMgr->MapBufferToHostMemory(sbtBuf, 0, VK_WHOLE_SIZE);
     {
-      auto *pBuf  = reinterpret_cast<uint8_t *>(hostBuf);
+      auto *pBuf  = reinterpret_cast<uint8_t *>(mapped);
       auto *pData = pBuf;
 
       //  Raygen
@@ -221,10 +222,8 @@ namespace vk_rt_utils
         memcpy(pData, shaderHandleStorage.data() + (handleIdx++) * handleSize, handleSize);
         pData += SBT_strides[2].stride;
       }
-      
-      a_pResMgr->GetCopyEngine()->UpdateBuffer(sbtBuf, 0, pBuf, sbtSize);
     }
-    std::free(hostBuf);
+    a_pResMgr->UnmapBuffer(sbtBuf);
 
     return SBT_strides;
   }
