@@ -924,7 +924,7 @@ namespace vk_rt_utils
     }
   }
 
-  VkPipeline RTPipelineMaker::MakePipeline(VkDevice a_device, uint32_t a_maxDepth)
+  VkPipeline RTPipelineMaker::MakePipeline(VkDevice a_device, VkPipelineCreateFlags a_flags, uint32_t a_maxDepth)
   {
     VkRayTracingPipelineCreateInfoKHR createInfo = {};
     createInfo.sType      = VK_STRUCTURE_TYPE_RAY_TRACING_PIPELINE_CREATE_INFO_KHR;
@@ -934,6 +934,7 @@ namespace vk_rt_utils
     createInfo.pGroups    = shaderGroups.data();
     createInfo.maxPipelineRayRecursionDepth = a_maxDepth;
     createInfo.layout = m_pipelineLayout;
+    createInfo.flags = a_flags;
     VK_CHECK_RESULT(vkCreateRayTracingPipelinesKHR(a_device, VK_NULL_HANDLE, VK_NULL_HANDLE, 1, &createInfo, nullptr, &m_pipeline));
 
   for (size_t i = 0; i < m_stagesNum; ++i)

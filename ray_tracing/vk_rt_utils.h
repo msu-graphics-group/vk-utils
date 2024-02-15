@@ -187,7 +187,7 @@ namespace vk_rt_utils
     void             LoadShaders(VkDevice a_device, const std::vector<std::pair<VkShaderStageFlagBits, std::string>> &shader_paths);
     VkPipelineLayout MakeLayout(VkDevice a_device, VkDescriptorSetLayout a_dslayout);
     VkPipelineLayout MakeLayout(VkDevice a_device, std::vector<VkDescriptorSetLayout> a_dslayouts);
-    VkPipeline       MakePipeline(VkDevice a_device, uint32_t a_maxDepth = 2);
+    VkPipeline       MakePipeline(VkDevice a_device, VkPipelineCreateFlags a_flags = 0, uint32_t a_maxDepth = 2);
 
     private:
       int              m_stagesNum = 0;
