@@ -30,7 +30,8 @@ namespace vk_utils
     return layout;
   }
 
-  VkDescriptorPool createDescriptorPool(VkDevice a_device, const DescriptorTypesVec &a_descrTypes, unsigned a_maxSets)
+  VkDescriptorPool createDescriptorPool(VkDevice a_device, const DescriptorTypesVec &a_descrTypes, unsigned a_maxSets,
+                                        VkDescriptorPoolCreateFlags a_flags)
   {
     VkDescriptorPool pool;
 
@@ -49,6 +50,7 @@ namespace vk_utils
     descriptorPoolCreateInfo.maxSets = a_maxSets;
     descriptorPoolCreateInfo.poolSizeCount = (uint32_t)poolSizes.size();
     descriptorPoolCreateInfo.pPoolSizes = poolSizes.data();
+    descriptorPoolCreateInfo.flags = a_flags;
 
     VK_CHECK_RESULT(vkCreateDescriptorPool(a_device, &descriptorPoolCreateInfo, nullptr, &pool));
 
