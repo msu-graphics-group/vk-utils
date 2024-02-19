@@ -41,13 +41,19 @@ namespace vk_rt_utils
   VkStridedDeviceAddressRegionKHR getSBTStridedDeviceAddressRegion(VkDevice a_device, VkBuffer buffer,
                                                                    uint32_t handleCount, uint32_t handleSizeAligned);
 
-  std::vector<VkStridedDeviceAddressRegionKHR> CreateShaderBindingTable(VkDevice a_device, 
-                                                                        std::shared_ptr<vk_utils::IResourceManager> a_pResMgr,
-                                                                        VkPipeline a_rtPipeline,
-                                                                        uint32_t a_numShaderGroups, uint32_t a_numHitStages,
-                                                                        uint32_t a_numMissStages,
-                                                                        VkPhysicalDeviceRayTracingPipelinePropertiesKHR a_rtPipelineProps);
+  std::vector<VkStridedDeviceAddressRegionKHR> CreateSimpleSBT(VkDevice a_device, 
+                                                               std::shared_ptr<vk_utils::IResourceManager> a_pResMgr,
+                                                               VkPipeline a_rtPipeline,
+                                                               uint32_t a_numShaderGroups, uint32_t a_numHitStages,
+                                                               uint32_t a_numMissStages,
+                                                               VkPhysicalDeviceRayTracingPipelinePropertiesKHR a_rtPipelineProps);
 
+  std::vector<VkStridedDeviceAddressRegionKHR> CreateSimpleSBTSeparateBuffers(VkDevice a_device, 
+                                                                              std::shared_ptr<vk_utils::IResourceManager> a_pResMgr,
+                                                                              VkPipeline a_rtPipeline,
+                                                                              uint32_t a_numShaderGroups, uint32_t a_numHitStages,
+                                                                              uint32_t a_numMissStages,
+                                                                              VkPhysicalDeviceRayTracingPipelinePropertiesKHR a_rtPipelineProps);
   struct AccelStructureSizeInfo
   {
     size_t accelerationStructureSize;
