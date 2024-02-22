@@ -186,13 +186,16 @@ namespace vk_rt_utils
     VkBufferUsageFlags flags = VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT |
                                VK_BUFFER_USAGE_SHADER_BINDING_TABLE_BIT_KHR |VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
 
-    auto sbtBuf = a_pResMgr->CreateBuffer(sbtSize, flags, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                                          VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT);
 
-    const auto sbtAddress = vk_rt_utils::getBufferDeviceAddress(a_device, sbtBuf);
     const auto rgenStride = vk_utils::getSBTAlignedSize(handleSizeAligned, a_rtPipelineProps.shaderGroupBaseAlignment);
     const auto missSize   = vk_utils::getSBTAlignedSize(a_numMissStages * handleSizeAligned, a_rtPipelineProps.shaderGroupBaseAlignment);
     const auto hitSize    = vk_utils::getSBTAlignedSize(a_numHitStages  * handleSizeAligned, a_rtPipelineProps.shaderGroupBaseAlignment);
+
+    auto buffSize = rgenStride + missSize * a_numMissStages + hitSize * a_numHitStages;
+    auto sbtBuf = a_pResMgr->CreateBuffer(buffSize, flags, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                                          VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT);
+
+    const auto sbtAddress = vk_rt_utils::getBufferDeviceAddress(a_device, sbtBuf);
     SBT_strides.push_back({ sbtAddress, rgenStride, rgenStride });
     SBT_strides.push_back({ SBT_strides.back().deviceAddress + SBT_strides.back().size, handleSizeAligned, missSize });
     SBT_strides.push_back({ SBT_strides.back().deviceAddress + SBT_strides.back().size, handleSizeAligned, hitSize });
@@ -248,16 +251,17 @@ namespace vk_rt_utils
     VkBufferUsageFlags flags = VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT |
                                VK_BUFFER_USAGE_SHADER_BINDING_TABLE_BIT_KHR |VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
 
-    auto raygenBuf  = a_pResMgr->CreateBuffer(handleSize, flags, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                                             VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT);
-    auto raymissBuf = a_pResMgr->CreateBuffer(handleSize, flags, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                                             VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT);
-    auto rayhitBuf  = a_pResMgr->CreateBuffer(handleSize, flags, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                                             VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT);
-
     const auto rgenStride = vk_utils::getSBTAlignedSize(handleSizeAligned, a_rtPipelineProps.shaderGroupBaseAlignment);
     const auto missSize   = vk_utils::getSBTAlignedSize(a_numMissStages * handleSizeAligned, a_rtPipelineProps.shaderGroupBaseAlignment);
     const auto hitSize    = vk_utils::getSBTAlignedSize(a_numHitStages  * handleSizeAligned, a_rtPipelineProps.shaderGroupBaseAlignment);
+
+    auto raygenBuf  = a_pResMgr->CreateBuffer(rgenStride, flags, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                                             VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT);
+    auto raymissBuf = a_pResMgr->CreateBuffer(missSize * a_numMissStages, flags, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                                             VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT);
+    auto rayhitBuf  = a_pResMgr->CreateBuffer(hitSize * a_numHitStages, flags, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                                             VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT);
+
     SBT_strides.push_back({ vk_rt_utils::getBufferDeviceAddress(a_device, raygenBuf), rgenStride, rgenStride });
     SBT_strides.push_back({ vk_rt_utils::getBufferDeviceAddress(a_device, raymissBuf), handleSizeAligned, missSize });
     SBT_strides.push_back({ vk_rt_utils::getBufferDeviceAddress(a_device, rayhitBuf), handleSizeAligned,  hitSize});
