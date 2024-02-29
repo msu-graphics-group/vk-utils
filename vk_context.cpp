@@ -87,7 +87,39 @@ vk_utils::VulkanContext vk_utils::globalContextInit(const std::vector<const char
   enabledLayers.push_back("VK_LAYER_KHRONOS_validation");
   enabledLayers.push_back("VK_LAYER_LUNARG_standard_validation");
   VK_CHECK_RESULT(volkInitialize());
-  g_ctx.instance = vk_utils::createInstance(enableValidationLayers, enabledLayers, extensions);
+  
+  bool hasRayTracingPipeline = false;
+  {
+    struct ListElem
+    {
+      VkStructureType             sType;
+      void*                       pNext;
+    };
+  
+    const ListElem* pList = (const ListElem*)a_pKnownFeatures;
+    
+    while(pList != nullptr)
+    {
+      if(pList->sType == VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR)
+      {
+        hasRayTracingPipeline = true;
+        break;
+      }
+  
+      pList = (const ListElem*)pList->pNext;
+    }
+  }
+
+  VkApplicationInfo applicationInfo = {};
+  
+  applicationInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+  applicationInfo.pApplicationName   = "LiteVK::App";
+  applicationInfo.applicationVersion = 0;
+  applicationInfo.pEngineName        = "LiteVK::Engine";
+  applicationInfo.engineVersion      = 0;
+  applicationInfo.apiVersion         = hasRayTracingPipeline ? VK_API_VERSION_1_2 : VK_API_VERSION_1_1;
+
+  g_ctx.instance = vk_utils::createInstance(enableValidationLayers, enabledLayers, extensions, &applicationInfo);
   volkLoadInstance(g_ctx.instance);
 
   g_ctx.physicalDevice = vk_utils::findPhysicalDevice(g_ctx.instance, true, a_preferredDeviceId);
@@ -175,10 +207,6 @@ vk_utils::VulkanContext vk_utils::globalContextInit(const std::vector<const char
     deviceExtensions.push_back(VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME);
     deviceExtensions.push_back(VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME);
     deviceExtensions.push_back(VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME);
-    // // Required by VK_KHR_ray_tracing_pipeline
-    // m_deviceExtensions.push_back(VK_KHR_SPIRV_1_4_EXTENSION_NAME);
-    // // Required by VK_KHR_spirv_1_4
-    // m_deviceExtensions.push_back(VK_KHR_SHADER_FLOAT_CONTROLS_EXTENSION_NAME);
   }
   
   if(supportedExtensions.find("VK_KHR_shader_non_semantic_info") != supportedExtensions.end())
