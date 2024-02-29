@@ -94,7 +94,10 @@ namespace vk_rt_utils
     return mem;
   }
 
-  AccelStructure createAccelStruct(VkDevice a_device, VkAccelerationStructureTypeKHR type, VkAccelerationStructureBuildSizesInfoKHR buildSizeInfo)
+  AccelStructure createAccelStruct(VkDevice a_device, VkAccelerationStructureTypeKHR type, 
+                                  VkAccelerationStructureBuildSizesInfoKHR buildSizeInfo,
+                                  VkAccelerationStructureCreateFlagsKHR a_flags, 
+                                  void* a_pNext )
   {
     AccelStructure accel = {};
 
@@ -110,6 +113,8 @@ namespace vk_rt_utils
     accelerationStructureCreate_info.buffer = accel.buffer;
     accelerationStructureCreate_info.size = buildSizeInfo.accelerationStructureSize;
     accelerationStructureCreate_info.type = type;
+    accelerationStructureCreate_info.pNext = a_pNext;
+    accelerationStructureCreate_info.createFlags = a_flags;
     vkCreateAccelerationStructureKHR(a_device, &accelerationStructureCreate_info, nullptr, &accel.handle);
 
     return accel;
@@ -618,7 +623,7 @@ namespace vk_rt_utils
     sizeInfo.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_SIZES_INFO_KHR;
     vkGetAccelerationStructureBuildSizesKHR(m_device, VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR, &buildInfo, &maxPrimitiveCountPerMesh, &sizeInfo);
 
-    m_scratchSize = sizeInfo.buildScratchSize;
+    m_scratchSize = std::max(sizeInfo.buildScratchSize, size_t(16384u));
     m_scratchBuf = vk_rt_utils::allocScratchBuffer(m_device, m_physDevice, m_scratchSize);
 
     m_totalBLASSizeEstimate = sizeInfo.accelerationStructureSize * (1 + maxTotalPrimitiveCount / maxPrimitiveCountPerMesh);
@@ -848,9 +853,25 @@ namespace vk_rt_utils
 
     assert(sizeInfo.buildScratchSize <= m_scratchSize);
 
+#ifdef VK_NV_ray_tracing_motion_blur
+  VkAccelerationStructureMotionInfoNV motionInfo{VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_MOTION_INFO_NV};
+  motionInfo.maxInstances = a_instNum;
+#endif
+
     if(!a_update)
     {
-      m_tlas    = vk_rt_utils::createAccelStruct(m_device, VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR, sizeInfo);
+      VkAccelerationStructureCreateFlagsKHR tlasFlags = 0;
+      void* pNext = nullptr;
+#ifdef VK_NV_ray_tracing_motion_blur
+      if(a_flags | VK_BUILD_ACCELERATION_STRUCTURE_MOTION_BIT_NV)
+      {
+        tlasFlags = VK_ACCELERATION_STRUCTURE_CREATE_MOTION_BIT_NV;
+        pNext = &motionInfo;
+      }
+#endif
+
+      m_tlas    = vk_rt_utils::createAccelStruct(m_device, VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR, sizeInfo,
+                                                 tlasFlags, pNext);
       m_tlasMem = vk_rt_utils::allocAndGetAddressAccelStruct(m_device, m_physDevice, m_tlas);
     }
 
