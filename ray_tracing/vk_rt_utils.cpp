@@ -863,7 +863,7 @@ namespace vk_rt_utils
       VkAccelerationStructureCreateFlagsKHR tlasFlags = 0;
       void* pNext = nullptr;
 #ifdef VK_NV_ray_tracing_motion_blur
-      if(a_flags | VK_BUILD_ACCELERATION_STRUCTURE_MOTION_BIT_NV)
+      if(a_flags & VK_BUILD_ACCELERATION_STRUCTURE_MOTION_BIT_NV)
       {
         tlasFlags = VK_ACCELERATION_STRUCTURE_CREATE_MOTION_BIT_NV;
         pNext = &motionInfo;
