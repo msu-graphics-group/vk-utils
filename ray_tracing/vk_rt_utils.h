@@ -89,6 +89,8 @@ namespace vk_rt_utils
       VkDeviceOrHostAddressConstKHR a_vertexBufAddress, VkDeviceOrHostAddressConstKHR a_indexBufAddress,
       VkBuildAccelerationStructureFlagsKHR a_flags = VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR);
 
+    uint32_t AddBLAS(VkDeviceOrHostAddressConstKHR a_boxBufAddress, size_t a_boxNumber);
+
     void BuildAllBLAS();
 
     void UpdateBLAS(uint32_t idx, const MeshInfo &a_meshInfo,
