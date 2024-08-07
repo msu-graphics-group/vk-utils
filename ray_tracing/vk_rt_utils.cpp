@@ -689,8 +689,8 @@ namespace vk_rt_utils
     asGeom.geometryType = VK_GEOMETRY_TYPE_AABBS_KHR;
 
     asGeom.geometry.aabbs.sType  = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_AABBS_DATA_KHR;
-    asGeom.geometry.aabbs.stride = sizeof(float)*8;
-    asGeom.geometry.aabbs.data = a_boxBufAddress;
+    asGeom.geometry.aabbs.stride = sizeof(VkAabbPositionsKHR);
+    asGeom.geometry.aabbs.data   = a_boxBufAddress;
 
     VkAccelerationStructureBuildRangeInfoKHR asRangeInfo{};
     asRangeInfo.primitiveCount  = a_boxNumber;
