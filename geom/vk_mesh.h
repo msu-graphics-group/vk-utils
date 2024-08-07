@@ -14,6 +14,8 @@ struct MeshInfo
   int32_t  m_vertexOffset = 0u;
   uint32_t m_indexOffset  = 0u;
 
+  uint32_t blasId = 0;
+
   VkDeviceSize m_vertexBufOffset = 0u;
   VkDeviceSize m_indexBufOffset  = 0u;
 };
