@@ -104,6 +104,7 @@ namespace vk_rt_utils
     VkAccelerationStructureKHR GetTLAS() const { return m_tlas.handle; };
     VkAccelerationStructureKHR GetBLAS(uint32_t idx) const { assert(idx < m_blas.size()); return m_blas[idx].handle; };
     uint64_t GetBLASDeviceAddress(uint32_t idx) const { assert(idx < m_blas.size()); return m_blas[idx].deviceAddress; };
+    size_t   GetBLASCount() const { return m_blasInputs.size(); }
 
     void Destroy();
 
