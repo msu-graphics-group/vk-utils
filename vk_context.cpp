@@ -97,7 +97,6 @@ vk_utils::VulkanContext vk_utils::globalContextInit(const std::vector<const char
   std::vector<const char*> enabledLayers;
   std::vector<const char*> extensions;
   enabledLayers.push_back("VK_LAYER_KHRONOS_validation");
-  enabledLayers.push_back("VK_LAYER_LUNARG_standard_validation");
   VK_CHECK_RESULT(volkInitialize());
   
   bool hasRayTracingPipeline = false;
