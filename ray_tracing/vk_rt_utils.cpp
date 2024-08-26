@@ -681,6 +681,38 @@ namespace vk_rt_utils
     return idx;
   }
 
+  uint32_t AccelStructureBuilderV2::AddBLAS(VkDeviceOrHostAddressConstKHR a_boxBufAddress, size_t a_boxNumber)
+  {
+    VkAccelerationStructureGeometryKHR asGeom {};
+    asGeom.sType        = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR;
+    asGeom.flags        = VK_GEOMETRY_OPAQUE_BIT_KHR;
+    asGeom.geometryType = VK_GEOMETRY_TYPE_AABBS_KHR;
+
+    asGeom.geometry.aabbs.sType  = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_AABBS_DATA_KHR;
+    asGeom.geometry.aabbs.stride = sizeof(VkAabbPositionsKHR);
+    asGeom.geometry.aabbs.data   = a_boxBufAddress;
+
+    VkAccelerationStructureBuildRangeInfoKHR asRangeInfo{};
+    asRangeInfo.primitiveCount  = a_boxNumber;
+    asRangeInfo.primitiveOffset = 0; // assumne already pass via correct device address
+    asRangeInfo.firstVertex     = 0; // assumne already pass via correct device address
+    asRangeInfo.transformOffset = 0;
+
+    vk_rt_utils::BLASBuildInput blasInput;
+    blasInput.geom.emplace_back(asGeom);
+    blasInput.buildRange.emplace_back(asRangeInfo);
+    m_blasInputs.emplace_back(blasInput);
+
+    uint32_t idx = static_cast<uint32_t>(m_blasInputs.size()) - 1u;
+
+    if(m_queueBuild)
+    {
+      BuildOneBLAS(idx);
+    }
+
+    return idx;
+  }
+
 
   void AccelStructureBuilderV2::AllocBLASMemory(uint32_t a_memTypeIdx, VkDeviceSize a_size)
   {

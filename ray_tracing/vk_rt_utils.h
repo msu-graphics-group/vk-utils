@@ -89,6 +89,8 @@ namespace vk_rt_utils
       VkDeviceOrHostAddressConstKHR a_vertexBufAddress, VkDeviceOrHostAddressConstKHR a_indexBufAddress,
       VkBuildAccelerationStructureFlagsKHR a_flags = VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR);
 
+    uint32_t AddBLAS(VkDeviceOrHostAddressConstKHR a_boxBufAddress, size_t a_boxNumber);
+
     void BuildAllBLAS();
 
     void UpdateBLAS(uint32_t idx, const MeshInfo &a_meshInfo,
@@ -102,6 +104,7 @@ namespace vk_rt_utils
     VkAccelerationStructureKHR GetTLAS() const { return m_tlas.handle; };
     VkAccelerationStructureKHR GetBLAS(uint32_t idx) const { assert(idx < m_blas.size()); return m_blas[idx].handle; };
     uint64_t GetBLASDeviceAddress(uint32_t idx) const { assert(idx < m_blas.size()); return m_blas[idx].deviceAddress; };
+    size_t   GetBLASCount() const { return m_blasInputs.size(); }
 
     void Destroy();
 

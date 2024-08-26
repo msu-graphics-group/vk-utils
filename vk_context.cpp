@@ -72,6 +72,18 @@ static RTXDeviceFeatures SetupRTXFeatures(VkPhysicalDevice a_physDev)
   return g_rtFeatures;
 }
 
+VkDebugUtilsMessengerEXT g_debug_utils_messenger{VK_NULL_HANDLE};
+
+VKAPI_ATTR VkBool32 VKAPI_CALL debug_utils_message_callback(
+    VkDebugUtilsMessageSeverityFlagBitsEXT      messageSeverity,
+    VkDebugUtilsMessageTypeFlagsEXT             messageType,
+    const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData,
+    void                                       *pUserData)
+{
+  std::cout << pCallbackData->pMessage << "\n";
+	return VK_FALSE;
+}
+
 vk_utils::VulkanContext vk_utils::globalContextInit(const std::vector<const char*>& requiredExtensions, 
                                                     bool enableValidationLayers, 
                                                     unsigned int a_preferredDeviceId,
@@ -85,7 +97,6 @@ vk_utils::VulkanContext vk_utils::globalContextInit(const std::vector<const char
   std::vector<const char*> enabledLayers;
   std::vector<const char*> extensions;
   enabledLayers.push_back("VK_LAYER_KHRONOS_validation");
-  enabledLayers.push_back("VK_LAYER_LUNARG_standard_validation");
   VK_CHECK_RESULT(volkInitialize());
   
   bool hasRayTracingPipeline = false;
@@ -236,6 +247,26 @@ vk_utils::VulkanContext vk_utils::globalContextInit(const std::vector<const char
                                                fIDs, VK_QUEUE_TRANSFER_BIT | VK_QUEUE_COMPUTE_BIT, pExtendedDeviceFeatures);
   volkLoadDevice(g_ctx.device);                                            
   g_ctx.commandPool = vk_utils::createCommandPool(g_ctx.device, fIDs.compute, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
+  
+
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////// debugPrintf
+  if(vkCreateDebugUtilsMessengerEXT == nullptr)
+    vkCreateDebugUtilsMessengerEXT = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(vkGetInstanceProcAddr(g_ctx.instance, "vkCreateDebugUtilsMessengerEXT"));
+  if(vkCreateDebugUtilsMessengerEXT == nullptr)
+    vkCreateDebugUtilsMessengerEXT = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(vkGetDeviceProcAddr(g_ctx.device, "vkCreateDebugUtilsMessengerEXT"));
+  if(vkCreateDebugUtilsMessengerEXT != nullptr)
+  { 
+    VkDebugUtilsMessengerCreateInfoEXT debug_utils_messenger_create_info{VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT};
+	  debug_utils_messenger_create_info.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT;
+	  debug_utils_messenger_create_info.messageType     = VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT;
+	  debug_utils_messenger_create_info.pfnUserCallback = debug_utils_message_callback;
+	  auto debugEnabled = vkCreateDebugUtilsMessengerEXT(g_ctx.instance, &debug_utils_messenger_create_info, nullptr, &g_debug_utils_messenger);
+    if(debugEnabled != VK_SUCCESS)
+    {
+      std::cout << "[vk_utils::globalContextInit]: vkCreateDebugUtilsMessengerEXT failed!" << std::endl;
+    }
+  }
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////// debugPrintf
 
   // (2) initialize vulkan helpers
   //  
