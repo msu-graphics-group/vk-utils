@@ -83,7 +83,8 @@ namespace vk_rt_utils
     // if (a_buildAsAdd == true) start building BLAS immediately after call to AddBLAS
     void Init(uint32_t maxVertexCountPerMesh, uint32_t maxPrimitiveCountPerMesh, uint32_t maxTotalPrimitiveCount,
         size_t singleVertexSize, bool a_buildAsAdd = false,
-        VkBuildAccelerationStructureFlagsKHR a_flags = VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR);
+        VkBuildAccelerationStructureFlagsKHR a_flags = VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR, 
+        uint32_t maxAABBPerObject = 0);
 
     uint32_t AddBLAS(const MeshInfo &a_meshInfo, size_t a_vertexDataStride,
       VkDeviceOrHostAddressConstKHR a_vertexBufAddress, VkDeviceOrHostAddressConstKHR a_indexBufAddress,

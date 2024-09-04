@@ -592,41 +592,56 @@ namespace vk_rt_utils
   }
 
   void AccelStructureBuilderV2::Init(uint32_t maxVertexCountPerMesh, uint32_t maxPrimitiveCountPerMesh, uint32_t maxTotalPrimitiveCount,
-    size_t singleVertexSize, bool a_buildAsAdd, VkBuildAccelerationStructureFlagsKHR a_flags)
+                                     size_t singleVertexSize, bool a_buildAsAdd, VkBuildAccelerationStructureFlagsKHR a_flags, uint32_t maxAABBPerObject)
   {
     m_queueBuild = a_buildAsAdd;
-    VkAccelerationStructureGeometryKHR accelerationStructureGeometry {};
-    accelerationStructureGeometry.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR;
-    accelerationStructureGeometry.flags = VK_GEOMETRY_OPAQUE_BIT_KHR;
-    accelerationStructureGeometry.geometryType = VK_GEOMETRY_TYPE_TRIANGLES_KHR;
-    accelerationStructureGeometry.geometry.triangles.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_TRIANGLES_DATA_KHR;
-    accelerationStructureGeometry.geometry.triangles.vertexFormat = VK_FORMAT_R32G32B32_SFLOAT;
-    //    accelerationStructureGeometry.geometry.triangles.vertexData   = vertexBufAddress;
-    accelerationStructureGeometry.geometry.triangles.maxVertex    = maxVertexCountPerMesh;
-    accelerationStructureGeometry.geometry.triangles.vertexStride = singleVertexSize;
 
-    accelerationStructureGeometry.geometry.triangles.indexType = VK_INDEX_TYPE_UINT32;
-    //    accelerationStructureGeometry.geometry.triangles.indexData = indexBufAddress;
-    accelerationStructureGeometry.geometry.triangles.transformData.deviceAddress = 0;
-    accelerationStructureGeometry.geometry.triangles.transformData.hostAddress   = nullptr;
+    VkAccelerationStructureBuildSizesInfoKHR trisBoxes[2] = {};
+    for(int geomTypeId = 0; geomTypeId < 2; geomTypeId++) 
+    {
+      VkAccelerationStructureGeometryKHR accelerationStructureGeometry {};
+      accelerationStructureGeometry.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR;
+      accelerationStructureGeometry.flags = VK_GEOMETRY_OPAQUE_BIT_KHR;
+      
+      if(geomTypeId == 0)
+      {
+        accelerationStructureGeometry.geometryType                    = VK_GEOMETRY_TYPE_TRIANGLES_KHR;
+        accelerationStructureGeometry.geometry.triangles.sType        = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_TRIANGLES_DATA_KHR;
+        accelerationStructureGeometry.geometry.triangles.vertexFormat = VK_FORMAT_R32G32B32_SFLOAT;
+        accelerationStructureGeometry.geometry.triangles.maxVertex    = maxVertexCountPerMesh;
+        accelerationStructureGeometry.geometry.triangles.vertexStride = singleVertexSize;
+    
+        accelerationStructureGeometry.geometry.triangles.indexType                   = VK_INDEX_TYPE_UINT32;
+        accelerationStructureGeometry.geometry.triangles.transformData.deviceAddress = 0;
+        accelerationStructureGeometry.geometry.triangles.transformData.hostAddress   = nullptr;
+      }
+      else
+      {
+        accelerationStructureGeometry.geometryType = VK_GEOMETRY_TYPE_AABBS_KHR;
+        accelerationStructureGeometry.geometry.aabbs.sType  = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_AABBS_DATA_KHR;
+        accelerationStructureGeometry.geometry.aabbs.stride = sizeof(VkAabbPositionsKHR);
+        //accelerationStructureGeometry.geometry.aabbs.data.hostAddress = nullptr;
+        maxPrimitiveCountPerMesh = maxAABBPerObject;
+      }
 
-    VkAccelerationStructureBuildGeometryInfoKHR buildInfo = {};
-    buildInfo.sType                    = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR;
-    buildInfo.flags                    = a_flags;
-    buildInfo.mode                     = VK_BUILD_ACCELERATION_STRUCTURE_MODE_BUILD_KHR;
-    buildInfo.type                     = VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR;
-    buildInfo.srcAccelerationStructure = VK_NULL_HANDLE;
-    buildInfo.geometryCount            = 1;
-    buildInfo.pGeometries              = &accelerationStructureGeometry;
+      VkAccelerationStructureBuildGeometryInfoKHR buildInfo = {};
+      buildInfo.sType                    = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR;
+      buildInfo.flags                    = a_flags;
+      buildInfo.mode                     = VK_BUILD_ACCELERATION_STRUCTURE_MODE_BUILD_KHR;
+      buildInfo.type                     = VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR;
+      buildInfo.srcAccelerationStructure = VK_NULL_HANDLE;
+      buildInfo.geometryCount            = 1;
+      buildInfo.pGeometries              = &accelerationStructureGeometry;
 
-    VkAccelerationStructureBuildSizesInfoKHR sizeInfo = {};
-    sizeInfo.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_SIZES_INFO_KHR;
-    vkGetAccelerationStructureBuildSizesKHR(m_device, VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR, &buildInfo, &maxPrimitiveCountPerMesh, &sizeInfo);
+      VkAccelerationStructureBuildSizesInfoKHR sizeInfo = {};
+      sizeInfo.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_SIZES_INFO_KHR;
+      vkGetAccelerationStructureBuildSizesKHR(m_device, VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR, &buildInfo, &maxPrimitiveCountPerMesh, &sizeInfo);
+      trisBoxes[geomTypeId] = sizeInfo;
+    }
 
-    m_scratchSize = std::max(sizeInfo.buildScratchSize, size_t(16384u));
-    m_scratchBuf = vk_rt_utils::allocScratchBuffer(m_device, m_physDevice, m_scratchSize);
-
-    m_totalBLASSizeEstimate = sizeInfo.accelerationStructureSize * (1 + maxTotalPrimitiveCount / maxPrimitiveCountPerMesh);
+    m_scratchSize           = std::max( std::max(trisBoxes[0].buildScratchSize, trisBoxes[1].buildScratchSize) , size_t(16384u));
+    m_scratchBuf            = vk_rt_utils::allocScratchBuffer(m_device, m_physDevice, m_scratchSize);
+    m_totalBLASSizeEstimate = std::max(trisBoxes[0].accelerationStructureSize, trisBoxes[1].accelerationStructureSize) * (1 + maxTotalPrimitiveCount / maxPrimitiveCountPerMesh);
   }
 
   VkAccelerationStructureBuildSizesInfoKHR AccelStructureBuilderV2::GetSizeInfo(const VkAccelerationStructureBuildGeometryInfoKHR& a_buildInfo, std::vector<VkAccelerationStructureBuildRangeInfoKHR>& a_ranges)
