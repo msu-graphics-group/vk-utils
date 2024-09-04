@@ -597,6 +597,13 @@ namespace vk_rt_utils
     m_queueBuild = a_buildAsAdd;
 
     VkAccelerationStructureBuildSizesInfoKHR trisBoxes[2] = {};
+    trisBoxes[0].buildScratchSize = 1024;
+    trisBoxes[0].accelerationStructureSize = 1024;
+    trisBoxes[1].buildScratchSize = 1024;
+    trisBoxes[1].accelerationStructureSize = 1024;
+
+    uint32_t oldmaxPrimitiveCountPerMesh = maxPrimitiveCountPerMesh;
+  
     for(int geomTypeId = 0; geomTypeId < 2; geomTypeId++) 
     {
       VkAccelerationStructureGeometryKHR accelerationStructureGeometry {};
@@ -641,7 +648,7 @@ namespace vk_rt_utils
 
     m_scratchSize           = std::max( std::max(trisBoxes[0].buildScratchSize, trisBoxes[1].buildScratchSize) , size_t(16384u));
     m_scratchBuf            = vk_rt_utils::allocScratchBuffer(m_device, m_physDevice, m_scratchSize);
-    m_totalBLASSizeEstimate = std::max(trisBoxes[0].accelerationStructureSize, trisBoxes[1].accelerationStructureSize) * (1 + maxTotalPrimitiveCount / maxPrimitiveCountPerMesh);
+    m_totalBLASSizeEstimate = std::max(trisBoxes[0].accelerationStructureSize, trisBoxes[1].accelerationStructureSize) * (1 + maxTotalPrimitiveCount / oldmaxPrimitiveCountPerMesh);
   }
 
   VkAccelerationStructureBuildSizesInfoKHR AccelStructureBuilderV2::GetSizeInfo(const VkAccelerationStructureBuildGeometryInfoKHR& a_buildInfo, std::vector<VkAccelerationStructureBuildRangeInfoKHR>& a_ranges)
