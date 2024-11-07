@@ -170,6 +170,11 @@ vk_utils::VulkanContext vk_utils::globalContextInit(const std::vector<const char
     
     vkGetPhysicalDeviceProperties2(g_ctx.physicalDevice, &physicalDeviceProperties);
     g_ctx.subgroupProps = subgroupProperties;
+    if (physicalDeviceProperties.properties.limits.timestampPeriod > 0 && physicalDeviceProperties.properties.limits.timestampComputeAndGraphics)
+      std::cout << "[VkUtils::INFO] [Timestamps] are supported." << std::endl;
+    else 
+      std::cout << "[VkUtils::INFO] [Timestamps] are NOT supported !" << std::endl;
+    
     //g_ctx.subgroupArithSupport = (subgroupProperties.supportedOperations & VK_SUBGROUP_FEATURE_ARITHMETIC_BIT);
     //g_ctx.subgroupSize         = subgroupProperties.subgroupSize;
   }
@@ -182,13 +187,13 @@ vk_utils::VulkanContext vk_utils::globalContextInit(const std::vector<const char
   if(supportRayQuery)
     rtxFeatures = SetupRTXFeatures(g_ctx.physicalDevice);
 
-  VkPhysicalDeviceVariablePointersFeatures varPointers = {};
+  static VkPhysicalDeviceVariablePointersFeatures varPointers = {};
   varPointers.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VARIABLE_POINTERS_FEATURES;
   varPointers.pNext = supportRayQuery ? &rtxFeatures.m_enabledAccelStructFeatures : nullptr;
   varPointers.variablePointers              = varPointersQuestion.variablePointers;
   varPointers.variablePointersStorageBuffer = varPointersQuestion.variablePointersStorageBuffer;
 
-  VkPhysicalDeviceDescriptorIndexingFeatures indexingFeatures{};
+  static VkPhysicalDeviceDescriptorIndexingFeatures indexingFeatures{};
   indexingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
   indexingFeatures.pNext = &varPointers;
   indexingFeatures.shaderSampledImageArrayNonUniformIndexing = supportBindless ? VK_TRUE : VK_FALSE;
@@ -196,7 +201,7 @@ vk_utils::VulkanContext vk_utils::globalContextInit(const std::vector<const char
 
   // query features for shaderInt8
   //
-  VkPhysicalDeviceShaderFloat16Int8Features features = featuresQuestion;
+  static VkPhysicalDeviceShaderFloat16Int8Features features = featuresQuestion;
   features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_FLOAT16_INT8_FEATURES;
   features.pNext = &indexingFeatures;
 
@@ -228,10 +233,22 @@ vk_utils::VulkanContext vk_utils::globalContextInit(const std::vector<const char
     deviceExtensions.push_back("VK_KHR_variable_pointers");
   if(supportedExtensions.find("VK_EXT_descriptor_indexing") != supportedExtensions.end())
     deviceExtensions.push_back("VK_EXT_descriptor_indexing");
+  
+  void* pExtendedDeviceFeatures = &features;
+
+  static VkPhysicalDeviceHostQueryResetFeatures resetFeatures = {};
+  if(supportedExtensions.find(VK_EXT_HOST_QUERY_RESET_EXTENSION_NAME) != supportedExtensions.end() && applicationInfo.apiVersion == VK_API_VERSION_1_1)
+  {
+    deviceExtensions.push_back(VK_EXT_HOST_QUERY_RESET_EXTENSION_NAME);
+    resetFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_HOST_QUERY_RESET_FEATURES;
+    resetFeatures.pNext = &features;
+    resetFeatures.hostQueryReset = VK_TRUE;
+
+    pExtendedDeviceFeatures = &resetFeatures;
+  }
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  void* pExtendedDeviceFeatures = &features;
 
   // use input extenstions and features if specified
   //
