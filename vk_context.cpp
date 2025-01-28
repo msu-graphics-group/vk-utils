@@ -128,7 +128,7 @@ vk_utils::VulkanContext vk_utils::globalContextInit(const std::vector<const char
   applicationInfo.applicationVersion = 0;
   applicationInfo.pEngineName        = "LiteVK::Engine";
   applicationInfo.engineVersion      = 0;
-  applicationInfo.apiVersion         = hasRayTracingPipeline ? VK_API_VERSION_1_2 : VK_API_VERSION_1_1;
+  applicationInfo.apiVersion         = VK_API_VERSION_1_2; // hasRayTracingPipeline ? VK_API_VERSION_1_2 : VK_API_VERSION_1_1;
 
   g_ctx.instance = vk_utils::createInstance(enableValidationLayers, enabledLayers, extensions, &applicationInfo);
   volkLoadInstance(g_ctx.instance);

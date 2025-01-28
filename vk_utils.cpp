@@ -205,39 +205,39 @@ namespace vk_utils {
     std::vector<std::string> supportedLayers;
 
     checkLayerSupport(a_requestedLayers, supportedLayers);
-    if (a_enableValidationLayers && !supportedLayers.empty())
-    {
-      uint32_t extensionCount;
-
-      vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
-      std::vector<VkExtensionProperties> extensionProperties(extensionCount);
-      vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, extensionProperties.data());
-
-      bool foundExtension = false;
-      for (VkExtensionProperties prop : extensionProperties)
-      {
-        if (strcmp(VK_EXT_DEBUG_REPORT_EXTENSION_NAME, prop.extensionName) == 0)
-        {
-          foundExtension = true;
-          break;
-        }
-      }
-
-      if (!foundExtension)
-        RUN_TIME_ERROR("Validation layers requested but extension VK_EXT_DEBUG_REPORT_EXTENSION_NAME not supported\n");
-
-      enabledExtensions.push_back(g_debugReportExtName);
-    }
+    //if (a_enableValidationLayers && !supportedLayers.empty())
+    //{
+    //  uint32_t extensionCount;
+    //
+    //  vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
+    //  std::vector<VkExtensionProperties> extensionProperties(extensionCount);
+    //  vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, extensionProperties.data());
+    //
+    //  bool foundExtension = false;
+    //  for (VkExtensionProperties prop : extensionProperties)
+    //  {
+    //    if (strcmp(VK_EXT_DEBUG_REPORT_EXTENSION_NAME, prop.extensionName) == 0)
+    //    {
+    //      foundExtension = true;
+    //      break;
+    //    }
+    //  }
+    //
+    //  if (!foundExtension)
+    //    RUN_TIME_ERROR("Validation layers requested but extension VK_EXT_DEBUG_REPORT_EXTENSION_NAME not supported\n");
+    //
+    //  enabledExtensions.push_back(g_debugReportExtName);
+    //}
 
     VkApplicationInfo applicationInfo = {};
     if (appInfo == nullptr)
     {
-      applicationInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-      applicationInfo.pApplicationName = "Default App Name";
+      applicationInfo.sType              = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+      applicationInfo.pApplicationName   = "Default App Name";
       applicationInfo.applicationVersion = 0;
-      applicationInfo.pEngineName = "DefaultEngine";
-      applicationInfo.engineVersion = 0;
-      applicationInfo.apiVersion = VK_API_VERSION_1_1;
+      applicationInfo.pEngineName        = "DefaultEngine";
+      applicationInfo.engineVersion      = 0;
+      applicationInfo.apiVersion         = VK_API_VERSION_1_2;
     }
     else
     {
@@ -256,28 +256,28 @@ namespace vk_utils {
     createInfo.pApplicationInfo = &applicationInfo;
 
     std::vector<const char *> layer_names;
-    VkValidationFeaturesEXT validationFeatures = {};
-    VkValidationFeatureEnableEXT enabledValidationFeatures[1] = { VK_VALIDATION_FEATURE_ENABLE_DEBUG_PRINTF_EXT };
+    static VkValidationFeaturesEXT validationFeatures = {};
+    static VkValidationFeatureEnableEXT enabledValidationFeatures[1] = { VK_VALIDATION_FEATURE_ENABLE_DEBUG_PRINTF_EXT };
 
     if (a_enableValidationLayers && !supportedLayers.empty())
     {
       for (const auto &layer : supportedLayers)
         layer_names.push_back(layer.data());
 
-      createInfo.enabledLayerCount = uint32_t(layer_names.size());
+      createInfo.enabledLayerCount   = uint32_t(layer_names.size());
       createInfo.ppEnabledLayerNames = layer_names.data();
 
-      validationFeatures.sType = VK_STRUCTURE_TYPE_VALIDATION_FEATURES_EXT;
-      validationFeatures.enabledValidationFeatureCount = 1;
-      validationFeatures.pEnabledValidationFeatures = enabledValidationFeatures;
-      //validationFeatures.pNext = createInfo.pNext;
-      createInfo.pNext = &validationFeatures;
+      //validationFeatures.sType = VK_STRUCTURE_TYPE_VALIDATION_FEATURES_EXT;
+      //validationFeatures.enabledValidationFeatureCount = 1;
+      //validationFeatures.pEnabledValidationFeatures = enabledValidationFeatures;
+      ////validationFeatures.pNext = createInfo.pNext;
+      //createInfo.pNext = &validationFeatures;
     }
     else
     {
-      createInfo.enabledLayerCount = 0;
+      createInfo.enabledLayerCount   = 0;
       createInfo.ppEnabledLayerNames = nullptr;
-      a_enableValidationLayers = false;
+      a_enableValidationLayers       = false;
     }
 
     createInfo.enabledExtensionCount = uint32_t(enabledExtensions.size());
