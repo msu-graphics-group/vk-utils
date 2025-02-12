@@ -51,15 +51,20 @@ struct RTXDeviceFeatures
 {
   VkPhysicalDeviceAccelerationStructureFeaturesKHR m_enabledAccelStructFeatures{};
   VkPhysicalDeviceBufferDeviceAddressFeatures      m_enabledDeviceAddressFeatures{};
-  VkPhysicalDeviceRayQueryFeaturesKHR              m_enabledRayQueryFeatures;
+  VkPhysicalDeviceRayQueryFeaturesKHR              m_enabledRayQueryFeatures{};
+  VkPhysicalDeviceRayTracingPipelineFeaturesKHR    m_rayTracingPipeline{};
 };
 
 static RTXDeviceFeatures SetupRTXFeatures(VkPhysicalDevice a_physDev)
 {
   static RTXDeviceFeatures g_rtFeatures;
 
+  g_rtFeatures.m_rayTracingPipeline.sType              = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR; // added for Slang with ray query
+  g_rtFeatures.m_rayTracingPipeline.rayTracingPipeline = true; 
+
   g_rtFeatures.m_enabledRayQueryFeatures.sType    = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_QUERY_FEATURES_KHR;
   g_rtFeatures.m_enabledRayQueryFeatures.rayQuery = VK_TRUE;
+  g_rtFeatures.m_enabledRayQueryFeatures.pNext    =  &g_rtFeatures.m_rayTracingPipeline;
 
   g_rtFeatures.m_enabledDeviceAddressFeatures.sType               = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES;
   g_rtFeatures.m_enabledDeviceAddressFeatures.bufferDeviceAddress = VK_TRUE;
@@ -128,7 +133,7 @@ vk_utils::VulkanContext vk_utils::globalContextInit(const std::vector<const char
   applicationInfo.applicationVersion = 0;
   applicationInfo.pEngineName        = "LiteVK::Engine";
   applicationInfo.engineVersion      = 0;
-  applicationInfo.apiVersion         = hasRayTracingPipeline ? VK_API_VERSION_1_2 : VK_API_VERSION_1_1;
+  applicationInfo.apiVersion         = VK_API_VERSION_1_2; //hasRayTracingPipeline ? VK_API_VERSION_1_2 : VK_API_VERSION_1_1;
 
   g_ctx.instance = vk_utils::createInstance(enableValidationLayers, enabledLayers, extensions, &applicationInfo);
   volkLoadInstance(g_ctx.instance);
@@ -212,8 +217,10 @@ vk_utils::VulkanContext vk_utils::globalContextInit(const std::vector<const char
     // Required by VK_KHR_RAY_QUERY
     deviceExtensions.push_back(VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME);
     deviceExtensions.push_back(VK_KHR_RAY_QUERY_EXTENSION_NAME);
+    deviceExtensions.push_back(VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME); // added for Slang with ray query
     deviceExtensions.push_back("VK_KHR_spirv_1_4");
     deviceExtensions.push_back("VK_KHR_shader_float_controls");  
+
     // Required by VK_KHR_acceleration_structure
     deviceExtensions.push_back(VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME);
     deviceExtensions.push_back(VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME);
