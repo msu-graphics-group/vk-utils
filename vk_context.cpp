@@ -199,16 +199,25 @@ vk_utils::VulkanContext vk_utils::globalContextInit(const std::vector<const char
   indexingFeatures.shaderSampledImageArrayNonUniformIndexing = supportBindless ? VK_TRUE : VK_FALSE;
   indexingFeatures.runtimeDescriptorArray                    = supportBindless ? VK_TRUE : VK_FALSE;
 
+  // query features for using Int8 inside buffer
+  //
+  VkPhysicalDevice8BitStorageFeatures storage8ButFeatures = {};
+  storage8ButFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_8BIT_STORAGE_FEATURES;
+  storage8ButFeatures.pNext = &indexingFeatures;
+  storage8ButFeatures.storageBuffer8BitAccess = VK_TRUE;
+
   // query features for shaderInt8
   //
   VkPhysicalDeviceShaderFloat16Int8Features features = featuresQuestion;
   features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_FLOAT16_INT8_FEATURES;
-  features.pNext = &indexingFeatures;
+  features.pNext = &storage8ButFeatures;
 
   std::vector<const char*> validationLayers, deviceExtensions;
   VkPhysicalDeviceFeatures enabledDeviceFeatures = {};
   enabledDeviceFeatures.shaderInt64   = deviceFeaturesQuestion.features.shaderInt64;
   enabledDeviceFeatures.shaderFloat64 = deviceFeaturesQuestion.features.shaderFloat64;
+  //enabledDeviceFeatures.storageBuf
+  //deviceFeaturesQuestion.features.shaderStorageBufferArrayDynamicIndexing
   
   vk_utils::QueueFID_T fIDs = {};
   
