@@ -204,7 +204,9 @@ vk_utils::VulkanContext vk_utils::globalContextInit(const std::vector<const char
   VkPhysicalDevice8BitStorageFeatures storage8ButFeatures = {};
   storage8ButFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_8BIT_STORAGE_FEATURES;
   storage8ButFeatures.pNext = &indexingFeatures;
-  storage8ButFeatures.storageBuffer8BitAccess = VK_TRUE;
+  storage8ButFeatures.storageBuffer8BitAccess           = VK_TRUE;
+  storage8ButFeatures.uniformAndStorageBuffer8BitAccess = VK_TRUE;
+  storage8ButFeatures.storagePushConstant8              = VK_FALSE;
 
   // query features for shaderInt8
   //
