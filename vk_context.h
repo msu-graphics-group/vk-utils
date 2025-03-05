@@ -41,6 +41,12 @@ namespace vk_utils
   VulkanContext globalContextGet(bool enableValidationLayers = false, unsigned int a_preferredDeviceId = 0);
   void          globalContextDestroy();
 
+  struct VulkanDeviceFeatures
+  {
+    VkPhysicalDeviceFeatures2 features2;
+    std::vector<const char*>  extensionNames;
+  };
+
   struct ExecTime
   {
     float msCopyToGPU    = 0.0f;
