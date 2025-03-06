@@ -34,7 +34,7 @@ namespace vk_utils
   bool          globalContextIsInitialized(const std::vector<const char*>& requiredExtensions = std::vector<const char*>());
   VulkanContext globalContextInit(const std::vector<const char*>& requiredExtensions = std::vector<const char*>(), 
                                   bool enableValidationLayers = false, 
-                                  unsigned int a_preferredDeviceId = 0,
+                                  unsigned int a_preferredDeviceId = 0, //explicit device id or CHOOSE_DEVICE_BY_NAME
                                   VkPhysicalDeviceFeatures2* a_pKnownFeatures = nullptr,
                                   size_t memForBuffers = size_t(-1), 
                                   size_t memForTextures = size_t(-1));

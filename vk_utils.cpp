@@ -304,6 +304,15 @@ namespace vk_utils {
     VK_CHECK_RESULT(local_vkCreateDebugReportCallbackEXT(a_instance, &createInfo, nullptr, a_debugReportCallback));
   }
 
+  bool hasPreferredName(const char *device_name)
+  {
+    if (strstr(device_name, "NVIDIA") != nullptr)
+      return true;
+    if (strstr(device_name, "AMD") != nullptr)
+      return true;
+    return false;
+  }
+
   VkPhysicalDevice findPhysicalDevice(VkInstance a_instance, bool a_printInfo, unsigned a_preferredDeviceId, std::vector<const char *> a_deviceExt)
   {
     uint32_t deviceCount;
@@ -333,7 +342,8 @@ namespace vk_utils {
       if (a_printInfo)
         deviceDescription = "  device " + std::to_string(i) + ", name = " + props.deviceName;
 
-      if (i == a_preferredDeviceId)
+      if (i == a_preferredDeviceId ||
+         (a_preferredDeviceId == CHOOSE_DEVICE_BY_NAME && hasPreferredName(props.deviceName)))
       {
         if (checkDeviceExtensionSupport(devices[i], a_deviceExt))
         {

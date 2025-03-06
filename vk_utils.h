@@ -22,6 +22,7 @@ namespace vk_utils
                                                          VK_COLOR_COMPONENT_B_BIT |
                                                          VK_COLOR_COMPONENT_A_BIT; // 0xF
 
+  constexpr unsigned CHOOSE_DEVICE_BY_NAME = unsigned(-1);
 
   struct QueueFID_T
   {
