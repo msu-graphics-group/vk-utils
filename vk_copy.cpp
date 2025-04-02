@@ -47,7 +47,7 @@ vk_utils::SimpleCopyHelper::SimpleCopyHelper(VkPhysicalDevice a_physicalDevice, 
   allocInfo.commandBufferCount = 1;
   VK_CHECK_RESULT(vkAllocateCommandBuffers(a_device, &allocInfo, &cmdBuff));
 
-  vk_utils::createBufferStaging(a_device, a_physicalDevice, a_stagingBuffSize, stagingBuff, stagingBuffMemory);
+  vk_utils::createBufferStaging(a_device, a_physicalDevice, a_stagingBuffSize, stagingBuff, stagingBuffMemory, true);
 
   stagingSize = a_stagingBuffSize;
 }
@@ -89,6 +89,14 @@ void vk_utils::SimpleCopyHelper::UpdateBuffer(VkBuffer a_dst, size_t a_dstOffset
     void* mappedMemory = nullptr;
     vkMapMemory(dev, stagingBuffMemory, 0, currCopySize, 0, &mappedMemory);
     memcpy(mappedMemory, (char*)(a_src) + currPos, currCopySize);
+
+    VkMappedMemoryRange range;
+    range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
+    range.memory = stagingBuffMemory;
+    range.size = currCopySize;
+    range.offset = 0;
+    vkFlushMappedMemoryRanges(dev, 1, &range);
+
     vkUnmapMemory(dev, stagingBuffMemory);
 
     VkCommandBufferBeginInfo beginInfo = {};
@@ -134,6 +142,14 @@ void vk_utils::SimpleCopyHelper::ReadBuffer(VkBuffer a_src, size_t a_srcOffset, 
 
     void* mappedMemory = nullptr;
     vkMapMemory(dev, stagingBuffMemory, 0, currCopySize, 0, &mappedMemory);
+    
+    VkMappedMemoryRange range;
+    range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
+    range.memory = stagingBuffMemory;
+    range.size = currCopySize;
+    range.offset = 0;
+    vkInvalidateMappedMemoryRanges(dev, 1, &range);
+
     memcpy((char*)(a_dst) + currPos, mappedMemory, currCopySize);
     vkUnmapMemory(dev, stagingBuffMemory); 
   }
@@ -187,6 +203,14 @@ void vk_utils::SimpleCopyHelper::ReadImage(VkImage a_image, void* a_dst, int a_w
 
     void* mappedMemory = nullptr;
     vkMapMemory(dev, stagingBuffMemory, 0, numLinesToCopy * lineSize, 0, &mappedMemory);
+
+    VkMappedMemoryRange range;
+    range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
+    range.memory = stagingBuffMemory;
+    range.size = numLinesToCopy * lineSize;
+    range.offset = 0;
+    vkInvalidateMappedMemoryRanges(dev, 1, &range);
+
     memcpy((char*)(a_dst) + currLine * lineSize, mappedMemory, numLinesToCopy * lineSize);
     vkUnmapMemory(dev, stagingBuffMemory);
   }
@@ -233,6 +257,14 @@ void vk_utils::SimpleCopyHelper::UpdateImage(VkImage a_image, const void* a_src,
     void* mappedMemory = nullptr;
     vkMapMemory(dev, stagingBuffMemory, 0, numLinesToCopy * lineSize, 0, &mappedMemory);
     memcpy(mappedMemory, (char*)(a_src) + currLine * lineSize, numLinesToCopy * lineSize);
+
+    VkMappedMemoryRange range;
+    range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
+    range.memory = stagingBuffMemory;
+    range.size = numLinesToCopy * lineSize;
+    range.offset = 0;
+    vkFlushMappedMemoryRanges(dev, 1, &range);
+
     vkUnmapMemory(dev, stagingBuffMemory);
 
     VkImageSubresourceLayers subresourceLayers = {};

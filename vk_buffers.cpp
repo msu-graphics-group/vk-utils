@@ -22,7 +22,7 @@ namespace vk_utils
   }
 
   void createBufferStaging(VkDevice a_device, VkPhysicalDevice a_physDevice, const size_t a_bufferSize,
-                           VkBuffer &a_buf, VkDeviceMemory& a_mem)
+                           VkBuffer &a_buf, VkDeviceMemory& a_mem, bool host_cached)
   {
 
     VkBufferCreateInfo bufferCreateInfo = {};
@@ -36,12 +36,20 @@ namespace vk_utils
     VkMemoryRequirements memoryRequirements;
     vkGetBufferMemoryRequirements(a_device, a_buf, &memoryRequirements);
 
+    VkMemoryPropertyFlags memPropFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
+    if(host_cached)
+    {
+      memPropFlags |= VK_MEMORY_PROPERTY_HOST_CACHED_BIT;
+    }
+    else 
+    {
+      memPropFlags |= VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+    }
+
     VkMemoryAllocateInfo allocateInfo = {};
     allocateInfo.sType           = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
     allocateInfo.allocationSize  = memoryRequirements.size;
-    allocateInfo.memoryTypeIndex = findMemoryType(memoryRequirements.memoryTypeBits,
-                                                            VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
-                                                            a_physDevice);
+    allocateInfo.memoryTypeIndex = findMemoryType(memoryRequirements.memoryTypeBits, memPropFlags, a_physDevice);
 
     VK_CHECK_RESULT(vkAllocateMemory(a_device, &allocateInfo, nullptr, &a_mem));
     VK_CHECK_RESULT(vkBindBufferMemory(a_device, a_buf, a_mem, 0));
