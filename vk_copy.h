@@ -80,7 +80,9 @@ namespace vk_utils
     size_t          stagingSize = 0u;
 
     VkPhysicalDevice physDev = VK_NULL_HANDLE;
-    VkDevice         dev = VK_NULL_HANDLE;
+    VkDevice         dev     = VK_NULL_HANDLE;
+
+    VkDeviceSize     m_nonCoherentAtomSize = 0;
 
     SimpleCopyHelper(const SimpleCopyHelper& rhs) = delete;
     SimpleCopyHelper& operator=(const SimpleCopyHelper& rhs) { (void)rhs; return *this; }

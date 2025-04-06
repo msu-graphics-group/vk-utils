@@ -28,7 +28,7 @@ vk_utils::SimpleCopyHelper::SimpleCopyHelper()
 }
 
 vk_utils::SimpleCopyHelper::SimpleCopyHelper(VkPhysicalDevice a_physicalDevice, VkDevice a_device,
-                                         VkQueue a_transferQueue, uint32_t a_transferQueueIDX, size_t a_stagingBuffSize)
+                                             VkQueue a_transferQueue, uint32_t a_transferQueueIDX, size_t a_stagingBuffSize)
 {
   physDev = a_physicalDevice;
   dev     = a_device;
@@ -50,6 +50,13 @@ vk_utils::SimpleCopyHelper::SimpleCopyHelper(VkPhysicalDevice a_physicalDevice, 
   vk_utils::createBufferStaging(a_device, a_physicalDevice, a_stagingBuffSize, stagingBuff, stagingBuffMemory, true);
 
   stagingSize = a_stagingBuffSize;
+
+  VkPhysicalDeviceProperties2 physicalDeviceProperties = {};
+  physicalDeviceProperties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
+  physicalDeviceProperties.pNext = nullptr;
+  vkGetPhysicalDeviceProperties2(a_physicalDevice, &physicalDeviceProperties);
+
+  m_nonCoherentAtomSize = physicalDeviceProperties.properties.limits.nonCoherentAtomSize;
 }
 
 vk_utils::SimpleCopyHelper::~SimpleCopyHelper()
@@ -139,15 +146,24 @@ void vk_utils::SimpleCopyHelper::ReadBuffer(VkBuffer a_src, size_t a_srcOffset, 
     vkEndCommandBuffer(cmdBuff);
 
     vk_utils::executeCommandBufferNow(cmdBuff, queue, dev);
+    
+    auto currMapSize = currCopySize;
+    if(currMapSize % m_nonCoherentAtomSize != 0)
+    {
+      auto times  = currMapSize/m_nonCoherentAtomSize;
+      currMapSize = m_nonCoherentAtomSize * (times + 1);
+    }
 
     void* mappedMemory = nullptr;
-    vkMapMemory(dev, stagingBuffMemory, 0, currCopySize, 0, &mappedMemory);
+    vkMapMemory(dev, stagingBuffMemory, 0, currMapSize, 0, &mappedMemory);
     
-    VkMappedMemoryRange range;
-    range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
+    VkMappedMemoryRange range = {};
+    range.sType  = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
+    range.pNext  = nullptr;
     range.memory = stagingBuffMemory;
-    range.size = currCopySize;
+    range.size   = currMapSize;
     range.offset = 0;
+
     vkInvalidateMappedMemoryRanges(dev, 1, &range);
 
     memcpy((char*)(a_dst) + currPos, mappedMemory, currCopySize);
