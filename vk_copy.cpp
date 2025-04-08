@@ -97,10 +97,11 @@ void vk_utils::SimpleCopyHelper::UpdateBuffer(VkBuffer a_dst, size_t a_dstOffset
     vkMapMemory(dev, stagingBuffMemory, 0, currCopySize, 0, &mappedMemory);
     memcpy(mappedMemory, (char*)(a_src) + currPos, currCopySize);
 
-    VkMappedMemoryRange range;
-    range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
+    VkMappedMemoryRange range = {};
+    range.sType  = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
+    range.pNext  = nullptr;
     range.memory = stagingBuffMemory;
-    range.size = currCopySize;
+    range.size   = currCopySize;
     range.offset = 0;
     vkFlushMappedMemoryRanges(dev, 1, &range);
 
@@ -159,7 +160,7 @@ void vk_utils::SimpleCopyHelper::ReadBuffer(VkBuffer a_src, size_t a_srcOffset, 
     
     VkMappedMemoryRange range = {};
     range.sType  = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
-    range.pNext  = nullptr;
+    range.pNext  = NULL;
     range.memory = stagingBuffMemory;
     range.size   = currMapSize;
     range.offset = 0;
