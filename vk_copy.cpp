@@ -93,15 +93,22 @@ void vk_utils::SimpleCopyHelper::UpdateBuffer(VkBuffer a_dst, size_t a_dstOffset
   for(size_t currPos = 0; currPos < a_size; currPos += stagingSize)
   {
     size_t currCopySize = std::min(a_size - currPos, stagingSize);
+    auto currMapSize = currCopySize;
+    if(currMapSize % m_nonCoherentAtomSize != 0)
+    {
+      auto times  = currMapSize/m_nonCoherentAtomSize;
+      currMapSize = m_nonCoherentAtomSize * (times + 1);
+    }
+
     void* mappedMemory = nullptr;
-    vkMapMemory(dev, stagingBuffMemory, 0, currCopySize, 0, &mappedMemory);
-    memcpy(mappedMemory, (char*)(a_src) + currPos, currCopySize);
+    vkMapMemory(dev, stagingBuffMemory, 0, currMapSize, 0, &mappedMemory);
+    memcpy(mappedMemory, (char*)(a_src) + currPos, currMapSize);
 
     VkMappedMemoryRange range = {};
     range.sType  = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
     range.pNext  = nullptr;
     range.memory = stagingBuffMemory;
-    range.size   = currCopySize;
+    range.size   = currMapSize;
     range.offset = 0;
     vkFlushMappedMemoryRanges(dev, 1, &range);
 
@@ -271,14 +278,22 @@ void vk_utils::SimpleCopyHelper::UpdateImage(VkImage a_image, const void* a_src,
         VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT);
     }
 
+    auto currMapSize = numLinesToCopy * lineSize;
+    if(currMapSize % m_nonCoherentAtomSize != 0)
+    {
+      auto times  = currMapSize/m_nonCoherentAtomSize;
+      currMapSize = m_nonCoherentAtomSize * (times + 1);
+    }
+
     void* mappedMemory = nullptr;
-    vkMapMemory(dev, stagingBuffMemory, 0, numLinesToCopy * lineSize, 0, &mappedMemory);
+    vkMapMemory(dev, stagingBuffMemory, 0, currMapSize, 0, &mappedMemory);
     memcpy(mappedMemory, (char*)(a_src) + currLine * lineSize, numLinesToCopy * lineSize);
 
-    VkMappedMemoryRange range;
+    VkMappedMemoryRange range{};
     range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
+    range.pNext = nullptr;
     range.memory = stagingBuffMemory;
-    range.size = numLinesToCopy * lineSize;
+    range.size   = currMapSize;
     range.offset = 0;
     vkFlushMappedMemoryRanges(dev, 1, &range);
 
