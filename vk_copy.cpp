@@ -410,6 +410,13 @@ vk_utils::PingPongCopyHelper::PingPongCopyHelper(VkPhysicalDevice a_physicalDevi
   fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
   fenceCreateInfo.flags = 0;
   VK_CHECK_RESULT(vkCreateFence(a_device, &fenceCreateInfo, NULL, &fence));
+
+  VkPhysicalDeviceProperties2 physicalDeviceProperties = {};
+  physicalDeviceProperties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
+  physicalDeviceProperties.pNext = nullptr;
+  vkGetPhysicalDeviceProperties2(a_physicalDevice, &physicalDeviceProperties);
+
+  m_nonCoherentAtomSize = physicalDeviceProperties.properties.limits.nonCoherentAtomSize;
 }
 
 vk_utils::PingPongCopyHelper::~PingPongCopyHelper()
