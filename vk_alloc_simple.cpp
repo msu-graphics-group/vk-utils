@@ -354,7 +354,7 @@ uint32_t MemoryAlloc_Special::AllocateHidden(const MemAllocInfo& a_allocInfoBuff
 
   if(m_bufAlloc.size < a_offset + bufMemTotal)
   {
-    VK_UTILS_LOG_INFO("[MemoryAlloc_Special::Allocate] Buffers REALLOC : old_size = " + std::to_string(m_bufAlloc.size) + ", new_size = " + std::to_string(bufMemTotal));
+    VK_UTILS_LOG_INFO("[Alloc(Special)] Buffers REALLOC  : old_size = " + std::to_string(m_bufAlloc.size) + ", new_size = " + std::to_string(bufMemTotal));
 
     allocInfo.memReq      = bufMemReqs[0];
     allocInfo.memReq.size = bufMemTotal;
@@ -426,7 +426,7 @@ uint32_t MemoryAlloc_Special::AllocateHidden(const MemAllocInfo& a_allocInfoBuff
 
     if(m_imgAlloc.size < imgMemTotal)
     {
-      VK_UTILS_LOG_INFO("[MemoryAlloc_Special::Allocate] Textures REALLOC : old_size = "
+      VK_UTILS_LOG_INFO("[Alloc(Special)] Textures REALLOC : old_size = "
                         + std::to_string(m_imgAlloc.size)
                         + ", new_size = "
                         + std::to_string(imgMemTotal));

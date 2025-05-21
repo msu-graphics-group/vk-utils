@@ -252,8 +252,8 @@ vk_utils::VulkanContext vk_utils::globalContextInit(const std::vector<const char
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////// debugPrintf
   if(vkCreateDebugUtilsMessengerEXT == nullptr)
     vkCreateDebugUtilsMessengerEXT = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(vkGetInstanceProcAddr(g_ctx.instance, "vkCreateDebugUtilsMessengerEXT"));
-  if(vkCreateDebugUtilsMessengerEXT == nullptr)
-    vkCreateDebugUtilsMessengerEXT = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(vkGetDeviceProcAddr(g_ctx.device, "vkCreateDebugUtilsMessengerEXT"));
+  //if(vkCreateDebugUtilsMessengerEXT == nullptr)
+  //  vkCreateDebugUtilsMessengerEXT = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(vkGetDeviceProcAddr(g_ctx.device, "vkCreateDebugUtilsMessengerEXT"));
   if(vkCreateDebugUtilsMessengerEXT != nullptr)
   { 
     VkDebugUtilsMessengerCreateInfoEXT debug_utils_messenger_create_info{VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT};
