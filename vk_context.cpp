@@ -84,12 +84,18 @@ VKAPI_ATTR VkBool32 VKAPI_CALL debug_utils_message_callback(
 	return VK_FALSE;
 }
 
+vk_utils::VulkanContext vk_utils::globalContextInit(vk_utils::VulkanDeviceFeatures& a_features, bool enableValidationLayers, unsigned int a_preferredDeviceId)
+{
+  return vk_utils::globalContextInit(a_features.extensionNames, enableValidationLayers, a_preferredDeviceId, &a_features.features2, a_features.memForBuffers, a_features.memForTextures, a_features.apiVersion);
+}
+
 vk_utils::VulkanContext vk_utils::globalContextInit(const std::vector<const char*>& requiredExtensions, 
                                                     bool enableValidationLayers, 
                                                     unsigned int a_preferredDeviceId,
                                                     VkPhysicalDeviceFeatures2* a_pKnownFeatures,
                                                     size_t memForBuffers, 
-                                                    size_t memForTextures)
+                                                    size_t memForTextures,
+                                                    uint32_t apiVersion)
 {
   if(globalContextIsInitialized(requiredExtensions))
     return g_ctx;
@@ -128,7 +134,10 @@ vk_utils::VulkanContext vk_utils::globalContextInit(const std::vector<const char
   applicationInfo.applicationVersion = 0;
   applicationInfo.pEngineName        = "LiteVK::Engine";
   applicationInfo.engineVersion      = 0;
-  applicationInfo.apiVersion         = hasRayTracingPipeline ? VK_API_VERSION_1_2 : VK_API_VERSION_1_1;
+  if(apiVersion >= VK_API_VERSION_1_2)
+    applicationInfo.apiVersion = apiVersion;
+  else
+    applicationInfo.apiVersion = hasRayTracingPipeline ? VK_API_VERSION_1_2 : VK_API_VERSION_1_1;
 
   g_ctx.instance = vk_utils::createInstance(enableValidationLayers, enabledLayers, extensions, &applicationInfo);
   volkLoadInstance(g_ctx.instance);

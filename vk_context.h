@@ -5,9 +5,9 @@
 #include "vk_copy.h"
 #include "vk_alloc.h"
 
+#include <cstdint>
 #include <vector>
 #include <memory>
-
 #include <stdexcept>
 #include <sstream>
 
@@ -37,7 +37,8 @@ namespace vk_utils
                                   unsigned int a_preferredDeviceId = 0, //explicit device id or CHOOSE_DEVICE_BY_NAME
                                   VkPhysicalDeviceFeatures2* a_pKnownFeatures = nullptr,
                                   size_t memForBuffers = size_t(-1), 
-                                  size_t memForTextures = size_t(-1));
+                                  size_t memForTextures = size_t(-1),
+                                  uint32_t apiVersion = VK_API_VERSION_1_1);
   VulkanContext globalContextGet(bool enableValidationLayers = false, unsigned int a_preferredDeviceId = 0);
   void          globalContextDestroy();
 
@@ -45,7 +46,14 @@ namespace vk_utils
   {
     VkPhysicalDeviceFeatures2 features2;
     std::vector<const char*>  extensionNames;
+    uint32_t apiVersion   = VK_API_VERSION_1_1;
+    size_t memForBuffers  = size_t(-1);
+    size_t memForTextures = size_t(-1);
   };
+
+  VulkanContext globalContextInit(VulkanDeviceFeatures& a_features, 
+                                  bool enableValidationLayers = false, 
+                                  unsigned int a_preferredDeviceId = 0);
 
   struct ExecTime
   {
