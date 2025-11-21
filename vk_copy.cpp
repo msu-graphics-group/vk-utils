@@ -102,7 +102,7 @@ void vk_utils::SimpleCopyHelper::UpdateBuffer(VkBuffer a_dst, size_t a_dstOffset
 
     void* mappedMemory = nullptr;
     vkMapMemory(dev, stagingBuffMemory, 0, currMapSize, 0, &mappedMemory);
-    memcpy(mappedMemory, (char*)(a_src) + currPos, currMapSize);
+    memcpy(mappedMemory, (char*)(a_src) + currPos, currCopySize);
 
     VkMappedMemoryRange range = {};
     range.sType  = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
