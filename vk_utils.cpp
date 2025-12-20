@@ -304,13 +304,21 @@ namespace vk_utils {
     VK_CHECK_RESULT(local_vkCreateDebugReportCallbackEXT(a_instance, &createInfo, nullptr, a_debugReportCallback));
   }
 
-  bool hasPreferredName(const char *device_name)
+  static constexpr uint32_t SCORE_SUPPORTED_DEVICE = 1;
+  static constexpr uint32_t SCORE_KNOWN_VENDOR     = 2;
+  static constexpr uint32_t SCORE_NVIDIA           = 3;
+  static constexpr uint32_t SCORE_USER_CHOICE      = 4;
+
+  uint32_t getScoreByName(const char *device_name)
   {
     if (strstr(device_name, "NVIDIA") != nullptr)
-      return true;
+      return SCORE_NVIDIA;
     if (strstr(device_name, "AMD") != nullptr)
-      return true;
-    return false;
+      return SCORE_KNOWN_VENDOR;
+    if (strstr(device_name, "Intel") != nullptr)
+      return SCORE_KNOWN_VENDOR;
+    
+    return SCORE_SUPPORTED_DEVICE;
   }
 
   VkPhysicalDevice findPhysicalDevice(VkInstance a_instance, bool a_printInfo, unsigned a_preferredDeviceId, std::vector<const char *> a_deviceExt)
@@ -332,6 +340,7 @@ namespace vk_utils {
 
     VkPhysicalDeviceProperties props;
     VkPhysicalDeviceFeatures features;
+    uint32_t preferredDeviceScore = 0; 
 
     for (size_t i = 0; i < devices.size(); i++)
     {
@@ -342,20 +351,28 @@ namespace vk_utils {
       if (a_printInfo)
         deviceDescription = "  device " + std::to_string(i) + ", name = " + props.deviceName;
 
-      if (i == a_preferredDeviceId ||
-         (a_preferredDeviceId == CHOOSE_DEVICE_BY_NAME && hasPreferredName(props.deviceName)))
+      if (checkDeviceExtensionSupport(devices[i], a_deviceExt))
       {
-        if (checkDeviceExtensionSupport(devices[i], a_deviceExt))
+        uint32_t curDeviceScore = 0;
+        if (a_preferredDeviceId == i) // this device is explicitly chosen by the user
+          curDeviceScore = SCORE_USER_CHOICE;
+        else if (a_preferredDeviceId == CHOOSE_DEVICE_BY_NAME) // get score by name, prefer NVIDIA GPU if available
+          curDeviceScore = getScoreByName(props.deviceName);
+        else // this device supports all requested extensions, choose it if there are no better options
+          curDeviceScore = SCORE_SUPPORTED_DEVICE; 
+
+        if (curDeviceScore > preferredDeviceScore)
         {
           physicalDevice = devices[i];
+          preferredDeviceScore = curDeviceScore;
           if (a_printInfo)
             deviceDescription += " <-- (selected)";
         }
-        else
-        {
-          if (a_printInfo)
-            deviceDescription += " <-- preferred device does not support requested extensions. Trying to find another device...";
-        }
+      }
+      else if (i == a_preferredDeviceId) //user explicitly chose this device, but it does not support requested extensions
+      {
+        if (a_printInfo)
+          deviceDescription += " <-- preferred device does not support requested extensions. Trying to find another device...";        
       }
 
       if (a_printInfo)
