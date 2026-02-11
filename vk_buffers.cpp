@@ -130,7 +130,7 @@ namespace vk_utils
     return res;
   }
 
-  std::vector<size_t> calculateMemOffsets(const std::vector<VkMemoryRequirements> &a_memReqs, size_t a_buffImageGranularity)
+  std::vector<VkDeviceSize> calculateMemOffsets(const std::vector<VkMemoryRequirements> &a_memReqs, size_t a_buffImageGranularity)
   {
     assert(!a_memReqs.empty());
 
