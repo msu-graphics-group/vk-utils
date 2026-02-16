@@ -281,15 +281,21 @@ namespace vk_utils
   }
 
   VulkanImageMem createDepthTexture(VkDevice a_device, VkPhysicalDevice a_physDevice,
-    const uint32_t a_width, const uint32_t a_height, VkFormat a_format)
+    const uint32_t a_width, const uint32_t a_height, VkFormat a_format, bool a_forSampling)
   {
     VulkanImageMem result = {};
     result.format = a_format;
 
-    VkImageCreateInfo imgCreateInfo = defaultImageCreateInfo(a_width, a_height, a_format, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, 1);
+    VkImageUsageFlags usageFlags = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+    if (a_forSampling)
+    {
+      usageFlags |= VK_IMAGE_USAGE_SAMPLED_BIT;
+    }
+
+    VkImageCreateInfo imgCreateInfo = defaultImageCreateInfo(a_width, a_height, a_format, usageFlags, 1);
     VkImageViewCreateInfo imageViewInfo = defaultImageViewCreateInfo(VK_NULL_HANDLE, a_format, 1, VK_IMAGE_ASPECT_DEPTH_BIT);
 
-    createImgAllocAndBind(a_device, a_physDevice, a_width, a_height, a_format, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+    createImgAllocAndBind(a_device, a_physDevice, a_width, a_height, a_format, usageFlags,
                           &result,
                           &imgCreateInfo, &imageViewInfo);
 
