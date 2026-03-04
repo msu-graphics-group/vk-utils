@@ -120,7 +120,7 @@ void vk_utils::FSQuad::Create(VkDevice a_device, const char* a_vspath, const cha
     VkDescriptorSetLayoutBinding descriptorSetLayoutBinding[1];
     
     descriptorSetLayoutBinding[0].binding            = 0;
-    descriptorSetLayoutBinding[0].descriptorType     = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    descriptorSetLayoutBinding[0].descriptorType     = a_rtInfo.drawFromBuffer ? VK_DESCRIPTOR_TYPE_STORAGE_BUFFER : VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
     descriptorSetLayoutBinding[0].descriptorCount    = 1;
     descriptorSetLayoutBinding[0].stageFlags         = VK_SHADER_STAGE_FRAGMENT_BIT;
     descriptorSetLayoutBinding[0].pImmutableSamplers = nullptr;  
@@ -355,7 +355,7 @@ void QuadRenderer::Create(VkDevice a_device, const char* a_vspath, const char* a
     VkDescriptorSetLayoutBinding descriptorSetLayoutBinding[1];
 
     descriptorSetLayoutBinding[0].binding = 0;
-    descriptorSetLayoutBinding[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    descriptorSetLayoutBinding[0].descriptorType  = a_rtInfo.drawFromBuffer ? VK_DESCRIPTOR_TYPE_STORAGE_BUFFER : VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
     descriptorSetLayoutBinding[0].descriptorCount = 1;
     descriptorSetLayoutBinding[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
     descriptorSetLayoutBinding[0].pImmutableSamplers = nullptr;
@@ -455,7 +455,8 @@ void QuadRenderer::DrawCmd(VkCommandBuffer a_cmdBuff, VkDescriptorSet a_inTexDes
    
   vkCmdBindPipeline(a_cmdBuff, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline);
   vkCmdBindDescriptorSets(a_cmdBuff, VK_PIPELINE_BIND_POINT_GRAPHICS, m_layout, 0, 1, &a_inTexDescriptor, 0, NULL);
-
+  
+  vkCmdPushConstants(a_cmdBuff, m_layout, VK_SHADER_STAGE_VERTEX_BIT|VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(m_rtCreateInfo.size), &m_rtCreateInfo.size);
   vkCmdDraw(a_cmdBuff, 3, 1, 0, 0);
 
   vkCmdEndRenderPass(a_cmdBuff);
