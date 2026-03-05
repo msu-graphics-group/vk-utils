@@ -32,7 +32,8 @@ namespace vk_utils
   };
 
   VkInstance createInstance(bool &a_enableValidationLayers, std::vector<const char *> &a_requestedLayers,
-                            std::vector<const char *> &a_instanceExtensions, VkApplicationInfo* appInfo = nullptr);
+                            std::vector<const char *> &a_instanceExtensions, VkApplicationInfo* appInfo = nullptr,
+                            VkInstanceCreateFlagBits a_flags = {}, const void* a_pNext = nullptr);
 
   VkPhysicalDevice findPhysicalDevice(VkInstance a_instance, bool a_printInfo, unsigned a_preferredDeviceId, std::vector<const char *> a_deviceExt = {});
 
