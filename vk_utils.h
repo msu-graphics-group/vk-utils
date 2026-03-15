@@ -81,6 +81,7 @@ namespace vk_utils
   VkRenderPass createDefaultRenderPass(VkDevice a_device, VkFormat a_imageFormat, VkFormat a_depthFormat,
     VkImageLayout a_colorFinalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
   VkRenderPass createRenderPass(VkDevice a_device, RenderTargetInfo2D a_rtInfo);
+  VkRenderPass createRenderPass(VkDevice a_device, RenderTargetInfo2D a_rtInfoColor, RenderTargetInfo2D a_rtInfoDepth);
   // ****************
 
   // *** errors and debugging ***
