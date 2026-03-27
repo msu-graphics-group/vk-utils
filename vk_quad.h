@@ -40,7 +40,7 @@ namespace vk_utils
     \param a_inTexDescriptor - input descriptor set for texture that will be assigned to a quad; it is assumed that user will create descriptor for current ... 
     \param a_offsAndScale    - input array of packed scale ([0],[1]) and offset ([2],[3]);
     */
-    virtual void DrawCmd(VkCommandBuffer a_cmdBuff, VkDescriptorSet a_inTexDescriptor, float a_offsAndScale[4]) = 0;
+    virtual void DrawCmd(VkCommandBuffer a_cmdBuff, VkDescriptorSet a_inTexDescriptor, float a_offsAndScale[4], void* pcData = nullptr, size_t pcSize = 128) = 0;
   };
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -60,7 +60,7 @@ namespace vk_utils
 
     void Create(VkDevice a_device, const char* a_vspath, const char* a_fspath, RenderTargetInfo2D a_rtInfo) override;
     void SetRenderTarget(VkImageView a_imageView) override; 
-    void DrawCmd(VkCommandBuffer a_cmdBuff, VkDescriptorSet a_inTexDescriptor, float a_offsAndScale[4]) override;
+    void DrawCmd(VkCommandBuffer a_cmdBuff, VkDescriptorSet a_inTexDescriptor, float a_offsAndScale[4], void* pcData, size_t pcSize) override;
 
   protected:
 
@@ -96,7 +96,7 @@ namespace vk_utils
 
     void Create(VkDevice a_device, const char* a_vspath, const char* a_fspath, RenderTargetInfo2D a_rtInfo) override;
     void SetRenderTarget(VkImageView a_imageView)                                                           override;
-    void DrawCmd(VkCommandBuffer a_cmdBuff, VkDescriptorSet a_inTexDescriptor, float a_offsAndScale[4])     override;
+    void DrawCmd(VkCommandBuffer a_cmdBuff, VkDescriptorSet a_inTexDescriptor, float a_offsAndScale[4], void* pcData, size_t pcSize) override;
 
   private:
 

@@ -196,7 +196,7 @@ void vk_utils::FSQuad::SetRenderTarget(VkImageView a_imageView)
   m_targetView = a_imageView; 
 }
 
-void vk_utils::FSQuad::DrawCmd(VkCommandBuffer a_cmdBuff, VkDescriptorSet a_inTexDescriptor, float a_offsAndScale[4])
+void vk_utils::FSQuad::DrawCmd(VkCommandBuffer a_cmdBuff, VkDescriptorSet a_inTexDescriptor, float a_offsAndScale[4], void* pcData, size_t pcSize)
 {
   VkRenderPassBeginInfo renderPassInfo = {};
   renderPassInfo.sType             = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -224,8 +224,11 @@ void vk_utils::FSQuad::DrawCmd(VkCommandBuffer a_cmdBuff, VkDescriptorSet a_inTe
     scaleAndOffset[2] = a_offsAndScale[2];
     scaleAndOffset[3] = a_offsAndScale[3];
   }
-
-  vkCmdPushConstants(a_cmdBuff, m_layout, (VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT), 0, 8*sizeof(float), scaleAndOffset);
+  
+  if(pcData != nullptr)
+    vkCmdPushConstants(a_cmdBuff, m_layout, VK_SHADER_STAGE_VERTEX_BIT|VK_SHADER_STAGE_FRAGMENT_BIT, 0, pcSize, pcData);
+  else
+    vkCmdPushConstants(a_cmdBuff, m_layout, VK_SHADER_STAGE_VERTEX_BIT|VK_SHADER_STAGE_FRAGMENT_BIT, 0, 8*sizeof(float), scaleAndOffset);
 
   vkCmdDraw(a_cmdBuff, 4, 1, 0, 0);
 
@@ -431,7 +434,7 @@ void QuadRenderer::SetRenderTarget(VkImageView a_imageView)
   m_targetView = a_imageView;
 }
 
-void QuadRenderer::DrawCmd(VkCommandBuffer a_cmdBuff, VkDescriptorSet a_inTexDescriptor, float a_offsAndScale[4])
+void QuadRenderer::DrawCmd(VkCommandBuffer a_cmdBuff, VkDescriptorSet a_inTexDescriptor, float a_offsAndScale[4], void* pcData, size_t pcSize)
 {
   (void)a_offsAndScale;
   VkRenderPassBeginInfo renderPassInfo = {};
@@ -456,7 +459,11 @@ void QuadRenderer::DrawCmd(VkCommandBuffer a_cmdBuff, VkDescriptorSet a_inTexDes
   vkCmdBindPipeline(a_cmdBuff, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline);
   vkCmdBindDescriptorSets(a_cmdBuff, VK_PIPELINE_BIND_POINT_GRAPHICS, m_layout, 0, 1, &a_inTexDescriptor, 0, NULL);
   
-  vkCmdPushConstants(a_cmdBuff, m_layout, VK_SHADER_STAGE_VERTEX_BIT|VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(m_rtCreateInfo.size), &m_rtCreateInfo.size);
+  if(pcData != nullptr)
+    vkCmdPushConstants(a_cmdBuff, m_layout, VK_SHADER_STAGE_VERTEX_BIT|VK_SHADER_STAGE_FRAGMENT_BIT, 0, pcSize, pcData);
+  else
+    vkCmdPushConstants(a_cmdBuff, m_layout, VK_SHADER_STAGE_VERTEX_BIT|VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(m_rtCreateInfo.size), &m_rtCreateInfo.size);
+  
   vkCmdDraw(a_cmdBuff, 3, 1, 0, 0);
 
   vkCmdEndRenderPass(a_cmdBuff);
