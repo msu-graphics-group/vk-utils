@@ -33,7 +33,7 @@ namespace vk_utils
 
   VkInstance createInstance(bool &a_enableValidationLayers, std::vector<const char *> &a_requestedLayers,
                             std::vector<const char *> &a_instanceExtensions, VkApplicationInfo* appInfo = nullptr,
-                            VkInstanceCreateFlagBits a_flags = {}, const void* a_pNext = nullptr);
+                            VkInstanceCreateFlags a_flags = {}, const void* a_pNext = nullptr);
 
   VkPhysicalDevice findPhysicalDevice(VkInstance a_instance, bool a_printInfo, unsigned a_preferredDeviceId, std::vector<const char *> a_deviceExt = {});
 
@@ -81,7 +81,6 @@ namespace vk_utils
   VkRenderPass createDefaultRenderPass(VkDevice a_device, VkFormat a_imageFormat, VkFormat a_depthFormat,
     VkImageLayout a_colorFinalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
   VkRenderPass createRenderPass(VkDevice a_device, RenderTargetInfo2D a_rtInfo);
-  VkRenderPass createRenderPass(VkDevice a_device, RenderTargetInfo2D a_rtInfoColor, RenderTargetInfo2D a_rtInfoDepth);
   // ****************
 
   // *** errors and debugging ***

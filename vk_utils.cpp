@@ -199,7 +199,7 @@ namespace vk_utils {
   }
 
   VkInstance createInstance(bool &a_enableValidationLayers, std::vector<const char *> &a_requestedLayers,
-    std::vector<const char *> &a_instanceExtensions, VkApplicationInfo *appInfo, VkInstanceCreateFlagBits a_flags, const void* a_pNext)
+    std::vector<const char *> &a_instanceExtensions, VkApplicationInfo *appInfo, VkInstanceCreateFlags a_flags, const void* a_pNext)
   {
     std::vector<const char *> enabledExtensions = a_instanceExtensions;
     std::vector<std::string> supportedLayers;
