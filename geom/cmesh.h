@@ -6,7 +6,7 @@
 #include <sstream>
 #include <memory>
 #include <cassert>
-
+#include <cstdint>
 
 namespace cmesh
 {
