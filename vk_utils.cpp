@@ -328,7 +328,8 @@ namespace vk_utils {
     vkEnumeratePhysicalDevices(a_instance, &deviceCount, nullptr);
     if (deviceCount == 0)
     {
-      RUN_TIME_ERROR("vk_utils::findPhysicalDevice, no Vulkan devices found");
+      std::cout << "[vk_utils::findPhysicalDevice]: no Vulkan devices found at all!" << std::endl;
+      return VK_NULL_HANDLE;
     }
 
     std::vector<VkPhysicalDevice> devices(deviceCount);
@@ -400,7 +401,7 @@ namespace vk_utils {
     }
 
     if (physicalDevice == VK_NULL_HANDLE)
-      RUN_TIME_ERROR("vk_utils::findPhysicalDevice, no Vulkan devices supporting requested extensions were found");
+      std::cout << "[vk_utils::findPhysicalDevice]: no Vulkan devices supporting requested extensions were found" << std::endl;
 
     return physicalDevice;
   }
